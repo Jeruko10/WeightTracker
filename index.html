@@ -4,31 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Joan Ruiz Berenguer</title>
-    <!-- Load Tailwind CSS and Three.js from CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        /* Custom font setup using the Inter font */
         html { font-family: 'Inter', sans-serif; }
-        /* Ensure body takes full screen and background container covers everything */
         body {
             position: relative;
             height: 100vh;
-            overflow: hidden; /* Hide scrollbars if content overflows */
+            overflow: hidden;
         }
-        /* Style for the canvas container */
         #background-container {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            z-index: 0; /* Background layer */
+            z-index: 0;
         }
-        /* Style for the main content card */
         .profile-card-wrapper {
             position: relative;
-            z-index: 10; /* Foreground layer */
+            z-index: 10;
             width: 100%;
             height: 100%;
             display: flex;
@@ -37,16 +32,13 @@
         }
     </style>
 </head>
-<body class="bg-black text-white p-4"> <!-- Base background for no-js or initial load -->
+<body class="bg-black text-white p-4">
 
-    <!-- Three.js Background Container -->
     <div id="background-container"></div>
 
-    <!-- Main Content Container: Centered Profile Card (Now wrapped to manage Z-index) -->
     <div class="profile-card-wrapper">
         <div class="w-full max-w-sm p-6 bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-2xl transition-all duration-300 hover:shadow-cyan-500/50">
 
-            <!-- Profile Image Placeholder -->
             <div class="mb-8">
                 <img 
                     src="profile.jpg" 
@@ -56,20 +48,16 @@
                 >
             </div>
 
-            <!-- Name -->
             <h1 class="text-3xl font-extrabold mb-2 tracking-wide text-center">
                 Joan Ruiz Berenguer
             </h1>
 
-            <!-- Title/Short Description (Optional, but looks nice) -->
             <p class="text-lg text-gray-300 mb-10 font-medium text-center">
                 Game Developer
             </p>
 
-            <!-- Social/Contact Links (Order is: Phone, LinkedIn, Itch.io, GitHub) -->
             <div class="space-y-4">
-              
-                <!-- LinkedIn (Blue) -->
+                
                 <a href="https://www.linkedin.com/in/jeruko/" target="_blank" rel="noopener noreferrer" 
                     class="flex items-center p-3 rounded-lg bg-blue-700 hover:bg-blue-600 transition-colors shadow-md">
                     <span class="text-white w-8 flex-shrink-0 text-xl text-center">
@@ -78,7 +66,6 @@
                     <span class="ml-4 flex-grow font-semibold text-center">LinkedIn</span>
                 </a>
 
-                <!-- GitHub (Dark Gray/Black) -->
                 <a href="https://github.com/Jeruko10" target="_blank" rel="noopener noreferrer" 
                     class="flex items-center p-3 rounded-lg bg-gray-900 hover:bg-black transition-colors shadow-md">
                     <span class="text-white w-8 flex-shrink-0 text-xl text-center">
@@ -91,23 +78,19 @@
     </div>
 
     <script>
-        // Three.js setup for the animated rain background
         function setupBackground() {
             const container = document.getElementById('background-container');
             const width = window.innerWidth;
             const height = window.innerHeight;
 
-            // 1. Scene setup
             const scene = new THREE.Scene();
             const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
             camera.position.z = 1;
 
-            // 2. Renderer setup
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(width, height);
             container.appendChild(renderer.domElement);
 
-            // 3. Shader code (GLSL)
             const vertexShader = `
                 void main() {
                     gl_Position = vec4(position, 1.0);
@@ -118,7 +101,6 @@
                 uniform float u_time;
                 uniform vec2 u_resolution;
 
-                // Simple hash function for randomness (returns 0.0 to 1.0)
                 float hash21(vec2 p) {
                     p = fract(p * vec2(123.45, 678.90));
                     p += dot(p, p.yx + 19.19);
@@ -128,50 +110,36 @@
                 void main() {
                     vec2 uv = gl_FragCoord.xy / u_resolution.xy;
                     
-                    // Scale up the UVs. This defines the density of the rain grid.
                     vec2 p = uv * 30.0; 
                     
-                    // Animate the grid cell upwards over time
                     p.y += u_time * 0.7; 
 
-                    vec2 i = floor(p); // Integer grid coordinates (cell index)
-                    vec2 f = fract(p); // Fractional coordinates within the cell [0, 1]
+                    vec2 i = floor(p);
+                    vec2 f = fract(p);
 
-                    // Random value based on the cell position (i)
                     float r = hash21(i);
                     
-                    // Use the random value to offset the line position within the cell (f.x)
-                    float offset_x = r * 0.6; // X offset for the line in the cell [0.0 to 0.6]
+                    float offset_x = r * 0.6;
                     
-                    // Use another random value for line duration/fade (making some lines shorter/fainter)
-                    float duration = hash21(i * 1.3) * 0.8 + 0.2; // Random duration [0.2 to 1.0]
+                    float duration = hash21(i * 1.3) * 0.8 + 0.2;
 
-                    // Center the line relative to the X offset
                     float line_center = offset_x + 0.2; 
                     
-                    // Create a thin vertical streak (Gaussian/smoothstep)
-                    // smoothstep(edge1, edge2, x) returns 1.0 if x > edge2 and 0.0 if x < edge1, with smooth transitions
                     float rain_streak = smoothstep(0.02, 0.0, abs(f.x - line_center));
                     
-                    // Make the streak fall: it fades out towards the bottom of the cell (f.y near 1.0)
-                    // The duration randomly shortens the streak.
-                    float fall_fade = smoothstep(duration, duration + 0.2, f.y); // Fades from duration up to duration + 0.2
+                    float fall_fade = smoothstep(duration, duration + 0.2, f.y);
                     
-                    // Final rain effect (mix of the horizontal and vertical effects)
                     float final_rain = rain_streak * (1.0 - fall_fade);
                     
-                    // Color mixing (monochromatic)
-                    vec3 baseColor = vec3(0.08, 0.08, 0.08); // Dark grey background
-                    vec3 rainColor = vec3(0.9, 0.9, 0.9);    // Bright white streaks
+                    vec3 baseColor = vec3(0.08, 0.08, 0.08);
+                    vec3 rainColor = vec3(0.9, 0.9, 0.9);
 
-                    // Mix the colors
-                    vec3 finalColor = mix(baseColor, rainColor, final_rain * 1.5); // Multiplier for brightness
+                    vec3 finalColor = mix(baseColor, rainColor, final_rain * 1.5);
 
                     gl_FragColor = vec4(finalColor, 1.0);
                 }
             `;
 
-            // 4. Uniforms and Material
             const uniforms = {
                 u_time: { type: 'f', value: 0.0 },
                 u_resolution: { type: 'v2', value: new THREE.Vector2(width, height) }
@@ -184,24 +152,20 @@
                 transparent: false
             });
 
-            // 5. Geometry (A simple plane that covers the entire viewport)
             const geometry = new THREE.PlaneGeometry(2, 2);
             const mesh = new THREE.Mesh(geometry, material);
             scene.add(mesh);
 
-            // 6. Animation Loop
             const startTime = Date.now();
             function animate() {
                 requestAnimationFrame(animate);
 
-                // Update time uniform
                 const elapsedTime = (Date.now() - startTime) / 1000;
                 uniforms.u_time.value = elapsedTime;
 
                 renderer.render(scene, camera);
             }
             
-            // 7. Handle Resizing
             function onWindowResize() {
                 const newWidth = window.innerWidth;
                 const newHeight = window.innerHeight;
@@ -214,7 +178,6 @@
             animate();
         }
 
-        // Start the animation on window load.
         window.onload = function () {
             setupBackground();
         }
