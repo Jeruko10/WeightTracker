@@ -1,305 +1,233 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Jeruko — Portfolio</title>
-  <meta name="description" content="Portfolio minimalista de Jeruko — proyectos, sobre mí y contacto." />
-
-  <!-- Minimal, modern reset + CSS variables for easy theming -->
-  <style>
-    /* Base reset */
-    *,
-    *::before,
-    *::after { box-sizing: border-box; }
-    html, body { height: 100%; margin: 0; }
-    img { max-width: 100%; display: block; }
-
-    /* Theme variables */
-    :root{
-      --bg: #0f1720;
-      --card: #0e1622;
-      --muted: #94a3b8;
-      --text: #e6eef8;
-      --accent: #7dd3fc;
-      --glass: rgba(255,255,255,0.03);
-      --radius: 12px;
-      --max-width: 1100px;
-      --gap: 24px;
-      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
-      --sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-    }
-
-    /* Light theme (toggle via [data-theme="light"] on body) */
-    body[data-theme="light"] {
-      --bg: #f7fbff;
-      --card: #ffffff;
-      --muted: #6b7280;
-      --text: #0b1220;
-      --accent: #2563eb;
-      --glass: rgba(11,18,32,0.04);
-    }
-
-    body {
-      font-family: var(--sans);
-      background: linear-gradient(180deg,var(--bg), #08101a 120%);
-      color: var(--text);
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
-      padding: 40px 20px;
-      display: flex;
-      justify-content: center;
-    }
-
-    .container {
-      width: min(100%, var(--max-width));
-      display: grid;
-      grid-template-columns: 1fr 340px;
-      gap: var(--gap);
-      align-items: start;
-    }
-
-    /* Make it single-column on small screens */
-    @media (max-width: 880px){
-      .container { grid-template-columns: 1fr; }
-    }
-
-    header.site-header {
-      grid-column: 1 / -1;
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap: 16px;
-      margin-bottom: 8px;
-    }
-
-    .brand {
-      display:flex;
-      gap:12px;
-      align-items:center;
-      text-decoration:none;
-      color:inherit;
-    }
-    .avatar {
-      width:56px;height:56px;border-radius:12px;
-      background:linear-gradient(135deg,var(--accent),transparent);
-      display:flex;align-items:center;justify-content:center;
-      font-weight:700;font-family:var(--mono);
-      color:var(--bg);
-      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
-    }
-    h1 { font-size:18px;margin:0;letter-spacing:0.2px; }
-    p.lead { margin:0;color:var(--muted);font-size:14px; }
-
-    nav.top-nav { display:flex; gap:10px; align-items:center; }
-    .btn {
-      background:transparent; border:1px solid transparent; padding:8px 12px;
-      border-radius:10px; font-size:14px; cursor:pointer;
-    }
-    .btn.ghost { border-color: rgba(255,255,255,0.06); color:var(--text); }
-    .btn.flat { background:var(--accent); color:var(--bg); font-weight:600; }
-
-    main.card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), var(--glass));
-      border-radius: var(--radius);
-      padding: 26px;
-      box-shadow: 0 6px 24px rgba(2,6,23,0.6);
-    }
-
-    section.about { margin-bottom: 22px; }
-    h2.section-title { margin:0 0 12px 0; font-size:16px; }
-    .bio { color:var(--muted); line-height:1.5; font-size:15px; }
-
-    .projects {
-      display:grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-    }
-    @media (max-width:520px){ .projects { grid-template-columns: 1fr; } }
-
-    .project {
-      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
-      padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.02);
-    }
-    .project h3 { margin:0 0 6px 0; font-size:15px; }
-    .project p { margin:0;color:var(--muted);font-size:13px; }
-
-    aside.sidebar {
-      position:relative;
-      height:fit-content;
-      align-self:start;
-    }
-
-    .meta-card {
-      background: linear-gradient(180deg, rgba(255,255,255,0.02), var(--glass));
-      padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);
-      display:flex;flex-direction:column;gap:12px;
-    }
-    .meta-item { display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:14px; }
-    .contact {
-      display:flex;flex-direction:column; gap:8px;
-    }
-    a.link { color:var(--accent); text-decoration:none; font-weight:600; font-size:14px; }
-
-    footer.site-footer {
-      grid-column:1/-1;
-      margin-top:18px;
-      display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;
-    }
-
-    /* subtle hover effects */
-    .project:hover { transform: translateY(-4px); transition:transform 220ms ease; }
-    .btn:active { transform: translateY(1px); }
-    a.link:hover { text-decoration:underline; }
-
-    /* small utilities */
-    .muted { color:var(--muted); font-size:13px; }
-    .tag { font-size:12px; padding:6px 8px; border-radius:999px; background:rgba(255,255,255,0.02); }
-    .stack { display:flex; gap:6px; flex-wrap:wrap; }
-    .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joan Ruiz Berenguer</title>
+    <!-- Load Tailwind CSS and Three.js from CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        /* Custom font setup using the Inter font */
+        html { font-family: 'Inter', sans-serif; }
+        /* Ensure body takes full screen and background container covers everything */
+        body {
+            position: relative;
+            height: 100vh;
+            overflow: hidden; /* Hide scrollbars if content overflows */
+        }
+        /* Style for the canvas container */
+        #background-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0; /* Background layer */
+        }
+        /* Style for the main content card */
+        .profile-card-wrapper {
+            position: relative;
+            z-index: 10; /* Foreground layer */
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
 </head>
-<body data-theme="dark">
-  <div class="container" role="main">
-    <header class="site-header" aria-label="Header">
-      <a class="brand" href="#home">
-        <div class="avatar" aria-hidden="true">J</div>
-        <div>
-          <h1>Jeruko</h1>
-          <p class="lead">Game dev · Programmer · Creative tinkerer</p>
-        </div>
-      </a>
+<body class="bg-black text-white p-4"> <!-- Base background for no-js or initial load -->
 
-      <nav class="top-nav" role="navigation" aria-label="Main navigation">
-        <button class="btn ghost" id="themeToggle" title="Toggle theme">Toggle</button>
-        <a class="btn flat" href="#contact">Contact</a>
-      </nav>
-    </header>
+    <!-- Three.js Background Container -->
+    <div id="background-container"></div>
 
-    <!-- Main column -->
-    <main class="card" id="home">
-      <section class="about" aria-labelledby="aboutTitle">
-        <h2 class="section-title" id="aboutTitle">Hola — soy Jeruko</h2>
-        <p class="bio">
-          Soy desarrollador de videojuegos y programador. Aquí muestro algunos proyectos personales y trabajo colaborativo.
-          Este portfolio es minimalista, responsive y fácil de modificar. Sustituye los proyectos por los tuyos y personaliza colores.
-        </p>
-      </section>
+    <!-- Main Content Container: Centered Profile Card (Now wrapped to manage Z-index) -->
+    <div class="profile-card-wrapper">
+        <div class="w-full max-w-sm p-6 bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-2xl transition-all duration-300 hover:shadow-cyan-500/50">
 
-      <section class="work" aria-labelledby="workTitle">
-        <h2 class="section-title" id="workTitle">Proyectos</h2>
-        <div class="projects" id="projectsList">
-          <!-- Example projects; replace with your own -->
-          <article class="project" tabindex="0">
-            <h3>Project Aurora</h3>
-            <p>Experimental roguelike with grid movement and tense turn-based combat.</p>
-            <div class="stack muted" style="margin-top:10px;">
-              <span class="tag">Godot</span><span class="tag">C#</span><span class="tag">Design</span>
+            <!-- Profile Image Placeholder -->
+            <div class="mb-8">
+                <img 
+                    src="profile.jpg" 
+                    alt="Profile picture" 
+                    class="w-40 h-40 rounded-full object-cover mx-auto border-4 border-white shadow-lg"
+                    onerror="this.onerror=null; this.src='https://placehold.co/160x160/222222/ffffff?text=JR'"
+                >
             </div>
-          </article>
 
-          <article class="project" tabindex="0">
-            <h3>Milk Voyage</h3>
-            <p>A short narrative puzzle about a fly traveling through cups of different drinks.</p>
-            <div class="stack muted" style="margin-top:10px;">
-              <span class="tag">Prototype</span><span class="tag">Game Jam</span>
+            <!-- Name -->
+            <h1 class="text-3xl font-extrabold mb-2 tracking-wide text-center">
+                Joan Ruiz Berenguer
+            </h1>
+
+            <!-- Title/Short Description (Optional, but looks nice) -->
+            <p class="text-lg text-gray-300 mb-10 font-medium text-center">
+                Game Developer
+            </p>
+
+            <!-- Social/Contact Links (Order is: Phone, LinkedIn, Itch.io, GitHub) -->
+            <div class="space-y-4">
+                
+                <!-- Phone Number -->
+                <div class="flex items-center justify-center text-left">
+                    <!-- Icon color changed to match text color -->
+                    <span class="text-gray-200 w-8 flex-shrink-0">📞</span>
+                    <span class="ml-3 font-semibold text-gray-200">
+                        +34 658 82 67 20
+                    </span>
+                </div>
+
+                <!-- LinkedIn (Blue) -->
+                <a href="https://www.linkedin.com/in/jeruko/" target="_blank" rel="noopener noreferrer" 
+                    class="flex items-center p-3 rounded-lg bg-blue-700 hover:bg-blue-600 transition-colors shadow-md">
+                    <span class="text-white w-8 flex-shrink-0 text-xl text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.518-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                    </span>
+                    <span class="ml-4 flex-grow font-semibold text-center">LinkedIn</span>
+                </a>
+
+                <!-- GitHub (Dark Gray/Black) -->
+                <a href="https://github.com/Jeruko10" target="_blank" rel="noopener noreferrer" 
+                    class="flex items-center p-3 rounded-lg bg-gray-900 hover:bg-black transition-colors shadow-md">
+                    <span class="text-white w-8 flex-shrink-0 text-xl text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.082-.778.08-.766.08-.766 1.203.086 1.838 1.238 1.838 1.238 1.07 1.835 2.809 1.305 3.492.998.108-.778.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.468-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.045.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.652.242 2.873.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.2-6.088 8.2-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                    </span>
+                    <span class="ml-4 flex-grow font-semibold text-center">GitHub</span>
+                </a>
             </div>
-          </article>
-
-          <article class="project" tabindex="0">
-            <h3>Tooling — Build Scripts</h3>
-            <p>Small collection of build & automation scripts for indie teams.</p>
-            <div class="stack muted" style="margin-top:10px;">
-              <span class="tag">Node</span><span class="tag">CI</span>
-            </div>
-          </article>
-
-          <article class="project" tabindex="0">
-            <h3>Portfolio Engine</h3>
-            <p>Reusable component-based template for quick prototypes and showreels.</p>
-            <div class="stack muted" style="margin-top:10px;">
-              <span class="tag">HTML</span><span class="tag">CSS</span>
-            </div>
-          </article>
         </div>
-      </section>
+    </div>
 
-      <section class="contact-section" aria-labelledby="contactTitle" style="margin-top:18px;">
-        <h2 class="section-title" id="contactTitle">Contacto</h2>
-        <p class="muted">¿Quieres colaborar? Mándame un email o encuentra mis redes.</p>
-        <p style="margin-top:8px;">
-          <a class="link" href="mailto:jeruko@example.com">jeruko@example.com</a>
-        </p>
-      </section>
-    </main>
+    <script>
+        // Three.js setup for the animated rain background
+        function setupBackground() {
+            const container = document.getElementById('background-container');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
 
-    <!-- Sidebar column -->
-    <aside class="sidebar">
-      <div class="meta-card" aria-label="Profile meta">
-        <div style="display:flex;align-items:center;gap:12px;">
-          <div class="avatar" style="width:48px;height:48px;border-radius:10px;">J</div>
-          <div>
-            <div style="font-weight:700">Jeruko</div>
-            <div class="muted">Indie game dev</div>
-          </div>
-        </div>
+            // 1. Scene setup
+            const scene = new THREE.Scene();
+            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+            camera.position.z = 1;
 
-        <div class="meta-item">
-          <div class="muted">Location</div>
-          <div>Spain</div>
-        </div>
+            // 2. Renderer setup
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(width, height);
+            container.appendChild(renderer.domElement);
 
-        <div class="meta-item">
-          <div class="muted">Availability</div>
-          <div>Open to collabs</div>
-        </div>
+            // 3. Shader code (GLSL)
+            const vertexShader = `
+                void main() {
+                    gl_Position = vec4(position, 1.0);
+                }
+            `;
 
-        <div style="height:1px;background:rgba(255,255,255,0.02);border-radius:6px;margin:6px 0;"></div>
+            const fragmentShader = `
+                uniform float u_time;
+                uniform vec2 u_resolution;
 
-        <div class="contact">
-          <a class="link" href="#projectsList">View projects</a>
-          <a class="link" href="https://github.com/jeruko" target="_blank" rel="noopener">GitHub</a>
-          <a class="link" href="https://twitter.com/jeruko" target="_blank" rel="noopener">Twitter</a>
-        </div>
-      </div>
-    </aside>
+                // Simple hash function for randomness (returns 0.0 to 1.0)
+                float hash21(vec2 p) {
+                    p = fract(p * vec2(123.45, 678.90));
+                    p += dot(p, p.yx + 19.19);
+                    return fract(p.x * p.y);
+                }
 
-    <footer class="site-footer" role="contentinfo">
-      <div>© <strong>Jeruko</strong> · {2025}</div>
-      <div class="muted">Built with ✦ minimal HTML</div>
-    </footer>
-  </div>
+                void main() {
+                    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+                    
+                    // Scale up the UVs. This defines the density of the rain grid.
+                    vec2 p = uv * 30.0; 
+                    
+                    // Animate the grid cell upwards over time
+                    p.y += u_time * 0.7; 
 
-  <!-- Small interactive scripts (theme toggle + smooth scroll) -->
-  <script>
-    // Toggle theme between dark and light. Comments in English.
-    (function(){
-      const body = document.body;
-      const toggle = document.getElementById('themeToggle');
+                    vec2 i = floor(p); // Integer grid coordinates (cell index)
+                    vec2 f = fract(p); // Fractional coordinates within the cell [0, 1]
 
-      // Use localStorage for a simple persistent theme preference
-      const saved = localStorage.getItem('theme');
-      if (saved) body.setAttribute('data-theme', saved);
+                    // Random value based on the cell position (i)
+                    float r = hash21(i);
+                    
+                    // Use the random value to offset the line position within the cell (f.x)
+                    float offset_x = r * 0.6; // X offset for the line in the cell [0.0 to 0.6]
+                    
+                    // Use another random value for line duration/fade (making some lines shorter/fainter)
+                    float duration = hash21(i * 1.3) * 0.8 + 0.2; // Random duration [0.2 to 1.0]
 
-      toggle.addEventListener('click', () => {
-        const current = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-        body.setAttribute('data-theme', current);
-        localStorage.setItem('theme', current);
-      });
+                    // Center the line relative to the X offset
+                    float line_center = offset_x + 0.2; 
+                    
+                    // Create a thin vertical streak (Gaussian/smoothstep)
+                    // smoothstep(edge1, edge2, x) returns 1.0 if x > edge2 and 0.0 if x < edge1, with smooth transitions
+                    float rain_streak = smoothstep(0.02, 0.0, abs(f.x - line_center));
+                    
+                    // Make the streak fall: it fades out towards the bottom of the cell (f.y near 1.0)
+                    // The duration randomly shortens the streak.
+                    float fall_fade = smoothstep(duration, duration + 0.2, f.y); // Fades from duration up to duration + 0.2
+                    
+                    // Final rain effect (mix of the horizontal and vertical effects)
+                    float final_rain = rain_streak * (1.0 - fall_fade);
+                    
+                    // Color mixing (monochromatic)
+                    vec3 baseColor = vec3(0.08, 0.08, 0.08); // Dark grey background
+                    vec3 rainColor = vec3(0.9, 0.9, 0.9);    // Bright white streaks
 
-      // Smooth scroll for internal links
-      document.querySelectorAll('a[href^="#"]').forEach(a => {
-        a.addEventListener('click', e => {
-          const href = a.getAttribute('href');
-          if (href === '#' || href === '#!') return;
-          const target = document.querySelector(href);
-          if (target) {
-            e.preventDefault();
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          }
-        });
-      });
-    })();
-  </script>
+                    // Mix the colors
+                    vec3 finalColor = mix(baseColor, rainColor, final_rain * 1.5); // Multiplier for brightness
+
+                    gl_FragColor = vec4(finalColor, 1.0);
+                }
+            `;
+
+            // 4. Uniforms and Material
+            const uniforms = {
+                u_time: { type: 'f', value: 0.0 },
+                u_resolution: { type: 'v2', value: new THREE.Vector2(width, height) }
+            };
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: uniforms,
+                vertexShader: vertexShader,
+                fragmentShader: fragmentShader,
+                transparent: false
+            });
+
+            // 5. Geometry (A simple plane that covers the entire viewport)
+            const geometry = new THREE.PlaneGeometry(2, 2);
+            const mesh = new THREE.Mesh(geometry, material);
+            scene.add(mesh);
+
+            // 6. Animation Loop
+            const startTime = Date.now();
+            function animate() {
+                requestAnimationFrame(animate);
+
+                // Update time uniform
+                const elapsedTime = (Date.now() - startTime) / 1000;
+                uniforms.u_time.value = elapsedTime;
+
+                renderer.render(scene, camera);
+            }
+            
+            // 7. Handle Resizing
+            function onWindowResize() {
+                const newWidth = window.innerWidth;
+                const newHeight = window.innerHeight;
+
+                renderer.setSize(newWidth, newHeight);
+                uniforms.u_resolution.value.set(newWidth, newHeight);
+            }
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        // Start the animation on window load.
+        window.onload = function () {
+            setupBackground();
+        }
+    </script>
+
 </body>
 </html>
