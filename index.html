@@ -1,11 +1,305 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeruko Page</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Jeruko — Portfolio</title>
+  <meta name="description" content="Portfolio minimalista de Jeruko — proyectos, sobre mí y contacto." />
+
+  <!-- Minimal, modern reset + CSS variables for easy theming -->
+  <style>
+    /* Base reset */
+    *,
+    *::before,
+    *::after { box-sizing: border-box; }
+    html, body { height: 100%; margin: 0; }
+    img { max-width: 100%; display: block; }
+
+    /* Theme variables */
+    :root{
+      --bg: #0f1720;
+      --card: #0e1622;
+      --muted: #94a3b8;
+      --text: #e6eef8;
+      --accent: #7dd3fc;
+      --glass: rgba(255,255,255,0.03);
+      --radius: 12px;
+      --max-width: 1100px;
+      --gap: 24px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+      --sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    /* Light theme (toggle via [data-theme="light"] on body) */
+    body[data-theme="light"] {
+      --bg: #f7fbff;
+      --card: #ffffff;
+      --muted: #6b7280;
+      --text: #0b1220;
+      --accent: #2563eb;
+      --glass: rgba(11,18,32,0.04);
+    }
+
+    body {
+      font-family: var(--sans);
+      background: linear-gradient(180deg,var(--bg), #08101a 120%);
+      color: var(--text);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .container {
+      width: min(100%, var(--max-width));
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: var(--gap);
+      align-items: start;
+    }
+
+    /* Make it single-column on small screens */
+    @media (max-width: 880px){
+      .container { grid-template-columns: 1fr; }
+    }
+
+    header.site-header {
+      grid-column: 1 / -1;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+
+    .brand {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      text-decoration:none;
+      color:inherit;
+    }
+    .avatar {
+      width:56px;height:56px;border-radius:12px;
+      background:linear-gradient(135deg,var(--accent),transparent);
+      display:flex;align-items:center;justify-content:center;
+      font-weight:700;font-family:var(--mono);
+      color:var(--bg);
+      box-shadow: 0 6px 18px rgba(2,6,23,0.6);
+    }
+    h1 { font-size:18px;margin:0;letter-spacing:0.2px; }
+    p.lead { margin:0;color:var(--muted);font-size:14px; }
+
+    nav.top-nav { display:flex; gap:10px; align-items:center; }
+    .btn {
+      background:transparent; border:1px solid transparent; padding:8px 12px;
+      border-radius:10px; font-size:14px; cursor:pointer;
+    }
+    .btn.ghost { border-color: rgba(255,255,255,0.06); color:var(--text); }
+    .btn.flat { background:var(--accent); color:var(--bg); font-weight:600; }
+
+    main.card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), var(--glass));
+      border-radius: var(--radius);
+      padding: 26px;
+      box-shadow: 0 6px 24px rgba(2,6,23,0.6);
+    }
+
+    section.about { margin-bottom: 22px; }
+    h2.section-title { margin:0 0 12px 0; font-size:16px; }
+    .bio { color:var(--muted); line-height:1.5; font-size:15px; }
+
+    .projects {
+      display:grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    @media (max-width:520px){ .projects { grid-template-columns: 1fr; } }
+
+    .project {
+      background: linear-gradient(180deg, rgba(255,255,255,0.01), rgba(255,255,255,0.02));
+      padding:14px; border-radius:10px; border:1px solid rgba(255,255,255,0.02);
+    }
+    .project h3 { margin:0 0 6px 0; font-size:15px; }
+    .project p { margin:0;color:var(--muted);font-size:13px; }
+
+    aside.sidebar {
+      position:relative;
+      height:fit-content;
+      align-self:start;
+    }
+
+    .meta-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), var(--glass));
+      padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.02);
+      display:flex;flex-direction:column;gap:12px;
+    }
+    .meta-item { display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:14px; }
+    .contact {
+      display:flex;flex-direction:column; gap:8px;
+    }
+    a.link { color:var(--accent); text-decoration:none; font-weight:600; font-size:14px; }
+
+    footer.site-footer {
+      grid-column:1/-1;
+      margin-top:18px;
+      display:flex;justify-content:space-between;align-items:center;color:var(--muted);font-size:13px;
+    }
+
+    /* subtle hover effects */
+    .project:hover { transform: translateY(-4px); transition:transform 220ms ease; }
+    .btn:active { transform: translateY(1px); }
+    a.link:hover { text-decoration:underline; }
+
+    /* small utilities */
+    .muted { color:var(--muted); font-size:13px; }
+    .tag { font-size:12px; padding:6px 8px; border-radius:999px; background:rgba(255,255,255,0.02); }
+    .stack { display:flex; gap:6px; flex-wrap:wrap; }
+    .sr-only { position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0; }
+  </style>
 </head>
-<body>
-    <h1>Hi There!</h1>
+<body data-theme="dark">
+  <div class="container" role="main">
+    <header class="site-header" aria-label="Header">
+      <a class="brand" href="#home">
+        <div class="avatar" aria-hidden="true">J</div>
+        <div>
+          <h1>Jeruko</h1>
+          <p class="lead">Game dev · Programmer · Creative tinkerer</p>
+        </div>
+      </a>
+
+      <nav class="top-nav" role="navigation" aria-label="Main navigation">
+        <button class="btn ghost" id="themeToggle" title="Toggle theme">Toggle</button>
+        <a class="btn flat" href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <!-- Main column -->
+    <main class="card" id="home">
+      <section class="about" aria-labelledby="aboutTitle">
+        <h2 class="section-title" id="aboutTitle">Hola — soy Jeruko</h2>
+        <p class="bio">
+          Soy desarrollador de videojuegos y programador. Aquí muestro algunos proyectos personales y trabajo colaborativo.
+          Este portfolio es minimalista, responsive y fácil de modificar. Sustituye los proyectos por los tuyos y personaliza colores.
+        </p>
+      </section>
+
+      <section class="work" aria-labelledby="workTitle">
+        <h2 class="section-title" id="workTitle">Proyectos</h2>
+        <div class="projects" id="projectsList">
+          <!-- Example projects; replace with your own -->
+          <article class="project" tabindex="0">
+            <h3>Project Aurora</h3>
+            <p>Experimental roguelike with grid movement and tense turn-based combat.</p>
+            <div class="stack muted" style="margin-top:10px;">
+              <span class="tag">Godot</span><span class="tag">C#</span><span class="tag">Design</span>
+            </div>
+          </article>
+
+          <article class="project" tabindex="0">
+            <h3>Milk Voyage</h3>
+            <p>A short narrative puzzle about a fly traveling through cups of different drinks.</p>
+            <div class="stack muted" style="margin-top:10px;">
+              <span class="tag">Prototype</span><span class="tag">Game Jam</span>
+            </div>
+          </article>
+
+          <article class="project" tabindex="0">
+            <h3>Tooling — Build Scripts</h3>
+            <p>Small collection of build & automation scripts for indie teams.</p>
+            <div class="stack muted" style="margin-top:10px;">
+              <span class="tag">Node</span><span class="tag">CI</span>
+            </div>
+          </article>
+
+          <article class="project" tabindex="0">
+            <h3>Portfolio Engine</h3>
+            <p>Reusable component-based template for quick prototypes and showreels.</p>
+            <div class="stack muted" style="margin-top:10px;">
+              <span class="tag">HTML</span><span class="tag">CSS</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="contact-section" aria-labelledby="contactTitle" style="margin-top:18px;">
+        <h2 class="section-title" id="contactTitle">Contacto</h2>
+        <p class="muted">¿Quieres colaborar? Mándame un email o encuentra mis redes.</p>
+        <p style="margin-top:8px;">
+          <a class="link" href="mailto:jeruko@example.com">jeruko@example.com</a>
+        </p>
+      </section>
+    </main>
+
+    <!-- Sidebar column -->
+    <aside class="sidebar">
+      <div class="meta-card" aria-label="Profile meta">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="avatar" style="width:48px;height:48px;border-radius:10px;">J</div>
+          <div>
+            <div style="font-weight:700">Jeruko</div>
+            <div class="muted">Indie game dev</div>
+          </div>
+        </div>
+
+        <div class="meta-item">
+          <div class="muted">Location</div>
+          <div>Spain</div>
+        </div>
+
+        <div class="meta-item">
+          <div class="muted">Availability</div>
+          <div>Open to collabs</div>
+        </div>
+
+        <div style="height:1px;background:rgba(255,255,255,0.02);border-radius:6px;margin:6px 0;"></div>
+
+        <div class="contact">
+          <a class="link" href="#projectsList">View projects</a>
+          <a class="link" href="https://github.com/jeruko" target="_blank" rel="noopener">GitHub</a>
+          <a class="link" href="https://twitter.com/jeruko" target="_blank" rel="noopener">Twitter</a>
+        </div>
+      </div>
+    </aside>
+
+    <footer class="site-footer" role="contentinfo">
+      <div>© <strong>Jeruko</strong> · {2025}</div>
+      <div class="muted">Built with ✦ minimal HTML</div>
+    </footer>
+  </div>
+
+  <!-- Small interactive scripts (theme toggle + smooth scroll) -->
+  <script>
+    // Toggle theme between dark and light. Comments in English.
+    (function(){
+      const body = document.body;
+      const toggle = document.getElementById('themeToggle');
+
+      // Use localStorage for a simple persistent theme preference
+      const saved = localStorage.getItem('theme');
+      if (saved) body.setAttribute('data-theme', saved);
+
+      toggle.addEventListener('click', () => {
+        const current = body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+        body.setAttribute('data-theme', current);
+        localStorage.setItem('theme', current);
+      });
+
+      // Smooth scroll for internal links
+      document.querySelectorAll('a[href^="#"]').forEach(a => {
+        a.addEventListener('click', e => {
+          const href = a.getAttribute('href');
+          if (href === '#' || href === '#!') return;
+          const target = document.querySelector(href);
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>
