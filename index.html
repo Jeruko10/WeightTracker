@@ -3,185 +3,112 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeruko's Portfolio</title>
+    <title>Jugar historias de otros | Transmedia en España</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Lexend:wght@300;600&display=swap" rel="stylesheet">
     <style>
-        html { font-family: 'Inter', sans-serif; }
-        body {
-            position: relative;
-            height: 100vh;
-            overflow: hidden;
-        }
-        #background-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-        }
-        .profile-card-wrapper {
-            position: relative;
-            z-index: 10;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #f1f5f9; }
+        .heading-font { font-family: 'Lexend', sans-serif; }
+        .gradient-text { background: linear-gradient(90deg, #38bdf8, #818cf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .article-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
-<body class="bg-black text-white p-4">
+<body class="antialiased">
 
-    <div id="background-container"></div>
-
-    <div class="profile-card-wrapper">
-        <div class="w-full max-w-sm p-6 bg-gray-800/50 backdrop-blur-sm rounded-xl shadow-2xl transition-all duration-300 hover:shadow-cyan-500/50">
-
-            <div class="mb-8">
-                <img 
-                    src="profile.jpg" 
-                    alt="Profile picture" 
-                    class="w-40 h-40 rounded-full object-cover mx-auto border-4 border-white shadow-lg"
-                    onerror="this.onerror=null; this.src='https://placehold.co/160x160/222222/ffffff?text=JR'"
-                >
-            </div>
-
-            <h1 class="text-3xl font-extrabold mb-2 tracking-wide text-center">
-                Joan Ruiz Berenguer
+    <header class="relative h-[60vh] flex items-center justify-center overflow-hidden">
+        <div class="absolute inset-0 z-0">
+            <img src="https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=2070" class="w-full h-full object-cover opacity-30" alt="Gaming Background">
+            <div class="absolute inset-0 bg-gradient-to-t from-[#0f172a] via-transparent to-transparent"></div>
+        </div>
+        
+        <div class="relative z-10 text-center px-4 max-w-4xl">
+            <span class="inline-block px-3 py-1 mb-4 text-xs font-bold tracking-widest text-blue-400 uppercase border border-blue-400 rounded">Especial Editorial</span>
+            <h1 class="heading-font text-5xl md:text-7xl font-black mb-6 leading-tight">
+                [cite_start]Jugar historias de <span class="gradient-text">otros</span> [cite: 1]
             </h1>
+            <p class="text-xl md:text-2xl font-light text-slate-300 italic">
+                [cite_start]Por qué España necesita sus propios universos transmedia [cite: 2]
+            </p>
+        </div>
+    </header>
 
-            <p class="text-lg text-gray-300 mb-10 font-medium text-center">
-                Game Developer
+    <main class="max-w-3xl mx-auto px-6 py-16">
+        
+        <section class="mb-12">
+            <p class="text-xl leading-relaxed mb-8 text-slate-200">
+                [cite_start]En España casi todo el mundo sabe quién es Joel de <strong>The Last of Us</strong> o qué es <strong>Fortnite</strong>[cite: 3]. 
+                Ahora bien, si nos piden nombrar tres sagas españolas que también existan como cómic, serie o algo parecido... 
+                [cite_start]la cosa se complica bastante[cite: 4].
+            </p>
+            
+            <div class="article-card p-6 rounded-2xl mb-8">
+                <p class="mb-4">
+                    [cite_start]Nos hemos acostumbrado a vivir rodeados de universos que vienen de fuera: los jugamos, los vemos en streaming, los comentamos en redes y hasta escuchamos sus bandas sonoras en Spotify[cite: 5]. 
+                    [cite_start]Mientras tanto, las historias creadas aquí rara vez dan ese salto a otros formatos[cite: 6].
+                </p>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16 border-l-4 border-blue-500 pl-6 italic text-slate-400">
+            <div>
+                [cite_start]España es un mercado muy fuerte en consumo de videojuegos, pero la mayoría de los estudios nacionales son pequeños y dependen de editoras internacionales[cite: 13, 14].
+            </div>
+            <div>
+                [cite_start]Consumimos muchísimo, pero creamos universos que casi nunca llegan a expandirse más allá del propio juego[cite: 14, 15].
+            </div>
+        </section>
+
+        <section class="mb-16">
+            <h2 class="heading-font text-3xl font-bold mb-6">El fenómeno global</h2>
+            <p class="mb-6">
+                [cite_start]Que en España triunfen <strong>Arcane</strong> [cite: 7][cite_start], las series de <strong>The Witcher</strong> [cite: 10] [cite_start]o los conciertos virtuales de <strong>Fortnite</strong> demuestra que el público está más que preparado para experiencias transmedia complejas[cite: 17]. 
+                [cite_start]Pasamos sin problema del juego a la serie, del directo de Twitch al cómic o al merchandising[cite: 18].
+            </p>
+            
+            <blockquote class="bg-slate-800 p-8 rounded-xl border-t-2 border-indigo-500 mb-8">
+                <p class="text-lg italic">
+                    [cite_start]"League of Legends, Cyberpunk 2077 o The Witcher no son solo videojuegos: son cómics, novelas, música, merchandising, e-sports y eventos en directo"[cite: 20].
+                </p>
+            </blockquote>
+
+            <p>
+                [cite_start]El problema aparece cuando miramos hacia dentro y vemos que casi nunca somos nosotros quienes ponemos en circulación esas IP que lo ocupan todo[cite: 19]. 
+                [cite_start]Muchos proyectos funcionan como disparos únicos: salen, reciben buenas críticas y desaparecen del radar sin nada que mantenga vivo ese mundo[cite: 22].
+            </p>
+        </section>
+
+        <section class="mb-16">
+            <h2 class="heading-font text-3xl font-bold mb-6 text-blue-400">Un cambio de enfoque</h2>
+            <p class="mb-6">
+                [cite_start]No se trata de soñar con "la próxima The Last of Us de HBO", sino de abrir pequeñas puertas para que el proyecto siga respirando[cite: 25]. 
+                [cite_start]Se podría plantear desde el inicio un webcómic, un corto animado o un concierto de la banda sonora[cite: 24].
             </p>
 
-            <div class="space-y-4">
-                
-                <a href="https://www.linkedin.com/in/jeruko/" target="_blank" rel="noopener noreferrer" 
-                    class="flex items-center p-3 rounded-lg bg-blue-700 hover:bg-blue-600 transition-colors shadow-md">
-                    <span class="text-white w-8 flex-shrink-0 text-xl text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.518-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
-                    </span>
-                    <span class="ml-4 flex-grow font-semibold text-center">LinkedIn</span>
-                </a>
-
-                <a href="https://github.com/Jeruko10" target="_blank" rel="noopener noreferrer" 
-                    class="flex items-center p-3 rounded-lg bg-gray-900 hover:bg-black transition-colors shadow-md">
-                    <span class="text-white w-8 flex-shrink-0 text-xl text-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.082-.778.08-.766.08-.766 1.203.086 1.838 1.238 1.838 1.238 1.07 1.835 2.809 1.305 3.492.998.108-.778.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.468-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.045.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.652.242 2.873.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.2-6.088 8.2-11.386 0-6.627-5.373-12-12-12z"/></svg>
-                    </span>
-                    <span class="ml-4 flex-grow font-semibold text-center">GitHub</span>
-                </a>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="p-6 bg-slate-900 rounded-lg border border-slate-700">
+                    <h4 class="font-bold text-white mb-2 underline decoration-blue-500">Educación</h4>
+                    [cite_start]<p class="text-sm text-slate-400">Las universidades enseñan a programar, pero no siempre a pensar una obra como una marca cultural[cite: 27].</p>
+                </div>
+                <div class="p-6 bg-slate-900 rounded-lg border border-slate-700">
+                    <h4 class="font-bold text-white mb-2 underline decoration-indigo-500">Políticas</h4>
+                    [cite_start]<p class="text-sm text-slate-400">Las ayudas públicas suelen centrarse en la producción, pero rara vez en la expansión de la IP[cite: 30].</p>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
 
-    <script>
-        function setupBackground() {
-            const container = document.getElementById('background-container');
-            const width = window.innerWidth;
-            const height = window.innerHeight;
+        <section class="text-center bg-gradient-to-br from-indigo-900/40 to-blue-900/40 p-12 rounded-3xl border border-white/10">
+            <h3 class="heading-font text-3xl font-black mb-4">El Reto Final</h3>
+            <p class="text-lg text-slate-300 mb-8">
+                [cite_start]Si otros países crean universos que viajan de la consola al cine, no hay razón para que España no pueda jugar esa partida con nuestros personajes y ciudades[cite: 34]. 
+                [cite_start]Lo que está en juego es conseguir que se escuche algo que suene a nosotros[cite: 35].
+            </p>
+        </section>
 
-            const scene = new THREE.Scene();
-            const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
-            camera.position.z = 1;
+    </main>
 
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(width, height);
-            container.appendChild(renderer.domElement);
-
-            const vertexShader = `
-                void main() {
-                    gl_Position = vec4(position, 1.0);
-                }
-            `;
-
-            const fragmentShader = `
-                uniform float u_time;
-                uniform vec2 u_resolution;
-
-                float hash21(vec2 p) {
-                    p = fract(p * vec2(123.45, 678.90));
-                    p += dot(p, p.yx + 19.19);
-                    return fract(p.x * p.y);
-                }
-
-                void main() {
-                    vec2 uv = gl_FragCoord.xy / u_resolution.xy;
-                    
-                    vec2 p = uv * 30.0; 
-                    
-                    p.y += u_time * 0.7; 
-
-                    vec2 i = floor(p);
-                    vec2 f = fract(p);
-
-                    float r = hash21(i);
-                    
-                    float offset_x = r * 0.6;
-                    
-                    float duration = hash21(i * 1.3) * 0.8 + 0.2;
-
-                    float line_center = offset_x + 0.2; 
-                    
-                    float rain_streak = smoothstep(0.02, 0.0, abs(f.x - line_center));
-                    
-                    float fall_fade = smoothstep(duration, duration + 0.2, f.y);
-                    
-                    float final_rain = rain_streak * (1.0 - fall_fade);
-                    
-                    vec3 baseColor = vec3(0.08, 0.08, 0.08);
-                    vec3 rainColor = vec3(0.9, 0.9, 0.9);
-
-                    vec3 finalColor = mix(baseColor, rainColor, final_rain * 1.5);
-
-                    gl_FragColor = vec4(finalColor, 1.0);
-                }
-            `;
-
-            const uniforms = {
-                u_time: { type: 'f', value: 0.0 },
-                u_resolution: { type: 'v2', value: new THREE.Vector2(width, height) }
-            };
-
-            const material = new THREE.ShaderMaterial({
-                uniforms: uniforms,
-                vertexShader: vertexShader,
-                fragmentShader: fragmentShader,
-                transparent: false
-            });
-
-            const geometry = new THREE.PlaneGeometry(2, 2);
-            const mesh = new THREE.Mesh(geometry, material);
-            scene.add(mesh);
-
-            const startTime = Date.now();
-            function animate() {
-                requestAnimationFrame(animate);
-
-                const elapsedTime = (Date.now() - startTime) / 1000;
-                uniforms.u_time.value = elapsedTime;
-
-                renderer.render(scene, camera);
-            }
-            
-            function onWindowResize() {
-                const newWidth = window.innerWidth;
-                const newHeight = window.innerHeight;
-
-                renderer.setSize(newWidth, newHeight);
-                uniforms.u_resolution.value.set(newWidth, newHeight);
-            }
-
-            window.addEventListener('resize', onWindowResize, false);
-            animate();
-        }
-
-        window.onload = function () {
-            setupBackground();
-        }
-    </script>
+    <footer class="py-12 border-t border-slate-800 text-center text-slate-500 text-sm">
+        <p>© 2026 Estructura de la Comunicación - Basado en el PDF proporcionado.</p>
+    </footer>
 
 </body>
 </html>
