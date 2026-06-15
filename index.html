@@ -1,103 +1,745 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jugar historias de otros: el reto transmedia en España - MeriStation</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Lora:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Roboto', sans-serif; background-color: #f4f4f4; color: #1a1a1a; }
-        .article-body { font-family: 'Lora', serif; font-size: 1.2rem; line-height: 1.8; color: #333; }
-        .meris-red { color: #e6192e; }
-        .meris-bg-red { background-color: #e6192e; }
-        .sidebar-title { border-bottom: 3px solid #e6192e; padding-bottom: 5px; }
-        /* Reducción del 40% del tamaño (es decir, al 60% del ancho) */
-        .article-img { width: 60%; margin-left: auto; margin-right: auto; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#1c1b1f">
+<title>Weight Tracker</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Google Sans',Roboto,system-ui,sans-serif;background:#1c1b1f;color:#e6e1e5;min-height:100vh}
+.app{max-width:430px;margin:0 auto;padding:0 0 2rem}
+.header{background:#1c1b1f;padding:20px 20px 0}
+.header-titles{display:flex;align-items:center;gap:12px;padding-bottom:16px}
+h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
+.divider{width:1.5px;height:28px;background:#3a3540;border-radius:2px;flex-shrink:0;display:none}
+#cycle-label{font-size:22px;font-weight:500;display:none}
+.tabs{display:flex}
+.tab{flex:1;text-align:center;font-size:13px;font-weight:500;padding:10px 0;color:#938f99;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:#d0bcff;border-bottom:2px solid #d0bcff}
+.section{padding:16px;display:none}
+.section.active{display:block}
+.card{background:#2b2930;border-radius:16px;padding:16px;margin-bottom:12px}
+.card-title{font-size:12px;font-weight:500;color:#938f99;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:#2b2930;border-radius:16px;padding:12px 6px;text-align:center}
+.stat-label{font-size:10px;color:#938f99;margin-bottom:4px;font-weight:500}
+.stat-val{font-size:15px;font-weight:500;color:#e6e1e5}
+.stat-val.ac{color:#d0bcff}
+.goal-banner{background:#2b2930;border-radius:16px;padding:16px;margin-bottom:12px}
+.banner-title{font-size:12px;color:#938f99;font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.pace-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.chip{font-size:13px;font-weight:500;padding:5px 14px;border-radius:20px}
+.chip.on{background:#1a3a2a;color:#6fcf97}
+.chip.fast{background:#3a1a1a;color:#eb5757}
+.chip.slow{background:#3a2a0a;color:#f2c94c}
+.chip.none{background:#3a3540;color:#938f99}
+.pace-desc{font-size:12px;color:#938f99}
+.proj{font-size:12px;color:#938f99;margin-bottom:10px}
+.proj b{color:#e6e1e5}
+.bars{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.bar-row{display:flex;flex-direction:column;gap:3px}
+.bar-labels{display:flex;justify-content:space-between;font-size:11px;color:#938f99}
+.bar-track{height:6px;background:#3a3540;border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .4s}
+.teal{background:#6fcf97}
+.purple{background:#d0bcff}
+.bar-sub{font-size:10px;color:#938f99;margin-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:#938f99}
+.leg-item{display:flex;align-items:center;gap:6px}
+.leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
+.leg-dash{width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block}
+.chart-wrap{position:relative;height:190px}
+input[type=date],input[type=number]{background:#3a3540;border:1.5px solid transparent;border-radius:10px;color:#e6e1e5;font-size:15px;padding:10px 12px;width:100%;outline:none;font-family:inherit;transition:border-color .15s;color-scheme:dark}
+input:focus{border-color:#d0bcff;background:#45404d}
+.row2{display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:10px}
+.btn{width:100%;border:none;border-radius:10px;font-size:15px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit;transition:background .15s}
+.btn.primary{background:#d0bcff;color:#381e72}
+.btn.primary:hover{background:#e8def8}
+.btn.secondary{background:#3a3540;color:#e6e1e5;font-weight:500;margin-top:8px}
+.btn.secondary:hover{background:#45404d}
+.btn.google{background:#fff;color:#1c1b1f;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px}
+.btn.google:hover{background:#f0f0f0}
+.err{color:#eb5757;font-size:12px;min-height:16px;margin-top:6px}
+.field-label{font-size:12px;color:#938f99;margin-bottom:6px;font-weight:500}
+.goal-form{display:flex;flex-direction:column;gap:10px}
+.entry-list{display:flex;flex-direction:column}
+.entry{display:flex;align-items:center;justify-content:space-between;padding:11px 8px;border-bottom:1px solid #3a3540}
+.entry:last-of-type{border-bottom:none}
+.edate{font-size:13px;color:#938f99}
+.ewt{font-size:15px;font-weight:500}
+.ebtn{background:none;border:none;color:#938f99;cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;font-family:inherit}
+.ebtn:hover{background:#3a1a1a;color:#eb5757}
+.ebtn.edit-btn:hover{background:#2b3a2b;color:#6fcf97}
+.edit-row{display:none;padding:8px 4px 10px;border-bottom:1px solid #3a3540;gap:8px;align-items:center;flex-wrap:wrap}
+.edit-row input{max-width:100px}
+.edit-row .btn{padding:8px 14px;font-size:13px;width:auto}
+.edit-row .btn.secondary{margin:0}
+.empty{color:#938f99;font-size:14px;text-align:center;padding:2rem 0}
+.wtbl{width:100%;border-collapse:collapse;font-size:13px}
+.wtbl th{text-align:left;color:#938f99;font-weight:500;padding:4px 6px;border-bottom:1px solid #3a3540}
+.wtbl td{padding:7px 6px;border-bottom:1px solid #3a3540;color:#e6e1e5}
+.wtbl tr:last-child td{border-bottom:none}
+.wtbl td:last-child{text-align:right;color:#938f99;font-size:12px}
+.past-goal{display:flex;justify-content:space-between;align-items:center;padding:9px 4px;border-bottom:1px solid #3a3540}
+.past-goal:last-child{border-bottom:none}
+/* login screen */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:24px}
+#login-screen h2{font-size:24px;font-weight:500;color:#e6e1e5}
+#login-screen p{font-size:14px;color:#938f99;text-align:center;max-width:280px}
+/* user bar */
+.user-bar{display:flex;align-items:center;justify-content:space-between;padding:0 20px 12px}
+.user-info{display:flex;align-items:center;gap:8px}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:#3a3540;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#d0bcff;overflow:hidden}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.user-name{font-size:13px;color:#938f99}
+.signout-btn{background:none;border:none;color:#938f99;font-size:12px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px}
+.signout-btn:hover{background:#3a3540;color:#e6e1e5}
+.sync-indicator{font-size:11px;color:#938f99;padding:0 20px 8px;text-align:right}
+.sync-indicator.saving{color:#f2c94c}
+.sync-indicator.saved{color:#6fcf97}
+</style>
 </head>
 <body>
 
-    <div class="w-full h-1 meris-bg-red"></div>
-    <nav class="bg-white border-b border-gray-200 py-4 px-6 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex justify-between items-center">
-            <span class="text-2xl font-black italic uppercase"><span class="meris-red">MERI</span>STATION</span>
-            <div class="hidden md:flex space-x-6 text-xs font-bold uppercase text-gray-600 tracking-wider">
-                <a href="#">Noticias</a><a href="#">Análisis</a><a href="#">Guías</a><a href="#">Vídeos</a><a href="#">PC</a><a href="#">PS5</a>
-            </div>
+<!-- LOGIN -->
+<div id="login-screen" style="display:none">
+  <h2>WEIGHT TRACKER</h2>
+  <p>Sign in to sync your data across devices</p>
+  <button class="btn google" id="btn-google-sign-in" style="max-width:280px">
+    <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z"/><path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.964 10.707A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/><path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 6.293C4.672 4.166 6.656 3.58 9 3.58z"/></svg>
+    Sign in with Google
+  </button>
+</div>
+
+<!-- APP -->
+<div id="app-screen" style="display:none">
+  <div class="app">
+    <div class="header">
+      <div class="header-titles">
+        <h1>WEIGHT TRACKER</h1>
+        <div class="divider" id="divider"></div>
+        <span id="cycle-label"></span>
+      </div>
+      <div class="tabs">
+        <div class="tab active" data-tab="overview">Overview</div>
+        <div class="tab" data-tab="log">Log</div>
+        <div class="tab" data-tab="goal">Goal</div>
+      </div>
+    </div>
+    <div class="user-bar">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar"></div>
+        <span class="user-name" id="user-name"></span>
+      </div>
+      <button class="signout-btn" id="btn-signout">Sign out</button>
+    </div>
+    <div class="sync-indicator" id="sync-indicator"></div>
+
+    <div id="overview" class="section active">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Current</div><div class="stat-val ac" id="s-cur">—</div></div>
+        <div class="stat"><div class="stat-label">7d avg</div><div class="stat-val" id="s-avg">—</div></div>
+        <div class="stat"><div class="stat-label">7d change</div><div class="stat-val" id="s-rate">—</div></div>
+      </div>
+      <div class="goal-banner">
+        <div class="banner-title" id="banner-title">Goal</div>
+        <div class="pace-row">
+          <span class="chip none" id="pace-chip">No goal set</span>
+          <span class="pace-desc" id="pace-desc"></span>
         </div>
-    </nav>
-
-    <article class="max-w-6xl mx-auto mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <div class="lg:col-span-2 bg-white p-6 md:p-12 shadow-sm">
-            <nav class="text-xs text-gray-500 mb-4 uppercase font-bold">Videojuegos > Artículos</nav>
-            
-            <h1 class="text-4xl md:text-5xl font-black leading-tight mb-6">Jugar historias de otros: por qué España necesita sus propios universos transmedia</h1>
-            
-            <p class="article-body italic text-gray-500 text-xl mb-8 border-l-4 border-red-600 pl-6">
-                En España casi todo el mundo sabe quién es Joel de The Last of Us o qué es Fortnite. Ahora bien, si nos piden nombrar tres sagas españolas que también existan como cómic, serie o algo parecido… la cosa se complica bastante.
-            </p>
-
-            <div class="flex items-center space-x-4 mb-8 border-b border-gray-100 pb-6">
-                <img src="author.jpg" alt="Redactor" class="w-12 h-12 rounded-full object-cover bg-gray-200">
-                <div class="text-sm">
-                    <p class="font-bold uppercase">Joan Ruiz Berenguer</p>
-                    <p class="text-gray-400">9 de Ene. 2026 - 09:02 CET</p>
-                </div>
-            </div>
-
-            <div class="article-body space-y-6">
-                <p>Nos hemos acostumbrado a vivir rodeados de universos que vienen de fuera: los jugamos, los vemos en streaming, los comentamos en redes y hasta escuchamos sus bandas sonoras en Spotify. Mientras tanto, las historias creadas aquí rara vez dan ese salto a otros formatos.</p>
-
-                <div class="my-10 text-center">
-                    <img src="image1.jpg" alt="Transmedia Universe" class="article-img shadow-md">
-                    <p class="text-xs text-gray-400 mt-2 italic">Arcane y The Witcher, ejemplos del éxito transmedia internacional.</p>
-                </div>
-
-                <p>Los datos confirman esa sensación. España es un mercado muy fuerte en consumo de videojuegos, pero la mayoría de los estudios nacionales son pequeños y dependen de editoras internacionales para poder mantenerse. Consumimos muchísimo, pero creamos universos que casi nunca llegan a expandirse más allá del propio juego.</p>
-
-                <p>Ojo, que esto no tiene por qué ser algo negativo en sí mismo. Que en España triunfen Arcane, las series de The Witcher o los conciertos virtuales de Fortnite demuestra que el público está más que preparado para experiencias transmedia complejas. Pasamos sin problema del juego a la serie, del directo de Twitch al cómic o al merchandising. El problema aparece cuando miramos hacia dentro y vemos que casi nunca somos nosotros quienes ponemos en circulación esas IP que lo ocupan todo.</p>
-
-                <h2 class="text-2xl font-black mt-10 mb-4 uppercase tracking-tighter border-b-2 border-gray-100 pb-2">El patrón internacional</h2>
-                <p>Fuera de España el patrón se repite constantemente. League of Legends, Cyberpunk 2077 o The Witcher no son solo videojuegos: son cómics, novelas, música, merchandising, e-sports y eventos en directo. Detrás hay grandes empresas y mucha planificación, pero también una forma muy clara de entender el videojuego como solo una parte de algo más grande. Aquí, en cambio, muchos proyectos funcionan como disparos únicos: salen, reciben buenas críticas o algún premio, y desaparecen del radar sin cómics, sin serie de animación, sin podcast, sin nada que mantenga vivo ese mundo.</p>
-
-                <div class="my-10 text-center">
-                    <img src="image2.jpg" alt="Spanish Games" class="article-img shadow-md">
-                    <p class="text-xs text-gray-400 mt-2 italic">Blasphemous, uno de los pocos ejemplos de expansión física y de arte en España.</p>
-                </div>
-
-                <p>Es cierto que el tamaño importa. La mayoría de estudios españoles tienen recursos limitados y bastante hacen con terminar el juego y encontrar un publisher. Pero también hay una cuestión de enfoque. Igual que se dedica tiempo a pensar mecánicas o narrativa, se podría empezar a plantear desde el inicio qué partes del universo del juego podrían funcionar en otros formatos: un webcómic, un corto animado, un concierto de la banda sonora en un festival local o incluso una mini serie en YouTube. No se trata de soñar con “la próxima The Last of Us de HBO”, sino de abrir pequeñas puertas para que el proyecto siga respirando.</p>
-
-                <p>En este cambio de mentalidad no solo entran en juego los estudios. Las políticas públicas suelen centrarse en cuántos videojuegos se producen, pero rara vez en cuántas IP españolas consiguen mantenerse vivas en más de un medio. Las universidades enseñan a programar y a diseñar, pero no siempre a pensar una obra como una marca cultural que pueda existir también como cómic o serie corta. Y los medios especializados, muchas veces, siguen dedicando la mayor parte de su atención a los grandes lanzamientos internacionales, mientras los intentos transmedia de aquí pasan casi desapercibidos.</p>
-
-                <p>Seguir disfrutando de lo que llega de fuera es inevitable y, de hecho, positivo: aporta referentes, calidad y contexto. El reto está en aprender de ello para que nuestras propias historias no se queden siempre en segundo plano. Si en otros países han sido capaces de crear universos que viajan de la consola al cine y al concierto, no hay una razón real para que desde España no podamos empezar a jugar esa misma partida, pero con nuestros personajes, nuestras ciudades y nuestras rarezas culturales. Al final, lo que está en juego no es solo vender más copias, sino conseguir que, dentro del ruido transmedia global, también se escuche algo que suene a nosotros.</p>
-            </div>
+        <div class="proj" id="proj-line" style="display:none"></div>
+        <div class="bars" id="bars" style="display:none">
+          <div class="bar-row">
+            <div class="bar-labels"><span id="tl-s"></span><span id="tl-e"></span></div>
+            <div class="bar-track"><div class="bar-fill teal" id="time-fill" style="width:0%"></div></div>
+            <div class="bar-sub" id="time-sub"></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-labels"><span id="wl-s"></span><span id="wl-e"></span></div>
+            <div class="bar-track"><div class="bar-fill purple" id="wt-fill" style="width:0%"></div></div>
+            <div class="bar-sub" id="wt-sub"></div>
+          </div>
         </div>
-
-        <aside class="space-y-8">
-            <div class="bg-white p-6 shadow-sm">
-                <h3 class="sidebar-title font-black text-lg mb-4 uppercase">Lo más caliente</h3>
-                <div class="space-y-4">
-                    <div class="flex gap-3">
-                        <span class="text-2xl font-black text-gray-200">01</span>
-                        <p class="text-sm font-bold hover:text-red-600 cursor-pointer">El misterio de Red Dead Redemption 2 que desquicia a los fans</p>
-                    </div>
-                    <div class="flex gap-3">
-                        <span class="text-2xl font-black text-gray-200">02</span>
-                        <p class="text-sm font-bold hover:text-red-600 cursor-pointer">Por qué España necesita su propio Arcane</p>
-                    </div>
-                </div>
-            </div>
-        </aside>
-    </article>
-
-    <footer class="mt-12 bg-white border-t border-gray-200 py-12">
-        <div class="max-w-6xl mx-auto px-6 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
-            <span class="text-2xl font-black italic uppercase mb-4 md:mb-0"><span class="meris-red">MERI</span>STATION</span>
-            <p class="text-xs text-gray-400">© 2026 PRISA MEDIA. Todos los derechos reservados.</p>
+      </div>
+      <div class="card">
+        <div class="card-title">Progress</div>
+        <div class="legend">
+          <span class="leg-item"><span class="leg-solid"></span>Weight</span>
+          <span class="leg-item"><span class="leg-dash"></span>Ideal pace</span>
         </div>
-    </footer>
+        <div class="chart-wrap"><canvas id="chart" role="img" aria-label="Weight progress chart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Weekly summary</div>
+        <div id="week-summary"><p class="empty">No entries yet</p></div>
+      </div>
+    </div>
 
+    <div id="log" class="section">
+      <div class="card">
+        <div class="card-title">Add entry</div>
+        <div class="row2">
+          <input type="date" id="inp-date">
+          <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+        </div>
+        <button class="btn primary" id="btn-add">Add</button>
+        <p class="err" id="add-err"></p>
+      </div>
+      <div class="card">
+        <div class="card-title">History</div>
+        <div class="entry-list" id="entry-list"><p class="empty">No entries yet</p></div>
+      </div>
+    </div>
+
+    <div id="goal" class="section">
+      <div class="card">
+        <div class="card-title">Set your goal</div>
+        <div class="goal-form">
+          <div><div class="field-label">Target weight (kg)</div><input type="number" id="g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
+          <div><div class="field-label">Start date</div><input type="date" id="g-start"></div>
+          <div><div class="field-label">Target date</div><input type="date" id="g-end"></div>
+          <button class="btn primary" id="btn-save-goal">Save goal</button>
+          <button class="btn secondary" id="btn-clear-goal" style="display:none">Remove goal</button>
+        </div>
+        <p class="err" id="goal-err"></p>
+      </div>
+      <div class="card" id="goal-summary" style="display:none">
+        <div class="card-title">Current goal</div>
+        <div id="goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
+      </div>
+      <div class="card" id="goal-history-card" style="display:none">
+        <div class="card-title">Past goals</div>
+        <div id="goal-history-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+var firebaseConfig = {
+  apiKey: "AIzaSyCyLBXgZeYsTW8s7IiGr5foJzLmzo3D9z4",
+  authDomain: "weight-tracking-joan.firebaseapp.com",
+  projectId: "weight-tracking-joan",
+  storageBucket: "weight-tracking-joan.firebasestorage.app",
+  messagingSenderId: "452714898066",
+  appId: "1:452714898066:web:ecaf9cf5489ad3a6bf3c4b"
+};
+
+var fbApp = initializeApp(firebaseConfig);
+var auth = getAuth(fbApp);
+var db = getFirestore(fbApp);
+var currentUser = null;
+var entries = [], goal = null, goalHistory = [], chart = null;
+
+function userDoc(path) { return doc(db, 'users', currentUser.uid, path); }
+function userCol(path) { return collection(db, 'users', currentUser.uid, path); }
+
+function syncStatus(msg, cls) {
+  var el = document.getElementById('sync-indicator');
+  el.textContent = msg; el.className = 'sync-indicator ' + (cls||'');
+}
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+document.getElementById('btn-google-sign-in').addEventListener('click', function() {
+  signInWithPopup(auth, new GoogleAuthProvider()).catch(function(e){ console.error(e); });
+});
+
+document.getElementById('btn-signout').addEventListener('click', function() {
+  signOut(auth);
+});
+
+onAuthStateChanged(auth, function(user) {
+  if(user) {
+    currentUser = user;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = '';
+    document.getElementById('user-name').textContent = user.displayName || user.email;
+    var av = document.getElementById('user-avatar');
+    if(user.photoURL) av.innerHTML = '<img src="'+user.photoURL+'">';
+    else av.textContent = (user.displayName||'U')[0].toUpperCase();
+    loadFromFirebase();
+  } else {
+    currentUser = null;
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app-screen').style.display = 'none';
+  }
+});
+
+// ── LOAD FROM FIREBASE ────────────────────────────────────────────────────────
+async function loadFromFirebase() {
+  syncStatus('Loading…');
+  try {
+    var entriesSnap = await getDocs(query(userCol('entries'), orderBy('date')));
+    entries = entriesSnap.docs.map(function(d){ return Object.assign({_id: d.id}, d.data()); });
+
+    var goalSnap = await getDoc(userDoc('data/goal'));
+    goal = goalSnap.exists() ? goalSnap.data() : null;
+
+    var histSnap = await getDocs(query(userCol('goalHistory'), orderBy('savedOn', 'desc')));
+    goalHistory = histSnap.docs.map(function(d){ return Object.assign({_id: d.id}, d.data()); });
+
+    syncStatus('Synced', 'saved');
+    setTimeout(function(){ syncStatus(''); }, 2000);
+    render();
+  } catch(e) {
+    syncStatus('Error loading data', '');
+    console.error(e);
+  }
+}
+
+// ── SAVE HELPERS ──────────────────────────────────────────────────────────────
+async function saveEntry(entry) {
+  syncStatus('Saving…', 'saving');
+  var ref = await addDoc(userCol('entries'), {date: entry.date, weight: entry.weight});
+  entry._id = ref.id;
+  syncStatus('Saved', 'saved');
+  setTimeout(function(){ syncStatus(''); }, 2000);
+}
+
+async function updateEntry(entry) {
+  syncStatus('Saving…', 'saving');
+  await setDoc(doc(db, 'users', currentUser.uid, 'entries', entry._id), {date: entry.date, weight: entry.weight});
+  syncStatus('Saved', 'saved');
+  setTimeout(function(){ syncStatus(''); }, 2000);
+}
+
+async function removeEntry(entry) {
+  syncStatus('Saving…', 'saving');
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'entries', entry._id));
+  syncStatus('Saved', 'saved');
+  setTimeout(function(){ syncStatus(''); }, 2000);
+}
+
+async function saveGoalToFirebase() {
+  syncStatus('Saving…', 'saving');
+  await setDoc(userDoc('data/goal'), goal);
+  syncStatus('Saved', 'saved');
+  setTimeout(function(){ syncStatus(''); }, 2000);
+}
+
+async function removeGoalFromFirebase() {
+  await deleteDoc(userDoc('data/goal'));
+}
+
+async function saveGoalHistory(g) {
+  syncStatus('Saving…', 'saving');
+  var ref = await addDoc(userCol('goalHistory'), g);
+  g._id = ref.id;
+  syncStatus('Saved', 'saved');
+  setTimeout(function(){ syncStatus(''); }, 2000);
+}
+
+async function removeGoalHistory(g) {
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'goalHistory', g._id));
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+document.getElementById('inp-date').value = today();
+document.querySelectorAll('.tab').forEach(function(tab) {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+    tab.classList.add('active');
+    document.querySelectorAll('.section').forEach(function(s){ s.classList.remove('active'); });
+    document.getElementById(tab.dataset.tab).classList.add('active');
+    if(tab.dataset.tab === 'goal') loadGoalForm();
+  });
+});
+
+// ── ADD ENTRY ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-add').addEventListener('click', async function() {
+  var d = document.getElementById('inp-date').value;
+  var w = parseFloat(document.getElementById('inp-wt').value);
+  var err = document.getElementById('add-err');
+  if(!d) { err.textContent = 'Please select a date.'; return; }
+  if(!w||w<30||w>250) { err.textContent = 'Invalid weight (30–250 kg).'; return; }
+  if(entries.find(function(e){ return e.date===d; })) { err.textContent = 'An entry already exists for this day.'; return; }
+  err.textContent = '';
+  var entry = {date: d, weight: w};
+  entries.push(entry);
+  entries.sort(function(a,b){ return a.date.localeCompare(b.date); });
+  document.getElementById('inp-wt').value = '';
+  render();
+  await saveEntry(entry);
+});
+
+// ── GOAL SAVE ─────────────────────────────────────────────────────────────────
+document.getElementById('btn-save-goal').addEventListener('click', async function() {
+  var w = parseFloat(document.getElementById('g-wt').value);
+  var s = document.getElementById('g-start').value;
+  var e = document.getElementById('g-end').value;
+  var err = document.getElementById('goal-err');
+  var btn = document.getElementById('btn-save-goal');
+  if(!w||w<30||w>250) { err.textContent = 'Enter a valid weight (30–250 kg).'; return; }
+  if(!s) { err.textContent = 'Please set a start date.'; return; }
+  if(!e||e<=today()) { err.textContent = 'Target date must be in the future.'; return; }
+  if(s>=e) { err.textContent = 'Start date must be before target date.'; return; }
+  if(goal && btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1'; btn.textContent = 'Tap again to confirm';
+    btn.style.background = '#f2c94c'; btn.style.color = '#1c1b1f';
+    setTimeout(function(){ btn.dataset.confirm='0'; btn.textContent='Save goal'; btn.style.background=''; btn.style.color=''; }, 3000);
+    return;
+  }
+  if(goal) {
+    var old = {weight:goal.weight, start:goal.start, date:goal.date, savedOn:today()};
+    goalHistory.unshift(old);
+    await saveGoalHistory(old);
+  }
+  btn.dataset.confirm = '0'; btn.textContent = 'Save goal'; btn.style.background = ''; btn.style.color = '';
+  err.textContent = '';
+  goal = {weight:w, start:s, date:e};
+  document.getElementById('btn-clear-goal').style.display = '';
+  updateGoalSummary();
+  render();
+  await saveGoalToFirebase();
+});
+
+// ── GOAL CLEAR ────────────────────────────────────────────────────────────────
+document.getElementById('btn-clear-goal').addEventListener('click', async function() {
+  var btn = document.getElementById('btn-clear-goal');
+  if(btn.dataset.confirm !== '1') {
+    btn.dataset.confirm = '1'; btn.textContent = 'Tap again to confirm removal';
+    btn.style.background = '#3a1a1a'; btn.style.color = '#eb5757';
+    setTimeout(function(){ btn.dataset.confirm='0'; btn.textContent='Remove goal'; btn.style.background=''; btn.style.color=''; }, 3000);
+    return;
+  }
+  goal = null;
+  ['g-wt','g-start','g-end'].forEach(function(id){ document.getElementById(id).value=''; });
+  btn.dataset.confirm = '0'; btn.textContent = 'Remove goal'; btn.style.background = ''; btn.style.color = '';
+  btn.style.display = 'none';
+  document.getElementById('goal-summary').style.display = 'none';
+  render();
+  await removeGoalFromFirebase();
+});
+
+// ── GOAL FORM ─────────────────────────────────────────────────────────────────
+function loadGoalForm() {
+  if(goal) {
+    document.getElementById('g-wt').value = goal.weight;
+    document.getElementById('g-start').value = goal.start||'';
+    document.getElementById('g-end').value = goal.date;
+    document.getElementById('btn-clear-goal').style.display = '';
+    updateGoalSummary();
+  } else {
+    document.getElementById('btn-clear-goal').style.display = 'none';
+    document.getElementById('goal-summary').style.display = 'none';
+  }
+  var ghCard = document.getElementById('goal-history-card');
+  var ghList = document.getElementById('goal-history-list');
+  if(goalHistory.length) {
+    ghCard.style.display = '';
+    ghList.innerHTML = '';
+    goalHistory.forEach(function(g, idx) {
+      var se = entries.find(function(e){ return e.date>=g.start; })||entries[0];
+      var sw = se?se.weight:g.weight;
+      var isBulk = g.weight > sw;
+      var div = document.createElement('div');
+      div.className = 'past-goal';
+      var info = document.createElement('div');
+      info.innerHTML =
+        '<span style="font-size:12px;font-weight:500;color:'+(isBulk?'#6fcf97':'#eb5757')+'">'+(isBulk?'Bulk':'Cut')+'</span>'+
+        '<span style="font-size:13px;color:#938f99;margin-left:8px">'+fmt(g.start)+' → '+fmt(g.date)+'</span>';
+      var right = document.createElement('div');
+      right.style.cssText = 'display:flex;align-items:center;gap:10px';
+      var wSpan = document.createElement('span');
+      wSpan.style.cssText = 'font-size:14px;font-weight:500;color:#e6e1e5';
+      wSpan.textContent = g.weight+' kg';
+      var delBtn = document.createElement('button');
+      delBtn.className = 'ebtn';
+      delBtn.textContent = 'Delete';
+      (function(gh){ delBtn.addEventListener('click', function(){ deleteGoalHistory(gh, div, delBtn); }); })(g);
+      right.appendChild(wSpan); right.appendChild(delBtn);
+      div.appendChild(info); div.appendChild(right);
+      ghList.appendChild(div);
+    });
+  } else ghCard.style.display = 'none';
+}
+
+function updateGoalSummary() {
+  if(!goal) return;
+  document.getElementById('goal-summary').style.display = '';
+  var n = entries.length, cur = n?entries[n-1].weight:null;
+  var remW = Math.max(0.01,(new Date(goal.date)-new Date())/(7*864e5));
+  var kpw = cur?((goal.weight-cur)/remW).toFixed(2):'—';
+  var sign = parseFloat(kpw)>0?'+':'';
+  var totW = Math.round((new Date(goal.date)-new Date(goal.start))/(7*864e5));
+  document.getElementById('goal-summary-text').innerHTML =
+    '<b>'+goal.weight+' kg</b> by <b>'+fmt(goal.date)+'</b><br>'+
+    '<span style="color:#938f99;font-size:13px">Started '+fmt(goal.start)+' · '+totW+' weeks total · ideal pace: <b>'+sign+kpw+' kg/wk</b></span>';
+}
+
+// ── DELETE / EDIT ENTRIES ─────────────────────────────────────────────────────
+function deleteEntry(entry, row, btn) {
+  if(row.dataset.confirm !== '1') {
+    row.dataset.confirm = '1';
+    btn.textContent = 'Confirm'; btn.style.background = '#3a1a1a'; btn.style.color = '#eb5757';
+    setTimeout(function(){
+      if(row.dataset.confirm==='1'){ row.dataset.confirm='0'; btn.textContent='Delete'; btn.style.background=''; btn.style.color=''; }
+    }, 3000);
+    return;
+  }
+  entries = entries.filter(function(e){ return e.date!==entry.date; });
+  render();
+  removeEntry(entry);
+}
+
+function editEntry(date) {
+  document.querySelectorAll('.edit-row').forEach(function(r){ r.style.display='none'; });
+  var row = document.getElementById('er-'+date);
+  if(row){ row.style.display='flex'; row.querySelector('input').focus(); }
+}
+
+function confirmEdit(entry) {
+  var inp = document.getElementById('ei-'+entry.date);
+  var w = parseFloat(inp.value);
+  if(!w||w<30||w>250){ inp.style.borderColor='#eb5757'; return; }
+  entry.weight = w;
+  render();
+  updateEntry(entry);
+}
+
+function cancelEdit(date) {
+  var row = document.getElementById('er-'+date);
+  if(row) row.style.display = 'none';
+}
+
+async function deleteGoalHistory(g, row, btn) {
+  if(row.dataset.confirm !== '1') {
+    row.dataset.confirm = '1';
+    btn.textContent = 'Confirm'; btn.style.background = '#3a1a1a'; btn.style.color = '#eb5757';
+    setTimeout(function(){
+      if(row.dataset.confirm==='1'){ row.dataset.confirm='0'; btn.textContent='Delete'; btn.style.background=''; btn.style.color=''; }
+    }, 3000);
+    return;
+  }
+  goalHistory = goalHistory.filter(function(x){ return x._id!==g._id; });
+  await removeGoalHistory(g);
+  loadGoalForm();
+}
+
+// ── RENDER HISTORY ────────────────────────────────────────────────────────────
+function renderHistory() {
+  var list = document.getElementById('entry-list');
+  list.innerHTML = '';
+  if(!entries.length){ list.innerHTML='<p class="empty">No entries yet</p>'; return; }
+  var rev = [].concat(entries).reverse();
+  rev.forEach(function(e) {
+    var isToday = e.date === today();
+    var entryDiv = document.createElement('div');
+    entryDiv.className = 'entry';
+    entryDiv.dataset.date = e.date;
+    if(isToday){ entryDiv.style.background='#2b3a2b'; entryDiv.style.borderRadius='10px'; }
+
+    var dateSpan = document.createElement('span');
+    dateSpan.className = 'edate';
+    dateSpan.textContent = fmt(e.date);
+    if(isToday){
+      var badge = document.createElement('span');
+      badge.textContent = 'Today';
+      badge.style.cssText = 'font-size:10px;background:#3a3540;color:#6fcf97;padding:2px 6px;border-radius:6px;margin-left:6px';
+      dateSpan.appendChild(badge);
+    }
+
+    var wtSpan = document.createElement('span');
+    wtSpan.className = 'ewt';
+    wtSpan.textContent = e.weight.toFixed(1)+' kg';
+
+    var btnWrap = document.createElement('span');
+    btnWrap.style.cssText = 'display:flex;gap:4px';
+
+    var editBtn = document.createElement('button');
+    editBtn.className = 'ebtn edit-btn';
+    editBtn.textContent = 'Edit';
+    (function(entry){ editBtn.addEventListener('click', function(){ editEntry(entry.date); }); })(e);
+
+    var delBtn = document.createElement('button');
+    delBtn.className = 'ebtn del-btn';
+    delBtn.textContent = 'Delete';
+    (function(entry, row, btn){ delBtn.addEventListener('click', function(){ deleteEntry(entry, row, btn); }); })(e, entryDiv, delBtn);
+
+    btnWrap.appendChild(editBtn); btnWrap.appendChild(delBtn);
+    entryDiv.appendChild(dateSpan); entryDiv.appendChild(wtSpan); entryDiv.appendChild(btnWrap);
+    list.appendChild(entryDiv);
+
+    var editRow = document.createElement('div');
+    editRow.className = 'edit-row'; editRow.id = 'er-'+e.date;
+
+    var inp = document.createElement('input');
+    inp.type='number'; inp.id='ei-'+e.date; inp.value=e.weight; inp.min=30; inp.max=250; inp.step=0.1;
+
+    var saveBtn = document.createElement('button');
+    saveBtn.className = 'btn primary'; saveBtn.textContent = 'Save';
+    (function(entry){ saveBtn.addEventListener('click', function(){ confirmEdit(entry); }); })(e);
+
+    var cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn secondary'; cancelBtn.textContent = 'Cancel';
+    (function(entry){ cancelBtn.addEventListener('click', function(){ cancelEdit(entry.date); }); })(e);
+
+    editRow.appendChild(inp); editRow.appendChild(saveBtn); editRow.appendChild(cancelBtn);
+    list.appendChild(editRow);
+  });
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function today(){ return new Date().toISOString().slice(0,10); }
+function fmt(s){ if(!s) return '—'; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function weekKey(d){
+  var dt=new Date(d), jan=new Date(dt.getFullYear(),0,1);
+  var wk=Math.ceil(((dt-jan)/864e5+jan.getDay()+1)/7);
+  return dt.getFullYear()+'-W'+(wk<10?'0':'')+wk;
+}
+
+// ── MAIN RENDER ───────────────────────────────────────────────────────────────
+function render() {
+  var n = entries.length;
+  var wts = entries.map(function(e){ return e.weight; });
+  var cur = n?wts[n-1]:null;
+
+  var cycleEl = document.getElementById('cycle-label');
+  var dividerEl = document.getElementById('divider');
+  if(goal&&goal.start&&goal.date) {
+    var se = entries.find(function(e){ return e.date>=goal.start; })||entries[0];
+    var isBulk = goal.weight > (se?se.weight:goal.weight);
+    cycleEl.style.display = ''; dividerEl.style.display = '';
+    cycleEl.textContent = isBulk?'BULKING CYCLE':'CUTTING CYCLE';
+    cycleEl.style.color = isBulk?'#6fcf97':'#eb5757';
+  } else { cycleEl.style.display='none'; dividerEl.style.display='none'; }
+
+  document.getElementById('s-cur').textContent = cur?cur.toFixed(1)+' kg':'—';
+  if(n>=1) {
+    var sl = wts.slice(Math.max(0,n-7));
+    document.getElementById('s-avg').textContent = (sl.reduce(function(a,b){return a+b;},0)/sl.length).toFixed(1)+' kg';
+    var rateEl = document.getElementById('s-rate');
+    if(sl.length>=2){
+      var rate = sl[sl.length-1]-sl[0];
+      rateEl.textContent = (rate>=0?'+':'')+rate.toFixed(1)+' kg';
+      rateEl.style.color = rate>0?'#6fcf97':rate<0?'#eb5757':'#e6e1e5';
+    } else rateEl.textContent='—';
+  } else {
+    document.getElementById('s-avg').textContent='—';
+    document.getElementById('s-rate').textContent='—';
+  }
+
+  var chip = document.getElementById('pace-chip');
+  var pdesc = document.getElementById('pace-desc');
+  var bars = document.getElementById('bars');
+  var proj = document.getElementById('proj-line');
+  var btitle = document.getElementById('banner-title');
+
+  if(!goal||!goal.start||!goal.date||!cur) {
+    chip.className='chip none'; chip.textContent=(!goal||!goal.start||!goal.date)?'No goal set':'Not enough data';
+    pdesc.textContent=''; bars.style.display='none'; proj.style.display='none'; btitle.textContent='Goal';
+  } else {
+    var now = new Date();
+    var gStart = new Date(goal.start), gEnd = new Date(goal.date);
+    var totMs = gEnd-gStart, elMs = now-gStart;
+    var timePct = Math.min(100,Math.max(0,Math.round(elMs/totMs*100)));
+    var totWeeks = Math.max(0.01,totMs/(7*864e5));
+    var elWeeks = Math.max(0,(now-gStart)/(7*864e5));
+    var remWeeks = Math.max(0.01,(gEnd-now)/(7*864e5));
+    var startEntry = entries.find(function(e){ return e.date>=goal.start; })||entries[0];
+    var sw = startEntry.weight;
+    var idealNow = sw+(goal.weight-sw)*(elWeeks/totWeeks);
+    var diff = cur-idealNow;
+    var isGain = goal.weight>sw;
+    var kpw = (goal.weight-cur)/remWeeks;
+    var sign = kpw>=0?'+':'';
+    var ahead = isGain?diff>0.3:diff<-0.3;
+    var behind = isGain?diff<-0.3:diff>0.3;
+
+    btitle.textContent = 'Goal · '+goal.weight+' kg by '+fmt(goal.date);
+    if(ahead){ chip.className='chip fast'; chip.textContent='Ahead of pace'; pdesc.textContent='Slow down · need '+sign+kpw.toFixed(2)+' kg/wk'; }
+    else if(behind){ chip.className='chip slow'; chip.textContent='Behind pace'; pdesc.textContent='Push harder · need '+sign+kpw.toFixed(2)+' kg/wk'; }
+    else{ chip.className='chip on'; chip.textContent='On track'; pdesc.textContent=sign+kpw.toFixed(2)+' kg/wk needed'; }
+
+    proj.style.display='';
+    if(n>=2){
+      var cutoff = new Date(Math.max(gStart.getTime(), Date.now()-7*864e5));
+      var rec = entries.filter(function(e){ return new Date(e.date)>=cutoff; });
+      if(rec.length<2) rec = entries.slice(Math.max(0,n-2));
+      var rk = (rec[rec.length-1].weight-rec[0].weight)/Math.max(0.01,(new Date(rec[rec.length-1].date)-new Date(rec[0].date))/(7*864e5));
+      var movRight = (isGain&&rk>0)||(!isGain&&rk<0);
+      if(Math.abs(rk)<0.001) proj.textContent='Trend is flat — log more data';
+      else if(!movRight) proj.textContent='Current trend is moving away from goal';
+      else {
+        var wn = (goal.weight-cur)/rk;
+        var pd = new Date(); pd.setDate(pd.getDate()+Math.round(wn*7));
+        var ps = (pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
+        var dd = Math.round((pd-gEnd)/864e5);
+        var dt = dd===0?'right on time':dd<0?Math.abs(dd)+'d early':dd+'d late';
+        proj.innerHTML = 'At current rate, projected arrival: <b>'+ps+'</b> — <b>'+dt+'</b>';
+      }
+    } else proj.textContent='Log more entries to see projection';
+
+    bars.style.display='';
+    document.getElementById('tl-s').textContent=fmt(goal.start);
+    document.getElementById('tl-e').textContent=fmt(goal.date);
+    document.getElementById('time-fill').style.width=timePct+'%';
+    var dLeft=Math.max(0,Math.round((gEnd-now)/864e5));
+    document.getElementById('time-sub').textContent='Time elapsed: '+timePct+'% · '+dLeft+' day'+(dLeft!==1?'s':'')+' left';
+    var totD=Math.abs(goal.weight-sw), doneD=Math.abs(cur-sw);
+    var wPct=totD>0?Math.min(100,Math.round(doneD/totD*100)):100;
+    document.getElementById('wl-s').textContent=sw.toFixed(1)+' kg';
+    document.getElementById('wl-e').textContent=goal.weight.toFixed(1)+' kg';
+    document.getElementById('wt-fill').style.width=wPct+'%';
+    document.getElementById('wt-sub').textContent='Weight progress: '+wPct+'% · '+Math.abs(goal.weight-cur).toFixed(1)+' kg left';
+  }
+
+  updateGoalSummary();
+
+  var labels = entries.map(function(e){ var p=e.date.split('-'); return p[2]+'/'+p[1]; });
+  var datasets = [{
+    label:'Weight', data:wts, borderColor:'#d0bcff', backgroundColor:'rgba(208,188,255,0.08)',
+    borderWidth:2, pointRadius:4, pointBackgroundColor:'#d0bcff', tension:0.3, fill:true
+  }];
+  if(goal&&goal.start&&goal.date&&n){
+    var sd=new Date(goal.start), gd=new Date(goal.date);
+    var se2=entries.find(function(e){ return e.date>=goal.start; })||entries[0];
+    var sw2=se2.weight, totW2=Math.max(0.01,(gd-sd)/(7*864e5));
+    var ideal=entries.map(function(e){
+      if(e.date<goal.start) return null;
+      var t=(new Date(e.date)-sd)/(7*864e5);
+      return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
+    });
+    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
+  }
+
+  var gc='rgba(255,255,255,0.06)', tc='#938f99';
+  if(!chart){
+    chart=new Chart(document.getElementById('chart'),{
+      type:'line', data:{labels:labels,datasets:datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){ return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg'; }}}},
+        scales:{
+          x:{ticks:{color:tc,font:{size:11},maxTicksLimit:10},grid:{color:gc}},
+          y:{ticks:{color:tc,font:{size:11},callback:function(v){ return v.toFixed(1); }},grid:{color:gc}}
+        }
+      }
+    });
+  } else {
+    chart.data.labels=labels; chart.data.datasets=datasets; chart.update();
+  }
+
+  var weeks={};
+  entries.forEach(function(e){ var k=weekKey(e.date); if(!weeks[k]) weeks[k]=[]; weeks[k].push(e.weight); });
+  var wsum=document.getElementById('week-summary');
+  if(!n){ wsum.innerHTML='<p class="empty">No entries yet</p>'; }
+  else {
+    var rows=Object.entries(weeks).sort(function(a,b){ return b[0].localeCompare(a[0]); }).slice(0,8).map(function(pair){
+      var ws2=pair[1], avg=(ws2.reduce(function(a,b){ return a+b; },0)/ws2.length).toFixed(1);
+      var parts=pair[0].split('-W');
+      return '<tr><td>Week '+parts[1]+', '+parts[0]+'</td><td>'+avg+' kg</td><td>'+ws2.length+' entr'+(ws2.length===1?'y':'ies')+'</td></tr>';
+    }).join('');
+    wsum.innerHTML='<table class="wtbl"><thead><tr><th>Week</th><th>Avg</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  renderHistory();
+}
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 </body>
 </html>
