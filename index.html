@@ -8,10 +8,9 @@
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Google Sans',Roboto,system-ui,sans-serif;background:#1c1b1f;color:#e6e1e5;min-height:100vh}
-.app{max-width:430px;margin:0 auto;padding:0 0 2rem}
-.header{background:#1c1b1f;padding:20px 20px 0}
+.app{max-width:860px;margin:0 auto;padding:0 0 2rem}
+.header{background:#1c1b1f;padding:20px 24px 0}
 .header-titles{display:flex;align-items:center;gap:12px;padding-bottom:16px;flex-wrap:wrap}
 h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .hdivider{width:1.5px;height:28px;background:#3a3540;border-radius:2px;flex-shrink:0;display:none}
@@ -19,8 +18,11 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .tabs{display:flex}
 .tab{flex:1;text-align:center;font-size:13px;font-weight:500;padding:10px 0;color:#938f99;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
 .tab.active{color:#d0bcff;border-bottom:2px solid #d0bcff}
-.section{padding:16px;display:none}
+.section{padding:20px 24px;display:none}
 .section.active{display:block}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.one-col{display:grid;grid-template-columns:1fr;gap:16px}
+@media(max-width:600px){.two-col{grid-template-columns:1fr}}
 .card{background:#2b2930;border-radius:16px;padding:16px;margin-bottom:12px}
 .card-title{font-size:12px;font-weight:500;color:#938f99;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
@@ -50,7 +52,7 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:#938f99}
 .leg-item{display:flex;align-items:center;gap:6px}
 .leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
-.chart-wrap{position:relative;height:190px}
+.chart-wrap{position:relative;height:260px}
 input[type=date],input[type=number]{background:#3a3540;border:1.5px solid transparent;border-radius:10px;color:#e6e1e5;font-size:15px;padding:10px 12px;width:100%;outline:none;font-family:inherit;transition:border-color .15s;color-scheme:dark}
 input:focus{border-color:#d0bcff;background:#45404d}
 .row2{display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:10px}
@@ -89,14 +91,14 @@ input:focus{border-color:#d0bcff;background:#45404d}
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:24px}
 #login-screen h2{font-size:24px;font-weight:500;color:#e6e1e5}
 #login-screen p{font-size:14px;color:#938f99;text-align:center;max-width:280px}
-.user-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 4px}
+.user-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px 4px}
 .user-info{display:flex;align-items:center;gap:8px}
 .user-avatar{width:28px;height:28px;border-radius:50%;background:#3a3540;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#d0bcff;overflow:hidden;flex-shrink:0}
 .user-avatar img{width:100%;height:100%;object-fit:cover}
 .user-name{font-size:13px;color:#938f99}
 .signout-btn{background:none;border:none;color:#938f99;font-size:12px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px}
 .signout-btn:hover{background:#3a3540;color:#e6e1e5}
-.sync-indicator{font-size:11px;padding:0 20px 8px;text-align:right;min-height:20px;color:#938f99}
+.sync-indicator{font-size:11px;padding:0 24px 8px;text-align:right;min-height:20px;color:#938f99}
 .sync-indicator.saving{color:#f2c94c}
 .sync-indicator.saved{color:#6fcf97}
 .sync-indicator.error{color:#eb5757}
@@ -137,90 +139,103 @@ input:focus{border-color:#d0bcff;background:#45404d}
     <div class="sync-indicator" id="sync-indicator"></div>
 
     <div id="overview" class="section active">
-      <div class="stats">
-        <div class="stat"><div class="stat-label">Current</div><div class="stat-val ac" id="s-cur">—</div></div>
-        <div class="stat"><div class="stat-label">7d avg</div><div class="stat-val" id="s-avg">—</div></div>
-        <div class="stat"><div class="stat-label">7d change</div><div class="stat-val" id="s-rate">—</div></div>
-      </div>
-      <div class="goal-banner">
-        <div class="banner-title" id="banner-title">Goal</div>
-        <div class="pace-row">
-          <span class="chip none" id="pace-chip">No goal set</span>
-          <span class="pace-desc" id="pace-desc"></span>
-        </div>
-        <div class="proj" id="proj-line" style="display:none"></div>
-        <div class="bars" id="bars" style="display:none">
-          <div class="bar-row">
-            <div class="bar-labels"><span id="tl-s"></span><span id="tl-e"></span></div>
-            <div class="bar-track"><div class="bar-fill teal" id="time-fill" style="width:0%"></div></div>
-            <div class="bar-sub" id="time-sub"></div>
+      <div class="two-col">
+        <div>
+          <div class="stats">
+            <div class="stat"><div class="stat-label">Current</div><div class="stat-val ac" id="s-cur">—</div></div>
+            <div class="stat"><div class="stat-label">7d avg</div><div class="stat-val" id="s-avg">—</div></div>
+            <div class="stat"><div class="stat-label">7d change</div><div class="stat-val" id="s-rate">—</div></div>
           </div>
-          <div class="bar-row">
-            <div class="bar-labels"><span id="wl-s"></span><span id="wl-e"></span></div>
-            <div class="bar-track"><div class="bar-fill purple" id="wt-fill" style="width:0%"></div></div>
-            <div class="bar-sub" id="wt-sub"></div>
+          <div class="goal-banner">
+            <div class="banner-title" id="banner-title">Goal</div>
+            <div class="pace-row">
+              <span class="chip none" id="pace-chip">No goal set</span>
+            </div>
+            <div class="proj" id="proj-line" style="display:none"></div>
+            <div class="bars" id="bars" style="display:none">
+              <div class="bar-row">
+                <div class="bar-labels"><span id="tl-s"></span><span id="tl-e"></span></div>
+                <div class="bar-track"><div class="bar-fill teal" id="time-fill" style="width:0%"></div></div>
+                <div class="bar-sub" id="time-sub"></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-labels"><span id="wl-s"></span><span id="wl-e"></span></div>
+                <div class="bar-track"><div class="bar-fill purple" id="wt-fill" style="width:0%"></div></div>
+                <div class="bar-sub" id="wt-sub"></div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title">Weekly summary</div>
+            <div id="week-summary"><p class="empty">No entries yet</p></div>
           </div>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-title">Progress</div>
-        <div class="legend">
-          <span class="leg-item"><span class="leg-solid"></span>Weight</span>
-          <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
+        <div>
+          <div class="card">
+            <div class="card-title">Progress</div>
+            <div class="legend">
+              <span class="leg-item"><span class="leg-solid"></span>Weight</span>
+              <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
+            </div>
+            <div class="chart-wrap"><canvas id="chart"></canvas></div>
+          </div>
         </div>
-        <div class="chart-wrap"><canvas id="chart"></canvas></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Weekly summary</div>
-        <div id="week-summary"><p class="empty">No entries yet</p></div>
       </div>
     </div>
 
     <div id="log" class="section">
-      <div class="card">
-        <div class="card-title">Add entry</div>
-        <div class="row2">
-          <input type="date" id="inp-date">
-          <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Add entry</div>
+          <div class="row2">
+            <input type="date" id="inp-date">
+            <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+          </div>
+          <button class="btn primary" id="btn-add">Add</button>
+          <p class="err" id="add-err"></p>
         </div>
-        <button class="btn primary" id="btn-add">Add</button>
-        <p class="err" id="add-err"></p>
-      </div>
-      <div class="card">
-        <div class="card-title">History</div>
-        <div class="entry-list" id="entry-list"><p class="empty">No entries yet</p></div>
+        <div class="card">
+          <div class="card-title">History</div>
+          <div class="entry-list" id="entry-list"><p class="empty">No entries yet</p></div>
+        </div>
       </div>
     </div>
 
     <div id="goal" class="section">
-      <div class="card">
-        <div class="card-title">Set your goal</div>
-        <div class="goal-form">
-          <div><div class="field-label">Target weight (kg)</div><input type="number" id="g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
-          <div><div class="field-label">Start date</div><input type="date" id="g-start"></div>
-          <div><div class="field-label">Desired pace (kg / week)</div><input type="number" id="g-pace" placeholder="e.g. 0.25" step="0.05" min="0.05" max="2"></div>
-          <div class="goal-preview" id="goal-preview"></div>
-          <button class="btn primary" id="btn-save-goal">Save goal</button>
-          <button class="btn secondary" id="btn-clear-goal" style="display:none">Remove goal</button>
+      <div class="two-col">
+        <div>
+          <div class="card">
+            <div class="card-title">Set your goal</div>
+            <div class="goal-form">
+              <div><div class="field-label">Target weight (kg)</div><input type="number" id="g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
+              <div><div class="field-label">Start date</div><input type="date" id="g-start"></div>
+              <div><div class="field-label">Desired pace (kg / week)</div><input type="number" id="g-pace" placeholder="e.g. 0.25" step="0.05" min="0.05" max="2"></div>
+              <div class="goal-preview" id="goal-preview"></div>
+              <button class="btn primary" id="btn-save-goal">Save goal</button>
+              <button class="btn secondary" id="btn-clear-goal" style="display:none">Remove goal</button>
+            </div>
+            <p class="err" id="goal-err"></p>
+          </div>
         </div>
-        <p class="err" id="goal-err"></p>
-      </div>
-      <div class="card" id="goal-summary" style="display:none">
-        <div class="card-title">Current goal</div>
-        <div id="goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
-      </div>
-      <div class="card" id="goal-history-card" style="display:none">
-        <div class="card-title">Past goals</div>
-        <div id="goal-history-list"></div>
+        <div>
+          <div class="card" id="goal-summary" style="display:none">
+            <div class="card-title">Current goal</div>
+            <div id="goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
+          </div>
+          <div class="card" id="goal-history-card" style="display:none">
+            <div class="card-title">Past goals</div>
+            <div id="goal-history-list"></div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -592,7 +607,6 @@ function render(){
 
   // Goal banner
   var chip=document.getElementById('pace-chip');
-  var pdesc=document.getElementById('pace-desc');
   var bars=document.getElementById('bars');
   var proj=document.getElementById('proj-line');
   var btitle=document.getElementById('banner-title');
@@ -600,7 +614,7 @@ function render(){
   if(!goal||!goal.start||!goal.date||!cur){
     chip.className='chip none';
     chip.textContent=(!goal||!goal.start||!goal.date)?'No goal set':'Not enough data';
-    pdesc.textContent=''; bars.style.display='none'; proj.style.display='none'; btitle.textContent='Goal';
+    bars.style.display='none'; proj.style.display='none'; btitle.textContent='Goal';
   } else {
     var now=new Date(), gS=new Date(goal.start), gE=new Date(goal.date);
     var timePct=Math.min(100,Math.max(0,Math.round((now-gS)/(gE-gS)*100)));
@@ -626,9 +640,9 @@ function render(){
     var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
 
     btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
-    if(paceAhead){chip.className='chip fast';chip.textContent=goalIsGain?'Eat less':'Eat more';pdesc.textContent='Slow down · need '+sign+kpw.toFixed(2)+' kg/wk';}
-    else if(paceBehind){chip.className='chip slow';chip.textContent=goalIsGain?'Eat more':'Eat less';pdesc.textContent='Push harder · need '+sign+kpw.toFixed(2)+' kg/wk';}
-    else{chip.className='chip on';chip.textContent='On track';pdesc.textContent=sign+kpw.toFixed(2)+' kg/wk needed';}
+    if(paceAhead){chip.className='chip fast';chip.textContent=goalIsGain?'Eat less':'Eat more';}
+    else if(paceBehind){chip.className='chip slow';chip.textContent=goalIsGain?'Eat more':'Eat less';}
+    else{chip.className='chip on';chip.textContent='On track';}
 
     // Projection
     proj.style.display='';
