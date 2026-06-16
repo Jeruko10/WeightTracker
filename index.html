@@ -218,9 +218,6 @@ input:focus{border-color:#d0bcff;background:#45404d}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-date-fns/3.0.0/chartjs-adapter-date-fns.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/2.0.1/chartjs-plugin-zoom.min.js"></script>
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -686,115 +683,20 @@ function render(){
   }
   }
 
-  // Build full date range: 1 year back or first entry, to goal date or today+7d
-  var firstDate=entries.length?new Date(entries[0].date):new Date();
-  var minDate=new Date(Math.max(firstDate.getTime(), Date.now()-365*864e5));
-  var maxDate=goal&&goal.date?new Date(Math.max(new Date(goal.date).getTime(), Date.now())):new Date(Date.now()+7*864e5);
-
-  // Build datasets using real Date objects for x
-  var weightData=entries.map(function(e){return {x:e.date,y:e.weight};});
-  var idealData=[];
-  if(goal&&goal.start&&goal.date&&n){
-    var sd=new Date(goal.start), gd=new Date(goal.date);
-    var se2=entries.find(function(e){return e.date>=goal.start;})||entries[0];
-    var sw2=se2.weight, totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    // Draw ideal from goal start to goal end
-    var idealPoints=[goal.start, goal.date];
-    idealData=idealPoints.map(function(d){
-      var t=(new Date(d)-sd)/(7*864e5);
-      return {x:d, y:parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2))};
-    });
-  }
-
-  var datasets2=[{
-    label:'Weight',data:weightData,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:4,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true
-  }];
-  if(idealData.length){
-    datasets2.push({label:'Ideal pace',data:idealData,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
-  }
-
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
-
-  var targetLine=goal&&goal.weight?{
-    id:'targetLine',
-    afterDraw:function(ch){
-      if(!goal||!goal.weight)return;
-      var ctx2=ch.ctx, yScale=ch.scales.y, xScale=ch.scales.x;
-      var y=yScale.getPixelForValue(goal.weight);
-      if(y<yScale.top||y>yScale.bottom)return;
-      ctx2.save();
-      ctx2.beginPath();
-      ctx2.moveTo(xScale.left,y);
-      ctx2.lineTo(xScale.right,y);
-      ctx2.strokeStyle='rgba(108,207,151,0.5)';
-      ctx2.lineWidth=1;
-      ctx2.setLineDash([4,4]);
-      ctx2.stroke();
-      ctx2.font='10px system-ui';
-      ctx2.fillStyle='#6fcf97';
-      ctx2.fillText(goal.weight.toFixed(1)+' kg',xScale.right-48,y-4);
-      ctx2.restore();
-    }
-  }:null;
-
-  // Y bounds
-  var allVals=entries.map(function(e){return e.weight;});
-  var yMin=allVals.length?Math.min.apply(null,allVals):70;
-  var yMax=allVals.length?Math.max.apply(null,allVals):90;
-  if(goal&&goal.weight){
-    if(goal.isBulk) yMax=Math.max(yMax,goal.weight);
-    else yMin=Math.min(yMin,goal.weight);
-  }
-  yMin=parseFloat((yMin-0.5).toFixed(1));
-  yMax=parseFloat((yMax+0.5).toFixed(1));
-
-  var chartOpts={
-    responsive:true,maintainAspectRatio:false,
-    plugins:{
-      legend:{display:false},
-      tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}}},
-      zoom:{
-        pan:{enabled:true,mode:'x'},
-        zoom:{
-          wheel:{enabled:true},
-          pinch:{enabled:true},
-          mode:'x'
-        },
-        limits:{
-          x:{min:minDate.toISOString().slice(0,10), max:maxDate.toISOString().slice(0,10)}
-        }
-      }
-    },
-    scales:{
-      x:{
-        type:'time',
-        time:{unit:'day',displayFormats:{day:'dd/MM'},tooltipFormat:'dd/MM/yyyy'},
-        min:minDate.toISOString().slice(0,10),
-        max:maxDate.toISOString().slice(0,10),
-        ticks:{color:tc,font:{size:11},maxTicksLimit:10,source:'auto'},
-        grid:{color:gc}
-      },
-      y:{
-        min:yMin,max:yMax,
-        ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},
-        grid:{color:gc}
-      }
-    }
-  };
-
   if(!chart){
     chart=new Chart(document.getElementById('chart'),{
-      type:'line',
-      data:{datasets:datasets2},
-      plugins:targetLine?[targetLine]:[],
-      options:chartOpts
+      type:'line',data:{labels:labels,datasets:datasets},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}}}},
+        scales:{
+          x:{ticks:{color:tc,font:{size:11},maxTicksLimit:10},grid:{color:gc}},
+          y:{ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
+        }
+      }
     });
   } else {
-    chart.data.datasets=datasets2;
-    chart.options=chartOpts;
-    if(targetLine) chart.config.plugins=[targetLine];
-    chart.update();
+    chart.data.labels=labels; chart.data.datasets=datasets; chart.update();
   }
 
   // Weekly summary
