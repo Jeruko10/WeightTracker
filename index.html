@@ -343,6 +343,7 @@ function updateGoalPreview() {
   var n = entries.length, cur = n ? entries[n-1].weight : null;
   var startW = cur || w;
   var delta = w - startW;
+  if(Math.abs(delta) < 0.1) { err.textContent='Target weight must differ from current weight.'; return; }
   var isBulk = delta > 0;
   var pace = isBulk ? Math.abs(p) : -Math.abs(p);
   var weeks = Math.abs(delta / p);
@@ -369,9 +370,8 @@ document.getElementById('btn-save-goal').addEventListener('click', async functio
   if(!s) { err.textContent='Please set a start date.'; return; }
   if(!p||p<=0||p>2) { err.textContent='Enter a valid pace (0.05–2 kg/week).'; return; }
   var n = entries.length, cur = n ? entries[n-1].weight : null;
-  var startW = cur || w;
-  var delta = w - startW;
-  if(Math.abs(delta) < 0.1) { err.textContent='Target weight must differ from current weight.'; return; }
+  if(!cur) { err.textContent='Log at least one weight entry before setting a goal.'; return; }
+  var startW = cur;
   var isBulk = delta > 0;
   var weeks = Math.abs(delta / p);
   var days = Math.round(weeks * 7);
