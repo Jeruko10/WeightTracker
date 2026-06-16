@@ -684,19 +684,57 @@ function render(){
   }
 
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
+  // Y axis bounds
+  var allVals=wts.filter(function(v){return v!==null;});
+  var yMin=allVals.length?Math.min.apply(null,allVals):0;
+  var yMax=allVals.length?Math.max.apply(null,allVals):100;
+  if(goal&&goal.date){
+    if(goal.isBulk) yMax=Math.max(yMax,goal.weight);
+    else yMin=Math.min(yMin,goal.weight);
+  }
+  var yPad=0.5;
+  yMin=parseFloat((yMin-yPad).toFixed(1));
+  yMax=parseFloat((yMax+yPad).toFixed(1));
+
+  // Target weight horizontal line
+  var targetLine=goal&&goal.weight?{
+    id:'targetLine',
+    afterDraw:function(ch){
+      if(!goal||!goal.weight)return;
+      var ctx2=ch.ctx, yScale=ch.scales.y, xScale=ch.scales.x;
+      var y=yScale.getPixelForValue(goal.weight);
+      ctx2.save();
+      ctx2.beginPath();
+      ctx2.moveTo(xScale.left,y);
+      ctx2.lineTo(xScale.right,y);
+      ctx2.strokeStyle='rgba(108,207,151,0.5)';
+      ctx2.lineWidth=1;
+      ctx2.setLineDash([4,4]);
+      ctx2.stroke();
+      ctx2.font='10px system-ui';
+      ctx2.fillStyle='#6fcf97';
+      ctx2.fillText(goal.weight.toFixed(1)+' kg',xScale.right-48,y-4);
+      ctx2.restore();
+    }
+  }:null;
+
   if(!chart){
     chart=new Chart(document.getElementById('chart'),{
       type:'line',data:{labels:labels,datasets:datasets},
+      plugins:targetLine?[targetLine]:[],
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}}}},
         scales:{
           x:{ticks:{color:tc,font:{size:11},maxTicksLimit:10},grid:{color:gc}},
-          y:{ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
+          y:{min:yMin,max:yMax,ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
         }
       }
     });
   } else {
-    chart.data.labels=labels; chart.data.datasets=datasets; chart.update();
+    chart.data.labels=labels; chart.data.datasets=datasets;
+    chart.options.scales.y.min=yMin; chart.options.scales.y.max=yMax;
+    if(targetLine){chart.config.plugins=[targetLine];}
+    chart.update();
   }
 
   // Weekly summary
