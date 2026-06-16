@@ -8,28 +8,61 @@
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
 <style>
+*{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Google Sans',Roboto,system-ui,sans-serif;background:#1c1b1f;color:#e6e1e5;min-height:100vh}
-.app{max-width:860px;margin:0 auto;padding:0 0 2rem}
-.header{background:#1c1b1f;padding:20px 24px 0}
-.header-titles{display:flex;align-items:center;gap:12px;padding-bottom:16px;flex-wrap:wrap}
-h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
-.hdivider{width:1.5px;height:28px;background:#3a3540;border-radius:2px;flex-shrink:0;display:none}
+
+/* ── LOGIN ── */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:24px}
+#login-screen h2{font-size:24px;font-weight:500;color:#e6e1e5}
+#login-screen p{font-size:14px;color:#938f99;text-align:center;max-width:280px}
+
+/* ── APP SHELL ── */
+#app-screen{display:none}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 24px 0}
+.topbar-left{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.topbar-right{display:flex;align-items:center;gap:12px}
+h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px;white-space:nowrap}
+.hdivider{width:1.5px;height:24px;background:#3a3540;border-radius:2px;flex-shrink:0;display:none}
 #cycle-label{font-size:22px;font-weight:500;display:none}
-.tabs{display:flex}
-.tab{flex:1;text-align:center;font-size:13px;font-weight:500;padding:10px 0;color:#938f99;cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
-.tab.active{color:#d0bcff;border-bottom:2px solid #d0bcff}
-.section{padding:20px 24px;display:none}
-.section.active{display:block}
-.two-col{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.one-col{display:grid;grid-template-columns:1fr;gap:16px}
-@media(max-width:600px){.two-col{grid-template-columns:1fr}}
+.user-info{display:flex;align-items:center;gap:8px}
+.user-avatar{width:28px;height:28px;border-radius:50%;background:#3a3540;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#d0bcff;overflow:hidden;flex-shrink:0}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.user-name{font-size:13px;color:#938f99}
+.signout-btn{background:none;border:none;color:#938f99;font-size:12px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px}
+.signout-btn:hover{background:#3a3540;color:#e6e1e5}
+.sync-indicator{font-size:11px;min-height:16px;color:#938f99;padding:4px 24px 0;text-align:right}
+.sync-indicator.saving{color:#f2c94c}
+.sync-indicator.saved{color:#6fcf97}
+.sync-indicator.error{color:#eb5757}
+
+/* ── DESKTOP LAYOUT ── */
+.desktop-layout{display:none}
+.left-panel{width:340px;flex-shrink:0;border-right:1px solid #2b2930;padding:16px;overflow-y:auto;height:calc(100vh - 90px)}
+.right-panel{flex:1;padding:16px;overflow-y:auto;height:calc(100vh - 90px)}
+.left-tabs{display:flex;gap:8px;margin-bottom:16px}
+.left-tab{flex:1;text-align:center;font-size:13px;font-weight:500;padding:9px;border-radius:10px;cursor:pointer;background:#2b2930;color:#938f99;transition:all .2s}
+.left-tab.active{background:#3a3540;color:#d0bcff}
+
+/* ── MOBILE LAYOUT ── */
+.mobile-layout{display:block}
+.mob-tabs{display:flex;border-bottom:1px solid #2b2930;margin:0 0 0}
+.mob-tab{flex:1;text-align:center;font-size:13px;font-weight:500;padding:10px 0;color:#938f99;cursor:pointer;border-bottom:2px solid transparent}
+.mob-tab.active{color:#d0bcff;border-bottom:2px solid #d0bcff}
+.mob-section{padding:16px;display:none}
+.mob-section.active{display:block}
+
+/* ── CARDS ── */
 .card{background:#2b2930;border-radius:16px;padding:16px;margin-bottom:12px}
 .card-title{font-size:12px;font-weight:500;color:#938f99;text-transform:uppercase;letter-spacing:.05em;margin-bottom:12px}
+
+/* ── STATS ── */
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .stat{background:#2b2930;border-radius:16px;padding:12px 6px;text-align:center}
 .stat-label{font-size:10px;color:#938f99;margin-bottom:4px;font-weight:500}
 .stat-val{font-size:15px;font-weight:500;color:#e6e1e5}
 .stat-val.ac{color:#d0bcff}
+
+/* ── GOAL BANNER ── */
 .goal-banner{background:#2b2930;border-radius:16px;padding:16px;margin-bottom:12px}
 .banner-title{font-size:12px;color:#938f99;font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
 .pace-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
@@ -38,7 +71,6 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .chip.fast{background:#3a1a1a;color:#eb5757}
 .chip.slow{background:#3a2a0a;color:#f2c94c}
 .chip.none{background:#3a3540;color:#938f99}
-.pace-desc{font-size:12px;color:#938f99}
 .proj{font-size:12px;color:#938f99;margin-bottom:10px}
 .proj b{color:#e6e1e5}
 .bars{display:flex;flex-direction:column;gap:8px;margin-top:8px}
@@ -49,10 +81,15 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .teal{background:#6fcf97}
 .purple{background:#d0bcff}
 .bar-sub{font-size:10px;color:#938f99;margin-top:2px}
+
+/* ── CHART ── */
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:#938f99}
 .leg-item{display:flex;align-items:center;gap:6px}
 .leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
-.chart-wrap{position:relative;height:260px}
+.chart-wrap{position:relative;height:360px}
+.chart-hint{font-size:10px;color:#555;text-align:center;margin-top:6px}
+
+/* ── INPUTS / BUTTONS ── */
 input[type=date],input[type=number]{background:#3a3540;border:1.5px solid transparent;border-radius:10px;color:#e6e1e5;font-size:15px;padding:10px 12px;width:100%;outline:none;font-family:inherit;transition:border-color .15s;color-scheme:dark}
 input:focus{border-color:#d0bcff;background:#45404d}
 .row2{display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:10px}
@@ -68,6 +105,8 @@ input:focus{border-color:#d0bcff;background:#45404d}
 .goal-form{display:flex;flex-direction:column;gap:10px}
 .goal-preview{background:#3a3540;border-radius:10px;padding:12px;font-size:13px;color:#938f99;line-height:1.7;display:none}
 .goal-preview b{color:#e6e1e5}
+
+/* ── HISTORY ── */
 .entry-list{display:flex;flex-direction:column}
 .entry{display:flex;align-items:center;justify-content:space-between;padding:11px 8px;border-bottom:1px solid #3a3540}
 .entry:last-of-type{border-bottom:none}
@@ -81,6 +120,8 @@ input:focus{border-color:#d0bcff;background:#45404d}
 .edit-row .btn{padding:8px 14px;font-size:13px;width:auto}
 .edit-row .btn.secondary{margin:0}
 .empty{color:#938f99;font-size:14px;text-align:center;padding:2rem 0}
+
+/* ── TABLES ── */
 .wtbl{width:100%;border-collapse:collapse;font-size:13px}
 .wtbl th{text-align:left;color:#938f99;font-weight:500;padding:4px 6px;border-bottom:1px solid #3a3540}
 .wtbl td{padding:7px 6px;border-bottom:1px solid #3a3540;color:#e6e1e5}
@@ -88,24 +129,16 @@ input:focus{border-color:#d0bcff;background:#45404d}
 .wtbl td:last-child{text-align:right;color:#938f99;font-size:12px}
 .past-goal{display:flex;justify-content:space-between;align-items:center;padding:9px 4px;border-bottom:1px solid #3a3540}
 .past-goal:last-child{border-bottom:none}
-#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:24px}
-#login-screen h2{font-size:24px;font-weight:500;color:#e6e1e5}
-#login-screen p{font-size:14px;color:#938f99;text-align:center;max-width:280px}
-.user-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 24px 4px}
-.user-info{display:flex;align-items:center;gap:8px}
-.user-avatar{width:28px;height:28px;border-radius:50%;background:#3a3540;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#d0bcff;overflow:hidden;flex-shrink:0}
-.user-avatar img{width:100%;height:100%;object-fit:cover}
-.user-name{font-size:13px;color:#938f99}
-.signout-btn{background:none;border:none;color:#938f99;font-size:12px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px}
-.signout-btn:hover{background:#3a3540;color:#e6e1e5}
-.sync-indicator{font-size:11px;padding:0 24px 8px;text-align:right;min-height:20px;color:#938f99}
-.sync-indicator.saving{color:#f2c94c}
-.sync-indicator.saved{color:#6fcf97}
-.sync-indicator.error{color:#eb5757}
+
+@media(min-width:700px){
+  .desktop-layout{display:flex}
+  .mobile-layout{display:none}
+}
 </style>
 </head>
 <body>
 
+<!-- LOGIN -->
 <div id="login-screen" style="display:none">
   <h2>WEIGHT TRACKER</h2>
   <p>Sign in to sync your data across devices</p>
@@ -115,118 +148,191 @@ input:focus{border-color:#d0bcff;background:#45404d}
   </button>
 </div>
 
-<div id="app-screen" style="display:none">
-  <div class="app">
-    <div class="header">
-      <div class="header-titles">
-        <h1>WEIGHT TRACKER</h1>
-        <div class="hdivider" id="hdivider"></div>
-        <span id="cycle-label"></span>
-      </div>
-      <div class="tabs">
-        <div class="tab active" data-tab="overview">Overview</div>
-        <div class="tab" data-tab="log">Log</div>
-        <div class="tab" data-tab="goal">Goal</div>
-      </div>
+<!-- APP -->
+<div id="app-screen">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <h1>WEIGHT TRACKER</h1>
+      <div class="hdivider" id="hdivider"></div>
+      <span id="cycle-label"></span>
     </div>
-    <div class="user-bar">
+    <div class="topbar-right">
       <div class="user-info">
         <div class="user-avatar" id="user-avatar"></div>
         <span class="user-name" id="user-name"></span>
       </div>
       <button class="signout-btn" id="btn-signout">Sign out</button>
     </div>
-    <div class="sync-indicator" id="sync-indicator"></div>
+  </div>
+  <div class="sync-indicator" id="sync-indicator"></div>
 
-    <div id="overview" class="section active">
-      <div class="two-col">
-        <div>
-          <div class="stats">
-            <div class="stat"><div class="stat-label">Current</div><div class="stat-val ac" id="s-cur">—</div></div>
-            <div class="stat"><div class="stat-label">7d avg</div><div class="stat-val" id="s-avg">—</div></div>
-            <div class="stat"><div class="stat-label">7d change</div><div class="stat-val" id="s-rate">—</div></div>
-          </div>
-          <div class="goal-banner">
-            <div class="banner-title" id="banner-title">Goal</div>
-            <div class="pace-row">
-              <span class="chip none" id="pace-chip">No goal set</span>
-            </div>
-            <div class="proj" id="proj-line" style="display:none"></div>
-            <div class="bars" id="bars" style="display:none">
-              <div class="bar-row">
-                <div class="bar-labels"><span id="tl-s"></span><span id="tl-e"></span></div>
-                <div class="bar-track"><div class="bar-fill teal" id="time-fill" style="width:0%"></div></div>
-                <div class="bar-sub" id="time-sub"></div>
-              </div>
-              <div class="bar-row">
-                <div class="bar-labels"><span id="wl-s"></span><span id="wl-e"></span></div>
-                <div class="bar-track"><div class="bar-fill purple" id="wt-fill" style="width:0%"></div></div>
-                <div class="bar-sub" id="wt-sub"></div>
-              </div>
-            </div>
-          </div>
-          <div class="card">
-            <div class="card-title">Weekly summary</div>
-            <div id="week-summary"><p class="empty">No entries yet</p></div>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <div class="card-title">Progress</div>
-            <div class="legend">
-              <span class="leg-item"><span class="leg-solid"></span>Weight</span>
-              <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
-            </div>
-            <div class="chart-wrap"><canvas id="chart"></canvas></div>
-          </div>
-        </div>
+  <!-- DESKTOP -->
+  <div class="desktop-layout">
+    <div class="left-panel">
+      <div class="left-tabs">
+        <div class="left-tab active" data-dtab="log">Log</div>
+        <div class="left-tab" data-dtab="goal">Goal</div>
       </div>
-    </div>
-
-    <div id="log" class="section">
-      <div class="two-col">
+      <!-- LOG -->
+      <div id="d-log" class="d-section">
         <div class="card">
           <div class="card-title">Add entry</div>
           <div class="row2">
-            <input type="date" id="inp-date">
-            <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+            <input type="date" id="d-inp-date">
+            <input type="number" id="d-inp-wt" placeholder="kg" min="30" max="250" step="0.1">
           </div>
-          <button class="btn primary" id="btn-add">Add</button>
-          <p class="err" id="add-err"></p>
+          <button class="btn primary" id="d-btn-add">Add</button>
+          <p class="err" id="d-add-err"></p>
         </div>
         <div class="card">
           <div class="card-title">History</div>
-          <div class="entry-list" id="entry-list"><p class="empty">No entries yet</p></div>
+          <div class="entry-list" id="d-entry-list"><p class="empty">No entries yet</p></div>
+        </div>
+      </div>
+      <!-- GOAL -->
+      <div id="d-goal" class="d-section" style="display:none">
+        <div class="card">
+          <div class="card-title">Set your goal</div>
+          <div class="goal-form">
+            <div><div class="field-label">Target weight (kg)</div><input type="number" id="d-g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
+            <div><div class="field-label">Start date</div><input type="date" id="d-g-start"></div>
+            <div><div class="field-label">Desired pace (kg / week)</div><input type="number" id="d-g-pace" placeholder="e.g. 0.25" step="0.05" min="0.05" max="2"></div>
+            <div class="goal-preview" id="d-goal-preview"></div>
+            <button class="btn primary" id="d-btn-save-goal">Save goal</button>
+            <button class="btn secondary" id="d-btn-clear-goal" style="display:none">Remove goal</button>
+          </div>
+          <p class="err" id="d-goal-err"></p>
+        </div>
+        <div class="card" id="d-goal-summary" style="display:none">
+          <div class="card-title">Current goal</div>
+          <div id="d-goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
+        </div>
+        <div class="card" id="d-goal-history-card" style="display:none">
+          <div class="card-title">Past goals</div>
+          <div id="d-goal-history-list"></div>
         </div>
       </div>
     </div>
+    <!-- RIGHT: always-visible overview -->
+    <div class="right-panel">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Current</div><div class="stat-val ac" id="d-s-cur">—</div></div>
+        <div class="stat"><div class="stat-label">7d avg</div><div class="stat-val" id="d-s-avg">—</div></div>
+        <div class="stat"><div class="stat-label">7d change</div><div class="stat-val" id="d-s-rate">—</div></div>
+      </div>
+      <div class="goal-banner">
+        <div class="banner-title" id="d-banner-title">Goal</div>
+        <div class="pace-row"><span class="chip none" id="d-pace-chip">No goal set</span></div>
+        <div class="proj" id="d-proj-line" style="display:none"></div>
+        <div class="bars" id="d-bars" style="display:none">
+          <div class="bar-row">
+            <div class="bar-labels"><span id="d-tl-s"></span><span id="d-tl-e"></span></div>
+            <div class="bar-track"><div class="bar-fill teal" id="d-time-fill" style="width:0%"></div></div>
+            <div class="bar-sub" id="d-time-sub"></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-labels"><span id="d-wl-s"></span><span id="d-wl-e"></span></div>
+            <div class="bar-track"><div class="bar-fill purple" id="d-wt-fill" style="width:0%"></div></div>
+            <div class="bar-sub" id="d-wt-sub"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Progress</div>
+        <div class="legend">
+          <span class="leg-item"><span class="leg-solid"></span>Weight</span>
+          <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
+        </div>
+        <div class="chart-wrap"><canvas id="chart"></canvas></div>
+        <div class="chart-hint">Scroll to pan · Wheel/pinch to zoom</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Weekly summary</div>
+        <div id="d-week-summary"><p class="empty">No entries yet</p></div>
+      </div>
+    </div>
+  </div>
 
-    <div id="goal" class="section">
-      <div class="two-col">
-        <div>
-          <div class="card">
-            <div class="card-title">Set your goal</div>
-            <div class="goal-form">
-              <div><div class="field-label">Target weight (kg)</div><input type="number" id="g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
-              <div><div class="field-label">Start date</div><input type="date" id="g-start"></div>
-              <div><div class="field-label">Desired pace (kg / week)</div><input type="number" id="g-pace" placeholder="e.g. 0.25" step="0.05" min="0.05" max="2"></div>
-              <div class="goal-preview" id="goal-preview"></div>
-              <button class="btn primary" id="btn-save-goal">Save goal</button>
-              <button class="btn secondary" id="btn-clear-goal" style="display:none">Remove goal</button>
-            </div>
-            <p class="err" id="goal-err"></p>
+  <!-- MOBILE -->
+  <div class="mobile-layout">
+    <div class="mob-tabs">
+      <div class="mob-tab active" data-mtab="overview">Overview</div>
+      <div class="mob-tab" data-mtab="log">Log</div>
+      <div class="mob-tab" data-mtab="goal">Goal</div>
+    </div>
+    <div id="m-overview" class="mob-section active">
+      <div class="stats">
+        <div class="stat"><div class="stat-label">Current</div><div class="stat-val ac" id="m-s-cur">—</div></div>
+        <div class="stat"><div class="stat-label">7d avg</div><div class="stat-val" id="m-s-avg">—</div></div>
+        <div class="stat"><div class="stat-label">7d change</div><div class="stat-val" id="m-s-rate">—</div></div>
+      </div>
+      <div class="goal-banner">
+        <div class="banner-title" id="m-banner-title">Goal</div>
+        <div class="pace-row"><span class="chip none" id="m-pace-chip">No goal set</span></div>
+        <div class="proj" id="m-proj-line" style="display:none"></div>
+        <div class="bars" id="m-bars" style="display:none">
+          <div class="bar-row">
+            <div class="bar-labels"><span id="m-tl-s"></span><span id="m-tl-e"></span></div>
+            <div class="bar-track"><div class="bar-fill teal" id="m-time-fill" style="width:0%"></div></div>
+            <div class="bar-sub" id="m-time-sub"></div>
+          </div>
+          <div class="bar-row">
+            <div class="bar-labels"><span id="m-wl-s"></span><span id="m-wl-e"></span></div>
+            <div class="bar-track"><div class="bar-fill purple" id="m-wt-fill" style="width:0%"></div></div>
+            <div class="bar-sub" id="m-wt-sub"></div>
           </div>
         </div>
-        <div>
-          <div class="card" id="goal-summary" style="display:none">
-            <div class="card-title">Current goal</div>
-            <div id="goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
-          </div>
-          <div class="card" id="goal-history-card" style="display:none">
-            <div class="card-title">Past goals</div>
-            <div id="goal-history-list"></div>
-          </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Progress</div>
+        <div class="legend">
+          <span class="leg-item"><span class="leg-solid"></span>Weight</span>
+          <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
         </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="m-chart"></canvas></div>
+        <div class="chart-hint">Scroll to pan · Pinch to zoom</div>
+      </div>
+      <div class="card">
+        <div class="card-title">Weekly summary</div>
+        <div id="m-week-summary"><p class="empty">No entries yet</p></div>
+      </div>
+    </div>
+    <div id="m-log" class="mob-section">
+      <div class="card">
+        <div class="card-title">Add entry</div>
+        <div class="row2">
+          <input type="date" id="m-inp-date">
+          <input type="number" id="m-inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+        </div>
+        <button class="btn primary" id="m-btn-add">Add</button>
+        <p class="err" id="m-add-err"></p>
+      </div>
+      <div class="card">
+        <div class="card-title">History</div>
+        <div class="entry-list" id="m-entry-list"><p class="empty">No entries yet</p></div>
+      </div>
+    </div>
+    <div id="m-goal" class="mob-section">
+      <div class="card">
+        <div class="card-title">Set your goal</div>
+        <div class="goal-form">
+          <div><div class="field-label">Target weight (kg)</div><input type="number" id="m-g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
+          <div><div class="field-label">Start date</div><input type="date" id="m-g-start"></div>
+          <div><div class="field-label">Desired pace (kg / week)</div><input type="number" id="m-g-pace" placeholder="e.g. 0.25" step="0.05" min="0.05" max="2"></div>
+          <div class="goal-preview" id="m-goal-preview"></div>
+          <button class="btn primary" id="m-btn-save-goal">Save goal</button>
+          <button class="btn secondary" id="m-btn-clear-goal" style="display:none">Remove goal</button>
+        </div>
+        <p class="err" id="m-goal-err"></p>
+      </div>
+      <div class="card" id="m-goal-summary" style="display:none">
+        <div class="card-title">Current goal</div>
+        <div id="m-goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
+      </div>
+      <div class="card" id="m-goal-history-card" style="display:none">
+        <div class="card-title">Past goals</div>
+        <div id="m-goal-history-list"></div>
       </div>
     </div>
   </div>
@@ -241,43 +347,24 @@ import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
-var FB = initializeApp({
-  apiKey:"AIzaSyCyLBXgZeYsTW8s7IiGr5foJzLmzo3D9z4",
-  authDomain:"weight-tracking-joan.firebaseapp.com",
-  projectId:"weight-tracking-joan",
-  storageBucket:"weight-tracking-joan.firebasestorage.app",
-  messagingSenderId:"452714898066",
-  appId:"1:452714898066:web:ecaf9cf5489ad3a6bf3c4b"
-});
-var auth = getAuth(FB);
-var db   = getFirestore(FB);
-var currentUser = null;
-var entries = [], goal = null, goalHistory = [], chart = null;
+var FB=initializeApp({apiKey:"AIzaSyCyLBXgZeYsTW8s7IiGr5foJzLmzo3D9z4",authDomain:"weight-tracking-joan.firebaseapp.com",projectId:"weight-tracking-joan",storageBucket:"weight-tracking-joan.firebasestorage.app",messagingSenderId:"452714898066",appId:"1:452714898066:web:ecaf9cf5489ad3a6bf3c4b"});
+var auth=getAuth(FB), db=getFirestore(FB);
+var currentUser=null, entries=[], goal=null, goalHistory=[], chart=null, mChart=null;
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
-function uDoc(p)  { return doc(db,'users',currentUser.uid,p); }
-function uCol(p)  { return collection(db,'users',currentUser.uid,p); }
-function eDoc(id) { return doc(db,'users',currentUser.uid,'entries',id); }
-function ghDoc(id){ return doc(db,'users',currentUser.uid,'goalHistory',id); }
-function today()  { return new Date().toISOString().slice(0,10); }
-function fmt(s)   { if(!s) return '—'; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
-function addDays(s,d){ var dt=new Date(s); dt.setDate(dt.getDate()+d); return dt.toISOString().slice(0,10); }
-function weekKey(s){
-  var dt=new Date(s), jan=new Date(dt.getFullYear(),0,1);
-  var wk=Math.ceil(((dt-jan)/864e5+jan.getDay()+1)/7);
-  return dt.getFullYear()+'-W'+(wk<10?'0':'')+wk;
-}
-function sync(msg,cls){
-  var el=document.getElementById('sync-indicator');
-  el.textContent=msg; el.className='sync-indicator '+(cls||'');
-}
+function uDoc(p){return doc(db,'users',currentUser.uid,p);}
+function uCol(p){return collection(db,'users',currentUser.uid,p);}
+function eDoc(id){return doc(db,'users',currentUser.uid,'entries',id);}
+function ghDoc(id){return doc(db,'users',currentUser.uid,'goalHistory',id);}
+function today(){return new Date().toISOString().slice(0,10);}
+function fmt(s){if(!s)return '—';var p=s.split('-');return p[2]+'/'+p[1]+'/'+p[0];}
+function addDays(s,d){var dt=new Date(s);dt.setDate(dt.getDate()+d);return dt.toISOString().slice(0,10);}
+function weekKey(s){var dt=new Date(s),jan=new Date(dt.getFullYear(),0,1);var wk=Math.ceil(((dt-jan)/864e5+jan.getDay()+1)/7);return dt.getFullYear()+'-W'+(wk<10?'0':'')+wk;}
+function sync(msg,cls){var el=document.getElementById('sync-indicator');el.textContent=msg;el.className='sync-indicator '+(cls||'');}
+function isDesktop(){return window.innerWidth>=700;}
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
-document.getElementById('btn-google-sign-in').addEventListener('click',function(){
-  signInWithPopup(auth,new GoogleAuthProvider()).catch(console.error);
-});
-document.getElementById('btn-signout').addEventListener('click',function(){ signOut(auth); });
-
+document.getElementById('btn-google-sign-in').addEventListener('click',function(){signInWithPopup(auth,new GoogleAuthProvider()).catch(console.error);});
+document.getElementById('btn-signout').addEventListener('click',function(){signOut(auth);});
 onAuthStateChanged(auth,function(u){
   if(u){
     currentUser=u;
@@ -285,7 +372,7 @@ onAuthStateChanged(auth,function(u){
     document.getElementById('app-screen').style.display='';
     document.getElementById('user-name').textContent=u.displayName||u.email;
     var av=document.getElementById('user-avatar');
-    if(u.photoURL) av.innerHTML='<img src="'+u.photoURL+'">';
+    if(u.photoURL)av.innerHTML='<img src="'+u.photoURL+'">';
     else av.textContent=(u.displayName||'U')[0].toUpperCase();
     setDoc(uDoc('data/profile'),{name:u.displayName||'',email:u.email||'',photoURL:u.photoURL||''});
     loadAll();
@@ -293,477 +380,311 @@ onAuthStateChanged(auth,function(u){
     currentUser=null;
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app-screen').style.display='none';
-    entries=[]; goal=null; goalHistory=[];
+    entries=[];goal=null;goalHistory=[];
     if(chart){chart.destroy();chart=null;}
+    if(mChart){mChart.destroy();mChart=null;}
   }
 });
 
-// ── FIREBASE LOAD ─────────────────────────────────────────────────────────────
+// ── FIREBASE ──────────────────────────────────────────────────────────────────
 async function loadAll(){
   sync('Loading…');
   try{
     var eSnap=await getDocs(uCol('entries'));
     entries=eSnap.docs.map(function(d){return Object.assign({_id:d.id},d.data());});
     entries.sort(function(a,b){return a.date.localeCompare(b.date);});
-
     var gSnap=await getDoc(uDoc('data/goal'));
     goal=gSnap.exists()?gSnap.data():null;
-
     var ghSnap=await getDocs(uCol('goalHistory'));
     goalHistory=ghSnap.docs.map(function(d){return Object.assign({_id:d.id},d.data());});
     goalHistory.sort(function(a,b){return (b.savedOn||'').localeCompare(a.savedOn||'');});
-
-    sync('Synced','saved'); setTimeout(function(){sync('');},2000);
+    sync('Synced','saved');setTimeout(function(){sync('');},2000);
     render();
-  } catch(e){
-    sync('Error loading data','error');
-    console.error(e);
-  }
+  }catch(e){sync('Error loading data','error');console.error(e);}
 }
+async function fbSaveEntry(e){sync('Saving…','saving');var r=await addDoc(uCol('entries'),{date:e.date,weight:e.weight});e._id=r.id;sync('Saved','saved');setTimeout(function(){sync('');},2000);}
+async function fbUpdateEntry(e){sync('Saving…','saving');await setDoc(eDoc(e._id),{date:e.date,weight:e.weight});sync('Saved','saved');setTimeout(function(){sync('');},2000);}
+async function fbDeleteEntry(e){sync('Saving…','saving');await deleteDoc(eDoc(e._id));sync('Saved','saved');setTimeout(function(){sync('');},2000);}
+async function fbSaveGoal(){sync('Saving…','saving');await setDoc(uDoc('data/goal'),goal);sync('Saved','saved');setTimeout(function(){sync('');},2000);}
+async function fbDeleteGoal(){await deleteDoc(uDoc('data/goal'));}
+async function fbSaveGH(g){sync('Saving…','saving');var r=await addDoc(uCol('goalHistory'),g);g._id=r.id;sync('Saved','saved');setTimeout(function(){sync('');},2000);}
+async function fbDeleteGH(g){await deleteDoc(ghDoc(g._id));}
 
-// ── FIREBASE WRITE ────────────────────────────────────────────────────────────
-async function fbSaveEntry(entry){
-  sync('Saving…','saving');
-  var ref=await addDoc(uCol('entries'),{date:entry.date,weight:entry.weight});
-  entry._id=ref.id;
-  sync('Saved','saved'); setTimeout(function(){sync('');},2000);
-}
-async function fbUpdateEntry(entry){
-  sync('Saving…','saving');
-  await setDoc(eDoc(entry._id),{date:entry.date,weight:entry.weight});
-  sync('Saved','saved'); setTimeout(function(){sync('');},2000);
-}
-async function fbDeleteEntry(entry){
-  sync('Saving…','saving');
-  await deleteDoc(eDoc(entry._id));
-  sync('Saved','saved'); setTimeout(function(){sync('');},2000);
-}
-async function fbSaveGoal(){
-  sync('Saving…','saving');
-  await setDoc(uDoc('data/goal'),goal);
-  sync('Saved','saved'); setTimeout(function(){sync('');},2000);
-}
-async function fbDeleteGoal(){ await deleteDoc(uDoc('data/goal')); }
-async function fbSaveGH(g){
-  sync('Saving…','saving');
-  var ref=await addDoc(uCol('goalHistory'),g);
-  g._id=ref.id;
-  sync('Saved','saved'); setTimeout(function(){sync('');},2000);
-}
-async function fbDeleteGH(g){ await deleteDoc(ghDoc(g._id)); }
-
-// ── TABS ──────────────────────────────────────────────────────────────────────
-document.getElementById('inp-date').value=today();
-document.querySelectorAll('.tab').forEach(function(tab){
+// ── TABS: DESKTOP ─────────────────────────────────────────────────────────────
+document.querySelectorAll('.left-tab').forEach(function(tab){
   tab.addEventListener('click',function(){
-    document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+    document.querySelectorAll('.left-tab').forEach(function(t){t.classList.remove('active');});
     tab.classList.add('active');
-    document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
-    document.getElementById(tab.dataset.tab).classList.add('active');
-    if(tab.dataset.tab==='goal') renderGoalTab();
+    document.querySelectorAll('.d-section').forEach(function(s){s.style.display='none';});
+    document.getElementById('d-'+tab.dataset.dtab).style.display='';
+    if(tab.dataset.dtab==='goal')renderGoalTab('d');
+  });
+});
+
+// ── TABS: MOBILE ──────────────────────────────────────────────────────────────
+document.getElementById('d-inp-date').value=today();
+document.getElementById('m-inp-date').value=today();
+document.querySelectorAll('.mob-tab').forEach(function(tab){
+  tab.addEventListener('click',function(){
+    document.querySelectorAll('.mob-tab').forEach(function(t){t.classList.remove('active');});
+    tab.classList.add('active');
+    document.querySelectorAll('.mob-section').forEach(function(s){s.classList.remove('active');});
+    document.getElementById('m-'+tab.dataset.mtab).classList.add('active');
+    if(tab.dataset.mtab==='goal')renderGoalTab('m');
   });
 });
 
 // ── ADD ENTRY ─────────────────────────────────────────────────────────────────
-document.getElementById('btn-add').addEventListener('click',async function(){
-  var d=document.getElementById('inp-date').value;
-  var w=parseFloat(document.getElementById('inp-wt').value);
-  var err=document.getElementById('add-err');
-  if(!d){err.textContent='Please select a date.';return;}
-  if(!w||w<30||w>250){err.textContent='Invalid weight (30–250 kg).';return;}
-  if(entries.find(function(e){return e.date===d;})){err.textContent='An entry already exists for this day.';return;}
-  err.textContent='';
-  var entry={date:d,weight:w};
-  entries.push(entry);
-  entries.sort(function(a,b){return a.date.localeCompare(b.date);});
-  document.getElementById('inp-wt').value='';
-  render();
-  await fbSaveEntry(entry);
-});
+function setupAddBtn(pfx){
+  document.getElementById(pfx+'-btn-add').addEventListener('click',async function(){
+    var d=document.getElementById(pfx+'-inp-date').value;
+    var w=parseFloat(document.getElementById(pfx+'-inp-wt').value);
+    var err=document.getElementById(pfx+'-add-err');
+    if(!d){err.textContent='Please select a date.';return;}
+    if(!w||w<30||w>250){err.textContent='Invalid weight (30–250 kg).';return;}
+    if(entries.find(function(e){return e.date===d;})){err.textContent='An entry already exists for this day.';return;}
+    err.textContent='';
+    var entry={date:d,weight:w};
+    entries.push(entry);
+    entries.sort(function(a,b){return a.date.localeCompare(b.date);});
+    document.getElementById(pfx+'-inp-wt').value='';
+    render();
+    await fbSaveEntry(entry);
+  });
+}
+setupAddBtn('d'); setupAddBtn('m');
 
 // ── ENTRY ACTIONS ─────────────────────────────────────────────────────────────
 function deleteEntry(entry,row,btn){
   if(row.dataset.confirm!=='1'){
-    row.dataset.confirm='1'; btn.textContent='Confirm'; btn.style.background='#3a1a1a'; btn.style.color='#eb5757';
+    row.dataset.confirm='1';btn.textContent='Confirm';btn.style.background='#3a1a1a';btn.style.color='#eb5757';
     setTimeout(function(){if(row.dataset.confirm==='1'){row.dataset.confirm='0';btn.textContent='Delete';btn.style.background='';btn.style.color='';}},3000);
     return;
   }
   entries=entries.filter(function(e){return e._id!==entry._id;});
-  render(); fbDeleteEntry(entry);
+  render();fbDeleteEntry(entry);
 }
 function editEntry(date){
   document.querySelectorAll('.edit-row').forEach(function(r){r.style.display='none';});
-  var row=document.getElementById('er-'+date);
-  if(row){row.style.display='flex';row.querySelector('input').focus();}
+  ['d','m'].forEach(function(p){var r=document.getElementById(p+'-er-'+date);if(r){r.style.display='flex';r.querySelector('input').focus();}});
 }
 function confirmEdit(entry){
-  var inp=document.getElementById('ei-'+entry.date);
+  var inp=document.getElementById((isDesktop()?'d':'m')+'-ei-'+entry.date);
+  if(!inp){inp=document.getElementById('d-ei-'+entry.date)||document.getElementById('m-ei-'+entry.date);}
   var w=parseFloat(inp.value);
   if(!w||w<30||w>250){inp.style.borderColor='#eb5757';return;}
-  entry.weight=w; render(); fbUpdateEntry(entry);
+  entry.weight=w;render();fbUpdateEntry(entry);
 }
 function cancelEdit(date){
-  var row=document.getElementById('er-'+date);
-  if(row)row.style.display='none';
+  ['d','m'].forEach(function(p){var r=document.getElementById(p+'-er-'+date);if(r)r.style.display='none';});
 }
 
 // ── RENDER HISTORY ────────────────────────────────────────────────────────────
-function renderHistory(){
-  var list=document.getElementById('entry-list');
+function renderHistory(pfx){
+  var list=document.getElementById(pfx+'-entry-list');
   list.innerHTML='';
   if(!entries.length){list.innerHTML='<p class="empty">No entries yet</p>';return;}
   [].concat(entries).reverse().forEach(function(e){
     var isToday=e.date===today();
-    var row=document.createElement('div'); row.className='entry'; row.dataset.date=e.date;
+    var row=document.createElement('div');row.className='entry';row.dataset.date=e.date;
     if(isToday){row.style.background='#2b3a2b';row.style.borderRadius='10px';}
-    var ds=document.createElement('span'); ds.className='edate'; ds.textContent=fmt(e.date);
-    if(isToday){
-      var b=document.createElement('span'); b.textContent='Today';
-      b.style.cssText='font-size:10px;background:#3a3540;color:#6fcf97;padding:2px 6px;border-radius:6px;margin-left:6px';
-      ds.appendChild(b);
-    }
-    var ws=document.createElement('span'); ws.className='ewt'; ws.textContent=e.weight.toFixed(1)+' kg';
-    var bw=document.createElement('span'); bw.style.cssText='display:flex;gap:4px';
-    var eb=document.createElement('button'); eb.className='ebtn edit-btn'; eb.textContent='Edit';
+    var ds=document.createElement('span');ds.className='edate';ds.textContent=fmt(e.date);
+    if(isToday){var b=document.createElement('span');b.textContent='Today';b.style.cssText='font-size:10px;background:#3a3540;color:#6fcf97;padding:2px 6px;border-radius:6px;margin-left:6px';ds.appendChild(b);}
+    var ws=document.createElement('span');ws.className='ewt';ws.textContent=e.weight.toFixed(1)+' kg';
+    var bw=document.createElement('span');bw.style.cssText='display:flex;gap:4px';
+    var eb=document.createElement('button');eb.className='ebtn edit-btn';eb.textContent='Edit';
     (function(en){eb.addEventListener('click',function(){editEntry(en.date);});})(e);
-    var db=document.createElement('button'); db.className='ebtn del-btn'; db.textContent='Delete';
-    (function(en,r,bn){db.addEventListener('click',function(){deleteEntry(en,r,bn);});})(e,row,db);
-    bw.appendChild(eb); bw.appendChild(db);
-    row.appendChild(ds); row.appendChild(ws); row.appendChild(bw);
+    var db=document.createElement('button');db.className='ebtn del-btn';db.textContent='Delete';
+    (function(en,r,btn){db.addEventListener('click',function(){deleteEntry(en,r,btn);});})(e,row,db);
+    bw.appendChild(eb);bw.appendChild(db);
+    row.appendChild(ds);row.appendChild(ws);row.appendChild(bw);
     list.appendChild(row);
-    var er=document.createElement('div'); er.className='edit-row'; er.id='er-'+e.date;
-    var inp=document.createElement('input'); inp.type='number'; inp.id='ei-'+e.date; inp.value=e.weight; inp.min=30; inp.max=250; inp.step=0.1;
-    var sv=document.createElement('button'); sv.className='btn primary'; sv.textContent='Save';
+    var er=document.createElement('div');er.className='edit-row';er.id=pfx+'-er-'+e.date;
+    var inp=document.createElement('input');inp.type='number';inp.id=pfx+'-ei-'+e.date;inp.value=e.weight;inp.min=30;inp.max=250;inp.step=0.1;
+    var sv=document.createElement('button');sv.className='btn primary';sv.textContent='Save';
     (function(en){sv.addEventListener('click',function(){confirmEdit(en);});})(e);
-    var ca=document.createElement('button'); ca.className='btn secondary'; ca.textContent='Cancel';
+    var ca=document.createElement('button');ca.className='btn secondary';ca.textContent='Cancel';
     (function(en){ca.addEventListener('click',function(){cancelEdit(en.date);});})(e);
-    er.appendChild(inp); er.appendChild(sv); er.appendChild(ca);
+    er.appendChild(inp);er.appendChild(sv);er.appendChild(ca);
     list.appendChild(er);
   });
 }
 
 // ── GOAL PREVIEW ─────────────────────────────────────────────────────────────
-function updateGoalPreview(){
-  var w=parseFloat(document.getElementById('g-wt').value);
-  var s=document.getElementById('g-start').value;
-  var p=parseFloat(document.getElementById('g-pace').value);
-  var prev=document.getElementById('goal-preview');
+function setupGoalPreview(pfx){
+  ['wt','start','pace'].forEach(function(f){
+    document.getElementById(pfx+'-g-'+f).addEventListener('input',function(){updateGoalPreview(pfx);});
+  });
+}
+function updateGoalPreview(pfx){
+  var w=parseFloat(document.getElementById(pfx+'-g-wt').value);
+  var s=document.getElementById(pfx+'-g-start').value;
+  var p=parseFloat(document.getElementById(pfx+'-g-pace').value);
+  var prev=document.getElementById(pfx+'-goal-preview');
   if(!w||!s||!p||p<=0){prev.style.display='none';return;}
-  var n=entries.length, cur=n?entries[n-1].weight:null;
-  var startW=cur!==null?cur:w;
-  var delta=w-startW;
-  var isBulk=delta>=0;
-  var weeks=Math.abs(delta/p)||1;
-  var days=Math.round(weeks*7);
-  var endDate=addDays(s,days);
+  var n=entries.length,cur=n?entries[n-1].weight:null;
+  var startW=cur!==null?cur:w,delta=w-startW,isBulk=delta>=0;
+  var weeks=Math.abs(delta/p)||1,days=Math.round(weeks*7),endDate=addDays(s,days);
   prev.style.display='';
   prev.innerHTML='<b>'+(isBulk?'Bulking':'Cutting')+'</b>'+(cur!==null?' from <b>'+startW.toFixed(1)+' kg</b>':'')+' to <b>'+w+' kg</b><br>At <b>'+(isBulk?'+':'-')+p+' kg/wk</b> → <b>'+weeks.toFixed(1)+' weeks</b> (~'+days+' days)<br>Estimated end: <b>'+fmt(endDate)+'</b>';
 }
-['g-wt','g-start','g-pace'].forEach(function(id){
-  document.getElementById(id).addEventListener('input',updateGoalPreview);
-});
+setupGoalPreview('d');setupGoalPreview('m');
 
-// ── GOAL SAVE ─────────────────────────────────────────────────────────────────
-document.getElementById('btn-save-goal').addEventListener('click',async function(){
-  var w=parseFloat(document.getElementById('g-wt').value);
-  var s=document.getElementById('g-start').value;
-  var p=parseFloat(document.getElementById('g-pace').value);
-  var err=document.getElementById('goal-err');
-  var btn=document.getElementById('btn-save-goal');
-  if(!w||w<30||w>250){err.textContent='Enter a valid target weight (30–250 kg).';return;}
-  if(!s){err.textContent='Please set a start date.';return;}
-  if(!p||p<=0||p>2){err.textContent='Enter a valid pace (0.05–2 kg/week).';return;}
-  var n=entries.length, cur=n?entries[n-1].weight:null;
-  var startW=cur!==null?cur:w;
-  var delta=w-startW;
-  if(cur!==null&&Math.abs(delta)<0.1){err.textContent='Target weight must differ from current weight.';return;}
-  var isBulk=delta>=0;
-  var weeks=Math.abs(delta/p)||1;
-  var days=Math.round(weeks*7);
-  var endDate=addDays(s,days);
-  if(endDate<=today()){err.textContent='Calculated end date is in the past. Adjust pace or start date.';return;}
-  if(goal&&btn.dataset.confirm!=='1'){
-    btn.dataset.confirm='1'; btn.textContent='Tap again to confirm';
-    btn.style.background='#f2c94c'; btn.style.color='#1c1b1f';
-    setTimeout(function(){btn.dataset.confirm='0';btn.textContent='Save goal';btn.style.background='';btn.style.color='';},3000);
-    return;
-  }
-  if(goal){
-    var old={weight:goal.weight,start:goal.start,date:goal.date,pace:goal.pace||null,isBulk:goal.isBulk,savedOn:today()};
-    goalHistory.unshift(old); await fbSaveGH(old);
-  }
-  btn.dataset.confirm='0'; btn.textContent='Save goal'; btn.style.background=''; btn.style.color='';
-  err.textContent='';
-  goal={weight:w,start:s,date:endDate,pace:p,isBulk:isBulk};
-  document.getElementById('btn-clear-goal').style.display='';
-  render(); await fbSaveGoal();
-});
-
-// ── GOAL CLEAR ────────────────────────────────────────────────────────────────
-document.getElementById('btn-clear-goal').addEventListener('click',async function(){
-  var btn=document.getElementById('btn-clear-goal');
-  if(btn.dataset.confirm!=='1'){
-    btn.dataset.confirm='1'; btn.textContent='Tap again to confirm removal';
-    btn.style.background='#3a1a1a'; btn.style.color='#eb5757';
-    setTimeout(function(){btn.dataset.confirm='0';btn.textContent='Remove goal';btn.style.background='';btn.style.color='';},3000);
-    return;
-  }
-  goal=null;
-  ['g-wt','g-start','g-pace'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('goal-preview').style.display='none';
-  btn.dataset.confirm='0'; btn.textContent='Remove goal'; btn.style.background=''; btn.style.color='';
-  btn.style.display='none';
-  document.getElementById('goal-summary').style.display='none';
-  render(); await fbDeleteGoal();
-});
+// ── GOAL SAVE / CLEAR ─────────────────────────────────────────────────────────
+function setupGoalSave(pfx){
+  document.getElementById(pfx+'-btn-save-goal').addEventListener('click',async function(){
+    var w=parseFloat(document.getElementById(pfx+'-g-wt').value);
+    var s=document.getElementById(pfx+'-g-start').value;
+    var p=parseFloat(document.getElementById(pfx+'-g-pace').value);
+    var err=document.getElementById(pfx+'-goal-err');
+    var btn=document.getElementById(pfx+'-btn-save-goal');
+    if(!w||w<30||w>250){err.textContent='Enter a valid target weight (30–250 kg).';return;}
+    if(!s){err.textContent='Please set a start date.';return;}
+    if(!p||p<=0||p>2){err.textContent='Enter a valid pace (0.05–2 kg/week).';return;}
+    var n=entries.length,cur=n?entries[n-1].weight:null;
+    var startW=cur!==null?cur:w,delta=w-startW;
+    if(cur!==null&&Math.abs(delta)<0.1){err.textContent='Target weight must differ from current weight.';return;}
+    var isBulk=delta>=0,weeks=Math.abs(delta/p)||1,days=Math.round(weeks*7),endDate=addDays(s,days);
+    if(endDate<=today()){err.textContent='Calculated end date is in the past. Adjust pace or start date.';return;}
+    if(goal&&btn.dataset.confirm!=='1'){
+      btn.dataset.confirm='1';btn.textContent='Tap again to confirm';btn.style.background='#f2c94c';btn.style.color='#1c1b1f';
+      setTimeout(function(){btn.dataset.confirm='0';btn.textContent='Save goal';btn.style.background='';btn.style.color='';},3000);return;
+    }
+    if(goal){var old={weight:goal.weight,start:goal.start,date:goal.date,pace:goal.pace||null,isBulk:goal.isBulk,savedOn:today()};goalHistory.unshift(old);await fbSaveGH(old);}
+    btn.dataset.confirm='0';btn.textContent='Save goal';btn.style.background='';btn.style.color='';
+    err.textContent='';
+    goal={weight:w,start:s,date:endDate,pace:p,isBulk:isBulk};
+    document.getElementById(pfx+'-btn-clear-goal').style.display='';
+    render();await fbSaveGoal();
+  });
+  document.getElementById(pfx+'-btn-clear-goal').addEventListener('click',async function(){
+    var btn=document.getElementById(pfx+'-btn-clear-goal');
+    if(btn.dataset.confirm!=='1'){
+      btn.dataset.confirm='1';btn.textContent='Tap again to confirm removal';btn.style.background='#3a1a1a';btn.style.color='#eb5757';
+      setTimeout(function(){btn.dataset.confirm='0';btn.textContent='Remove goal';btn.style.background='';btn.style.color='';},3000);return;
+    }
+    goal=null;
+    ['wt','start','pace'].forEach(function(f){document.getElementById(pfx+'-g-'+f).value='';});
+    document.getElementById(pfx+'-goal-preview').style.display='none';
+    btn.dataset.confirm='0';btn.textContent='Remove goal';btn.style.background='';btn.style.color='';btn.style.display='none';
+    document.getElementById(pfx+'-goal-summary').style.display='none';
+    render();await fbDeleteGoal();
+  });
+}
+setupGoalSave('d');setupGoalSave('m');
 
 // ── GOAL TAB ──────────────────────────────────────────────────────────────────
-function renderGoalTab(){
+function renderGoalTab(pfx){
   if(goal){
-    document.getElementById('g-wt').value=goal.weight;
-    document.getElementById('g-start').value=goal.start||'';
-    document.getElementById('g-pace').value=goal.pace||'';
-    document.getElementById('btn-clear-goal').style.display='';
-    updateGoalPreview();
-    renderGoalSummary();
+    document.getElementById(pfx+'-g-wt').value=goal.weight;
+    document.getElementById(pfx+'-g-start').value=goal.start||'';
+    document.getElementById(pfx+'-g-pace').value=goal.pace||'';
+    document.getElementById(pfx+'-btn-clear-goal').style.display='';
+    updateGoalPreview(pfx);
+    renderGoalSummary(pfx);
   } else {
-    document.getElementById('btn-clear-goal').style.display='none';
-    document.getElementById('goal-summary').style.display='none';
-    document.getElementById('goal-preview').style.display='none';
+    document.getElementById(pfx+'-btn-clear-goal').style.display='none';
+    document.getElementById(pfx+'-goal-summary').style.display='none';
+    document.getElementById(pfx+'-goal-preview').style.display='none';
   }
-  var ghCard=document.getElementById('goal-history-card');
-  var ghList=document.getElementById('goal-history-list');
+  var ghCard=document.getElementById(pfx+'-goal-history-card');
+  var ghList=document.getElementById(pfx+'-goal-history-list');
   if(goalHistory.length){
-    ghCard.style.display=''; ghList.innerHTML='';
+    ghCard.style.display='';ghList.innerHTML='';
     goalHistory.forEach(function(g){
       var isBulk=g.isBulk!==undefined?g.isBulk:false;
-      var div=document.createElement('div'); div.className='past-goal';
+      var div=document.createElement('div');div.className='past-goal';
       var info=document.createElement('div');
       info.innerHTML='<span style="font-size:12px;font-weight:500;color:'+(isBulk?'#6fcf97':'#eb5757')+'">'+(isBulk?'Bulk':'Cut')+'</span><span style="font-size:13px;color:#938f99;margin-left:8px">'+fmt(g.start)+' → '+fmt(g.date)+'</span>';
-      var right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:10px';
-      var ws=document.createElement('span'); ws.style.cssText='font-size:14px;font-weight:500;color:#e6e1e5'; ws.textContent=g.weight+' kg';
-      var db=document.createElement('button'); db.className='ebtn'; db.textContent='Delete';
-      (function(gh,row,btn){db.addEventListener('click',function(){deleteGH(gh,row,btn);});})(g,div,db);
-      right.appendChild(ws); right.appendChild(db);
-      div.appendChild(info); div.appendChild(right);
+      var right=document.createElement('div');right.style.cssText='display:flex;align-items:center;gap:10px';
+      var ws=document.createElement('span');ws.style.cssText='font-size:14px;font-weight:500;color:#e6e1e5';ws.textContent=g.weight+' kg';
+      var db=document.createElement('button');db.className='ebtn';db.textContent='Delete';
+      (function(gh,row,btn){db.addEventListener('click',function(){deleteGH(gh,row,btn,pfx);});})(g,div,db);
+      right.appendChild(ws);right.appendChild(db);
+      div.appendChild(info);div.appendChild(right);
       ghList.appendChild(div);
     });
   } else ghCard.style.display='none';
 }
-
-function renderGoalSummary(){
+function renderGoalSummary(pfx){
   if(!goal)return;
-  document.getElementById('goal-summary').style.display='';
-  var n=entries.length, cur=n?entries[n-1].weight:null;
+  document.getElementById(pfx+'-goal-summary').style.display='';
+  var n=entries.length,cur=n?entries[n-1].weight:null;
   var remW=Math.max(0.01,(new Date(goal.date)-new Date())/(7*864e5));
   var kpwN=cur?((goal.weight-cur)/remW).toFixed(2):'—';
   var sign=parseFloat(kpwN)>0?'+':'';
   var totW=Math.round((new Date(goal.date)-new Date(goal.start))/(7*864e5));
-  document.getElementById('goal-summary-text').innerHTML=
+  document.getElementById(pfx+'-goal-summary-text').innerHTML=
     '<b>'+goal.weight+' kg</b> by <b>'+fmt(goal.date)+'</b><br>'+
     '<span style="color:#938f99;font-size:13px">Started '+fmt(goal.start)+' · '+totW+' weeks · target pace: <b>'+(goal.isBulk?'+':'-')+goal.pace+' kg/wk</b>'+(cur?'<br>Currently need: <b>'+sign+kpwN+' kg/wk</b>':'')+'</span>';
 }
-
-async function deleteGH(g,row,btn){
+async function deleteGH(g,row,btn,pfx){
   if(row.dataset.confirm!=='1'){
-    row.dataset.confirm='1'; btn.textContent='Confirm'; btn.style.background='#3a1a1a'; btn.style.color='#eb5757';
-    setTimeout(function(){if(row.dataset.confirm==='1'){row.dataset.confirm='0';btn.textContent='Delete';btn.style.background='';btn.style.color='';}},3000);
-    return;
+    row.dataset.confirm='1';btn.textContent='Confirm';btn.style.background='#3a1a1a';btn.style.color='#eb5757';
+    setTimeout(function(){if(row.dataset.confirm==='1'){row.dataset.confirm='0';btn.textContent='Delete';btn.style.background='';btn.style.color='';}},3000);return;
   }
   goalHistory=goalHistory.filter(function(x){return x._id!==g._id;});
-  await fbDeleteGH(g); renderGoalTab();
+  await fbDeleteGH(g);renderGoalTab(pfx);
 }
 
-// ── MAIN RENDER ───────────────────────────────────────────────────────────────
-function render(){
+// ── CHART ─────────────────────────────────────────────────────────────────────
+function buildChart(canvasId,existingChart,heightRatio){
   var n=entries.length;
   var wts=entries.map(function(e){return e.weight;});
-  var cur=n?wts[n-1]:null;
 
-  // Cycle label
-  var cl=document.getElementById('cycle-label'), dv=document.getElementById('hdivider');
-  if(goal&&goal.start&&goal.date){
-    var cycleIsBulk=goal.isBulk!==undefined?goal.isBulk:true;
-    cl.style.display=''; dv.style.display='';
-    cl.textContent=cycleIsBulk?'BULKING CYCLE':'CUTTING CYCLE';
-    cl.style.color=cycleIsBulk?'#6fcf97':'#eb5757';
-  } else {cl.style.display='none';dv.style.display='none';}
+  // X bounds
+  var minDate=entries.length?new Date(entries[0].date):new Date();
+  var maxDate=goal&&goal.date?new Date(goal.date):new Date(Date.now()+7*864e5);
+  if(maxDate<new Date())maxDate=new Date(Date.now()+7*864e5);
 
-  // Stats
-  document.getElementById('s-cur').textContent=cur?cur.toFixed(1)+' kg':'—';
-  if(n>=1){
-    var sl=wts.slice(Math.max(0,n-7));
-    document.getElementById('s-avg').textContent=(sl.reduce(function(a,b){return a+b;},0)/sl.length).toFixed(1)+' kg';
-    var re=document.getElementById('s-rate');
-    if(sl.length>=2){
-      var rt=sl[sl.length-1]-sl[0];
-      re.textContent=(rt>=0?'+':'')+rt.toFixed(1)+' kg';
-      re.style.color=rt>0?'#6fcf97':rt<0?'#eb5757':'#e6e1e5';
-    } else re.textContent='—';
-  } else {
-    document.getElementById('s-avg').textContent='—';
-    document.getElementById('s-rate').textContent='—';
-  }
+  // Y bounds
+  var allVals=wts.slice();
+  var yMin=allVals.length?Math.min.apply(null,allVals):70;
+  var yMax=allVals.length?Math.max.apply(null,allVals):90;
+  if(goal&&goal.weight){if(goal.isBulk)yMax=Math.max(yMax,goal.weight);else yMin=Math.min(yMin,goal.weight);}
+  yMin=parseFloat((yMin-0.5).toFixed(1));
+  yMax=parseFloat((yMax+0.5).toFixed(1));
+  var fullYMin=yMin,fullYMax=yMax;
 
-  // Goal banner
-  var chip=document.getElementById('pace-chip');
-  var bars=document.getElementById('bars');
-  var proj=document.getElementById('proj-line');
-  var btitle=document.getElementById('banner-title');
-
-  if(!goal||!goal.start||!goal.date||!cur){
-    chip.className='chip none';
-    chip.textContent=(!goal||!goal.start||!goal.date)?'No goal set':'Not enough data';
-    bars.style.display='none'; proj.style.display='none'; btitle.textContent='Goal';
-  } else {
-    var now=new Date(), gS=new Date(goal.start), gE=new Date(goal.date);
-    var timePct=Math.min(100,Math.max(0,Math.round((now-gS)/(gE-gS)*100)));
-    var totWk=Math.max(0.01,(gE-gS)/(7*864e5));
-    var elWk=Math.max(0,(now-gS)/(7*864e5));
-    var remWk=Math.max(0.01,(gE-now)/(7*864e5));
-    var se=entries.find(function(e){return e.date>=goal.start;})||entries[0];
-    var sw=se.weight;
-    var goalIsGain=goal.isBulk!==undefined?goal.isBulk:goal.weight>sw;
-
-    // Pace comparison
-    var desiredPace=goal.pace;
-    var cutoff=new Date(Math.max(gS.getTime(),Date.now()-7*864e5));
-    var rec=entries.filter(function(e){return new Date(e.date)>=cutoff;});
-    if(rec.length<2) rec=entries.slice(Math.max(0,n-2));
-    var actualPace=rec.length>=2
-      ?(rec[rec.length-1].weight-rec[0].weight)/Math.max(0.01,(new Date(rec[rec.length-1].date)-new Date(rec[0].date))/(7*864e5))
-      :0;
-    var directedActual=goalIsGain?actualPace:-actualPace;
-    var tol=desiredPace*0.25;
-    var paceAhead=directedActual>desiredPace+tol;
-    var paceBehind=directedActual<desiredPace-tol;
-    var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
-
-    btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
-    if(paceAhead){chip.className='chip fast';chip.textContent=goalIsGain?'Eat less':'Eat more';}
-    else if(paceBehind){chip.className='chip slow';chip.textContent=goalIsGain?'Eat more':'Eat less';}
-    else{chip.className='chip on';chip.textContent='On track';}
-
-    // Projection
-    proj.style.display='';
-    if(n>=2){
-      var movRight=(goalIsGain&&actualPace>0)||(!goalIsGain&&actualPace<0);
-      if(Math.abs(actualPace)<0.001) proj.textContent='Trend is flat — log more data';
-      else if(!movRight) proj.textContent='Current trend is moving away from goal';
-      else{
-        var wn=(goal.weight-cur)/actualPace;
-        var pd=new Date(); pd.setDate(pd.getDate()+Math.round(wn*7));
-        var ps=(pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
-        var dd=Math.round((pd-gE)/864e5);
-        var dt=dd===0?'right on time':dd<0?Math.abs(dd)+'d early':dd+'d late';
-        proj.innerHTML='At current rate, projected arrival: <b>'+ps+'</b> — <b>'+dt+'</b>';
-      }
-    } else proj.textContent='Log more entries to see projection';
-
-    // Bars
-    bars.style.display='';
-    document.getElementById('tl-s').textContent=fmt(goal.start);
-    document.getElementById('tl-e').textContent=fmt(goal.date);
-    document.getElementById('time-fill').style.width=timePct+'%';
-    var dLeft=Math.max(0,Math.round((gE-now)/864e5));
-    document.getElementById('time-sub').textContent='Time elapsed: '+timePct+'% · '+dLeft+' day'+(dLeft!==1?'s':'')+' left';
-    var totD=Math.abs(goal.weight-sw), doneD=Math.abs(cur-sw);
-    var wPct=totD>0?Math.min(100,Math.round(doneD/totD*100)):100;
-    document.getElementById('wl-s').textContent=sw.toFixed(1)+' kg';
-    document.getElementById('wl-e').textContent=goal.weight.toFixed(1)+' kg';
-    document.getElementById('wt-fill').style.width=wPct+'%';
-    document.getElementById('wt-sub').textContent='Weight progress: '+wPct+'% · '+Math.abs(goal.weight-cur).toFixed(1)+' kg left';
-  }
-
-  renderGoalSummary();
-
-  // Chart
-  var labels=entries.map(function(e){var p=e.date.split('-');return p[2]+'/'+p[1];});
-  var datasets=[{
-    label:'Weight',data:wts,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:4,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true
-  }];
-  if(goal&&goal.start&&goal.date&&n){
-    var sd=new Date(goal.start), gd=new Date(goal.date);
-    var se2=entries.find(function(e){return e.date>=goal.start;})||entries[0];
-    var sw2=se2.weight, totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-  if(goal&&goal.start&&goal.date&&n){
-    var sd=new Date(goal.start), gd=new Date(goal.date);
-    var se2=entries.find(function(e){return e.date>=goal.start;})||entries[0];
-    var sw2=se2.weight, totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    var ideal=entries.map(function(e){
-      if(e.date<goal.start) return null;
-      var t=(new Date(e.date)-sd)/(7*864e5);
-      return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
-    });
-    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
-  }
-  }
-
-  // Build full date range: 1 year back or first entry, to goal date or today+7d
-  var firstDate=entries.length?new Date(entries[0].date):new Date();
-  var minDate=new Date(Math.max(firstDate.getTime(), Date.now()-365*864e5));
-  var maxDate=goal&&goal.date?new Date(Math.max(new Date(goal.date).getTime(), Date.now())):new Date(Date.now()+7*864e5);
-
-  // Build datasets using real Date objects for x
-  var weightData=entries.map(function(e){return {x:e.date,y:e.weight};});
+  var weightData=entries.map(function(e){return{x:e.date,y:e.weight};});
   var idealData=[];
   if(goal&&goal.start&&goal.date&&n){
-    var sd=new Date(goal.start), gd=new Date(goal.date);
-    var se2=entries.find(function(e){return e.date>=goal.start;})||entries[0];
-    var sw2=se2.weight, totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    // Draw ideal from goal start to goal end
-    var idealPoints=[goal.start, goal.date];
-    idealData=idealPoints.map(function(d){
-      var t=(new Date(d)-sd)/(7*864e5);
-      return {x:d, y:parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2))};
-    });
+    var sd=new Date(goal.start),gd=new Date(goal.date);
+    var se=entries.find(function(e){return e.date>=goal.start;})||entries[0];
+    var sw=se.weight,totW=Math.max(0.01,(gd-sd)/(7*864e5));
+    idealData=[{x:goal.start,y:sw},{x:goal.date,y:goal.weight}];
   }
 
-  var datasets2=[{
-    label:'Weight',data:weightData,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:4,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true
-  }];
-  if(idealData.length){
-    datasets2.push({label:'Ideal pace',data:idealData,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
-  }
+  var datasets=[{label:'Weight',data:weightData,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',borderWidth:2,pointRadius:4,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true}];
+  if(idealData.length)datasets.push({label:'Ideal pace',data:idealData,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
 
-  var gc='rgba(255,255,255,0.06)', tc='#938f99';
+  var gc='rgba(255,255,255,0.06)',tc='#938f99';
 
-  var targetLine=goal&&goal.weight?{
+  var targetLinePlugin={
     id:'targetLine',
     afterDraw:function(ch){
       if(!goal||!goal.weight)return;
-      var ctx2=ch.ctx, yScale=ch.scales.y, xScale=ch.scales.x;
+      // Only show when fully zoomed out (Y range close to full range)
+      var yScale=ch.scales.y;
+      var visRange=yScale.max-yScale.min;
+      var fullRange=fullYMax-fullYMin;
+      if(visRange<fullRange*0.9)return;
+      var xScale=ch.scales.x;
       var y=yScale.getPixelForValue(goal.weight);
       if(y<yScale.top||y>yScale.bottom)return;
+      var ctx2=ch.ctx;
       ctx2.save();
       ctx2.beginPath();
-      ctx2.moveTo(xScale.left,y);
-      ctx2.lineTo(xScale.right,y);
-      ctx2.strokeStyle='rgba(108,207,151,0.5)';
-      ctx2.lineWidth=1;
-      ctx2.setLineDash([4,4]);
+      ctx2.moveTo(xScale.left,y);ctx2.lineTo(xScale.right,y);
+      ctx2.strokeStyle='rgba(108,207,151,0.4)';ctx2.lineWidth=1;ctx2.setLineDash([4,4]);
       ctx2.stroke();
-      ctx2.font='10px system-ui';
-      ctx2.fillStyle='#6fcf97';
+      ctx2.font='10px system-ui';ctx2.fillStyle='#6fcf97';
       ctx2.fillText(goal.weight.toFixed(1)+' kg',xScale.right-48,y-4);
       ctx2.restore();
     }
-  }:null;
+  };
 
-  // Y bounds
-  var allVals=entries.map(function(e){return e.weight;});
-  var yMin=allVals.length?Math.min.apply(null,allVals):70;
-  var yMax=allVals.length?Math.max.apply(null,allVals):90;
-  if(goal&&goal.weight){
-    if(goal.isBulk) yMax=Math.max(yMax,goal.weight);
-    else yMin=Math.min(yMin,goal.weight);
-  }
-  yMin=parseFloat((yMin-0.5).toFixed(1));
-  yMax=parseFloat((yMax+0.5).toFixed(1));
-
-  var chartOpts={
+  var opts={
     responsive:true,maintainAspectRatio:false,
     plugins:{
       legend:{display:false},
@@ -771,61 +692,133 @@ function render(){
       zoom:{
         pan:{enabled:true,mode:'x'},
         zoom:{
-          wheel:{enabled:true},
-          pinch:{enabled:true},
-          mode:'x'
+          wheel:{enabled:true,mode:'xy'},
+          pinch:{enabled:true,mode:'xy'},
         },
         limits:{
-          x:{min:minDate.toISOString().slice(0,10), max:maxDate.toISOString().slice(0,10)}
+          x:{min:minDate.toISOString().slice(0,10),max:maxDate.toISOString().slice(0,10),minRange:2*864e5},
+          y:{min:yMin-2,max:yMax+2,minRange:0.5}
         }
       }
     },
     scales:{
-      x:{
-        type:'time',
-        time:{unit:'day',displayFormats:{day:'dd/MM'},tooltipFormat:'dd/MM/yyyy'},
-        min:minDate.toISOString().slice(0,10),
-        max:maxDate.toISOString().slice(0,10),
-        ticks:{color:tc,font:{size:11},maxTicksLimit:10,source:'auto'},
-        grid:{color:gc}
-      },
-      y:{
-        min:yMin,max:yMax,
-        ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},
-        grid:{color:gc}
-      }
+      x:{type:'time',time:{unit:'day',displayFormats:{day:'dd/MM'},tooltipFormat:'dd/MM/yyyy'},
+        min:minDate.toISOString().slice(0,10),max:maxDate.toISOString().slice(0,10),
+        ticks:{color:tc,font:{size:11},maxTicksLimit:10,source:'auto'},grid:{color:gc}},
+      y:{min:yMin,max:yMax,ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
     }
   };
 
-  if(!chart){
-    chart=new Chart(document.getElementById('chart'),{
-      type:'line',
-      data:{datasets:datasets2},
-      plugins:targetLine?[targetLine]:[],
-      options:chartOpts
-    });
+  if(!existingChart){
+    return new Chart(document.getElementById(canvasId),{type:'line',data:{datasets:datasets},plugins:[targetLinePlugin],options:opts});
   } else {
-    chart.data.datasets=datasets2;
-    chart.options=chartOpts;
-    if(targetLine) chart.config.plugins=[targetLine];
-    chart.update();
+    existingChart.data.datasets=datasets;
+    existingChart.options=opts;
+    existingChart.config.plugins=[targetLinePlugin];
+    existingChart.update();
+    return existingChart;
   }
+}
+
+// ── OVERVIEW RENDER ───────────────────────────────────────────────────────────
+function renderOverview(pfx){
+  var n=entries.length,wts=entries.map(function(e){return e.weight;}),cur=n?wts[n-1]:null;
+  document.getElementById(pfx+'-s-cur').textContent=cur?cur.toFixed(1)+' kg':'—';
+  if(n>=1){
+    var sl=wts.slice(Math.max(0,n-7));
+    document.getElementById(pfx+'-s-avg').textContent=(sl.reduce(function(a,b){return a+b;},0)/sl.length).toFixed(1)+' kg';
+    var re=document.getElementById(pfx+'-s-rate');
+    if(sl.length>=2){var rt=sl[sl.length-1]-sl[0];re.textContent=(rt>=0?'+':'')+rt.toFixed(1)+' kg';re.style.color=rt>0?'#6fcf97':rt<0?'#eb5757':'#e6e1e5';}
+    else re.textContent='—';
+  } else {document.getElementById(pfx+'-s-avg').textContent='—';document.getElementById(pfx+'-s-rate').textContent='—';}
+
+  var chip=document.getElementById(pfx+'-pace-chip');
+  var bars=document.getElementById(pfx+'-bars');
+  var proj=document.getElementById(pfx+'-proj-line');
+  var btitle=document.getElementById(pfx+'-banner-title');
+  if(!goal||!goal.start||!goal.date||!cur){
+    chip.className='chip none';chip.textContent=(!goal||!goal.start||!goal.date)?'No goal set':'Not enough data';
+    bars.style.display='none';proj.style.display='none';btitle.textContent='Goal';
+  } else {
+    var now=new Date(),gS=new Date(goal.start),gE=new Date(goal.date);
+    var timePct=Math.min(100,Math.max(0,Math.round((now-gS)/(gE-gS)*100)));
+    var totWk=Math.max(0.01,(gE-gS)/(7*864e5)),elWk=Math.max(0,(now-gS)/(7*864e5)),remWk=Math.max(0.01,(gE-now)/(7*864e5));
+    var se=entries.find(function(e){return e.date>=goal.start;})||entries[0],sw=se.weight;
+    var goalIsGain=goal.isBulk!==undefined?goal.isBulk:goal.weight>sw;
+    var desiredPace=goal.pace;
+    var cutoff=new Date(Math.max(gS.getTime(),Date.now()-7*864e5));
+    var rec=entries.filter(function(e){return new Date(e.date)>=cutoff;});
+    if(rec.length<2)rec=entries.slice(Math.max(0,n-2));
+    var actualPace=rec.length>=2?(rec[rec.length-1].weight-rec[0].weight)/Math.max(0.01,(new Date(rec[rec.length-1].date)-new Date(rec[0].date))/(7*864e5)):0;
+    var directedActual=goalIsGain?actualPace:-actualPace;
+    var tol=desiredPace*0.25;
+    var paceAhead=directedActual>desiredPace+tol,paceBehind=directedActual<desiredPace-tol;
+    btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
+    if(paceAhead){chip.className='chip fast';chip.textContent=goalIsGain?'Eat less':'Eat more';}
+    else if(paceBehind){chip.className='chip slow';chip.textContent=goalIsGain?'Eat more':'Eat less';}
+    else{chip.className='chip on';chip.textContent='On track';}
+
+    proj.style.display='';
+    if(n>=2){
+      var movRight=(goalIsGain&&actualPace>0)||(!goalIsGain&&actualPace<0);
+      if(Math.abs(actualPace)<0.001)proj.textContent='Trend is flat — log more data';
+      else if(!movRight)proj.textContent='Current trend is moving away from goal';
+      else{
+        var wn=(goal.weight-cur)/actualPace,pd=new Date();pd.setDate(pd.getDate()+Math.round(wn*7));
+        var ps=(pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
+        var dd=Math.round((pd-gE)/864e5),dt=dd===0?'right on time':dd<0?Math.abs(dd)+'d early':dd+'d late';
+        proj.innerHTML='At current rate, projected arrival: <b>'+ps+'</b> — <b>'+dt+'</b>';
+      }
+    } else proj.textContent='Log more entries to see projection';
+
+    bars.style.display='';
+    document.getElementById(pfx+'-tl-s').textContent=fmt(goal.start);
+    document.getElementById(pfx+'-tl-e').textContent=fmt(goal.date);
+    document.getElementById(pfx+'-time-fill').style.width=timePct+'%';
+    var dLeft=Math.max(0,Math.round((gE-now)/864e5));
+    document.getElementById(pfx+'-time-sub').textContent='Time elapsed: '+timePct+'% · '+dLeft+' day'+(dLeft!==1?'s':'')+' left';
+    var totD=Math.abs(goal.weight-sw),doneD=Math.abs(cur-sw),wPct=totD>0?Math.min(100,Math.round(doneD/totD*100)):100;
+    document.getElementById(pfx+'-wl-s').textContent=sw.toFixed(1)+' kg';
+    document.getElementById(pfx+'-wl-e').textContent=goal.weight.toFixed(1)+' kg';
+    document.getElementById(pfx+'-wt-fill').style.width=wPct+'%';
+    document.getElementById(pfx+'-wt-sub').textContent='Weight progress: '+wPct+'% · '+Math.abs(goal.weight-cur).toFixed(1)+' kg left';
+  }
+  renderGoalSummary(pfx);
 
   // Weekly summary
   var weeks={};
   entries.forEach(function(e){var k=weekKey(e.date);if(!weeks[k])weeks[k]=[];weeks[k].push(e.weight);});
-  var wsum=document.getElementById('week-summary');
+  var wsum=document.getElementById(pfx+'-week-summary');
   if(!n){wsum.innerHTML='<p class="empty">No entries yet</p>';}
   else{
     var rows=Object.entries(weeks).sort(function(a,b){return b[0].localeCompare(a[0]);}).slice(0,8).map(function(pair){
-      var ws2=pair[1], avg=(ws2.reduce(function(a,b){return a+b;},0)/ws2.length).toFixed(1), parts=pair[0].split('-W');
+      var ws2=pair[1],avg=(ws2.reduce(function(a,b){return a+b;},0)/ws2.length).toFixed(1),parts=pair[0].split('-W');
       return '<tr><td>Week '+parts[1]+', '+parts[0]+'</td><td>'+avg+' kg</td><td>'+ws2.length+' entr'+(ws2.length===1?'y':'ies')+'</td></tr>';
     }).join('');
     wsum.innerHTML='<table class="wtbl"><thead><tr><th>Week</th><th>Avg</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
   }
-
-  renderHistory();
 }
+
+// ── MAIN RENDER ───────────────────────────────────────────────────────────────
+function render(){
+  // Cycle label
+  var cl=document.getElementById('cycle-label'),dv=document.getElementById('hdivider');
+  if(goal&&goal.start&&goal.date){
+    var cycleIsBulk=goal.isBulk!==undefined?goal.isBulk:true;
+    cl.style.display='';dv.style.display='';
+    cl.textContent=cycleIsBulk?'BULKING CYCLE':'CUTTING CYCLE';
+    cl.style.color=cycleIsBulk?'#6fcf97':'#eb5757';
+  } else {cl.style.display='none';dv.style.display='none';}
+
+  renderOverview('d'); renderOverview('m');
+  renderHistory('d'); renderHistory('m');
+  chart=buildChart('chart',chart);
+  mChart=buildChart('m-chart',mChart);
+}
+
+// Init dates
+document.getElementById('d-inp-date').value=today();
+document.getElementById('m-inp-date').value=today();
 </script>
 </body>
 </html>
