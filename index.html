@@ -169,7 +169,8 @@ input:focus{border-color:#d0bcff;background:#45404d}
         <div class="card-title">Progress</div>
         <div class="legend">
           <span class="leg-item"><span class="leg-solid"></span>Weight</span>
-          <span class="leg-item"><span class="leg-dash"></span>Ideal pace</span>
+        <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #938f99;display:inline-block"></span>Original pace</span>
+          <span class="leg-item"><span class="leg-dash"></span>Adjusted pace</span>
         </div>
         <div class="chart-wrap"><canvas id="chart"></canvas></div>
       </div>
@@ -595,9 +596,19 @@ function render() {
     var timePct=Math.min(100,Math.max(0,Math.round((now-gS)/(gE-gS)*100)));
     var totWk=Math.max(0.01,(gE-gS)/(7*864e5)), elWk=Math.max(0,(now-gS)/(7*864e5)), remWk=Math.max(0.01,(gE-now)/(7*864e5));
     var se=entries.find(function(e){ return e.date>=goal.start; })||entries[0], sw=se.weight;
-    var isGain=goal.weight>sw, idealNow=sw+(goal.weight-sw)*(elWk/totWk), diff=cur-idealNow;
+    var desiredPace = goal.pace; // kg/week, always positive
+    var cutoff = new Date(Math.max(gS.getTime(), Date.now()-7*864e5));
+    var rec = entries.filter(function(e){ return new Date(e.date)>=cutoff; });
+    if(rec.length<2) rec = entries.slice(Math.max(0,n-2));
+    var actualPace = rec.length>=2
+      ? (rec[rec.length-1].weight-rec[0].weight) / Math.max(0.01,(new Date(rec[rec.length-1].date)-new Date(rec[0].date))/(7*864e5))
+      : 0;
+    // For cuts, desired direction is negative; for bulks, positive
+    var directedActual = isGain ? actualPace : -actualPace;
+    var tol = desiredPace * 0.25; // 25% tolerance around desired pace
+    var ahead  = directedActual > desiredPace + tol;
+    var behind = directedActual < desiredPace - tol;
     var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
-    var ahead=isGain?diff>0.3:diff<-0.3, behind=isGain?diff<-0.3:diff>0.3;
 
     btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
     if(ahead){ chip.className='chip fast'; chip.textContent=isGain?'Eat less':'Eat more'; pdesc.textContent='Slow down · need '+sign+kpw.toFixed(2)+' kg/wk'; }
@@ -643,12 +654,28 @@ function render() {
     var sd=new Date(goal.start), gd=new Date(goal.date);
     var se2=entries.find(function(e){ return e.date>=goal.start; })||entries[0], sw2=se2.weight;
     var totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    var ideal=entries.map(function(e){
+
+    // Segment 1: original ideal line from start to today (past)
+    var pastIdeal=entries.map(function(e){
       if(e.date<goal.start) return null;
       var t=(new Date(e.date)-sd)/(7*864e5);
       return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
     });
-    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
+
+    // Segment 2: recalculated line from current weight to goal (future)
+    var now=new Date(), cur2=wts[n-1];
+    var futureIdeal=entries.map(function(e){
+      if(new Date(e.date)<now) return null;
+      var t=(new Date(e.date)-now)/(7*864e5);
+      var remWk2=Math.max(0.01,(gd-now)/(7*864e5));
+      return parseFloat((cur2+(goal.weight-cur2)*(t/remWk2)).toFixed(2));
+    });
+    // Connect at today's last entry
+    var todayIdx=entries.reduce(function(best,e,i){ return new Date(e.date)<=now?i:best; },-1);
+    if(todayIdx>=0) futureIdeal[todayIdx]=cur2;
+
+    datasets.push({label:'Original pace',data:pastIdeal,borderColor:'#938f99',borderWidth:1,borderDash:[4,4],pointRadius:0,tension:0,fill:false});
+    datasets.push({label:'Adjusted pace',data:futureIdeal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
   }
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
   if(!chart){
