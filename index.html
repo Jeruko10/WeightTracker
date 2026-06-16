@@ -297,13 +297,15 @@ async function loadAll() {
   sync('Loading…');
   try {
     var [eSnap, gSnap, ghSnap] = await Promise.all([
-      getDocs(query(uCol('entries'), orderBy('date'))),
+      getDocs(uCol('entries')),
       getDoc(uDoc('data/goal')),
-      getDocs(query(uCol('goalHistory'), orderBy('savedOn','desc')))
+      getDocs(uCol('goalHistory'))
     ]);
-    entries     = eSnap.docs.map(function(d){ return Object.assign({_id:d.id},d.data()); });
-    goal        = gSnap.exists() ? gSnap.data() : null;
+    entries = eSnap.docs.map(function(d){ return Object.assign({_id:d.id},d.data()); });
+    entries.sort(function(a,b){ return a.date.localeCompare(b.date); });
+    goal = gSnap.exists() ? gSnap.data() : null;
     goalHistory = ghSnap.docs.map(function(d){ return Object.assign({_id:d.id},d.data()); });
+    goalHistory.sort(function(a,b){ return b.savedOn.localeCompare(a.savedOn); });
     sync('Synced','saved'); setTimeout(function(){ sync(''); },2000);
     render();
   } catch(e) { sync('Error loading data'); console.error(e); }
