@@ -618,9 +618,14 @@ function render(){
       chipClass='none'; chipMsg='Need '+(8-n)+' more log'+(8-n===1?'':'s');
       pdescMsg='';
     } else {
-      var curAvgP=wts.slice(n-7).reduce(function(a,b){return a+b;},0)/7;
-      var prevAvgP=wts.slice(n-14,n-7).reduce(function(a,b){return a+b;},0)/7;
-      var actualPaceP=curAvgP-prevAvgP; // positive = gaining, negative = losing
+      var curSlice=entries.slice(n-7);
+      var prevSlice=entries.slice(n-14,n-7);
+      var curAvgP=curSlice.reduce(function(a,b){return a+b.weight;},0)/7;
+      var prevAvgP=prevSlice.reduce(function(a,b){return a+b.weight;},0)/7;
+      var curMidDate=new Date(curSlice[Math.floor(curSlice.length/2)].date);
+      var prevMidDate=new Date(prevSlice[Math.floor(prevSlice.length/2)].date);
+      var weeksBetween=Math.max(0.01,(curMidDate-prevMidDate)/(7*864e5));
+      var actualPaceP=(curAvgP-prevAvgP)/weeksBetween; // positive = gaining, negative = losing
       var directedActual=goalIsGain?actualPaceP:-actualPaceP;
       var tol=desiredPace*0.25;
       var paceAhead=directedActual>desiredPace+tol;
