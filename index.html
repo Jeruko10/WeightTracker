@@ -611,6 +611,8 @@ function render(){
     var sw=se.weight;
     var goalIsGain=goal.isBulk!==undefined?goal.isBulk:goal.weight>sw;
 
+    var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
+
     // Pace comparison — entry-based, not day-based
     var desiredPace=goal.pace;
     var chipMsg, chipClass, pdescMsg;
@@ -635,7 +637,6 @@ function render(){
       else{chipClass='on';chipMsg='On track';pdescMsg=sign+kpw.toFixed(2)+' kg/wk needed';}
     }
 
-    var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
     btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
     chip.className='chip '+chipClass; chip.textContent=chipMsg; pdesc.textContent=pdescMsg;
 
