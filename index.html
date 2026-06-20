@@ -611,24 +611,28 @@ function render(){
     var sw=se.weight;
     var goalIsGain=goal.isBulk!==undefined?goal.isBulk:goal.weight>sw;
 
-    // Pace comparison
+    // Pace comparison — entry-based, not day-based
     var desiredPace=goal.pace;
-    var cutoff=new Date(Math.max(gS.getTime(),Date.now()-7*864e5));
-    var rec=entries.filter(function(e){return new Date(e.date)>=cutoff;});
-    if(rec.length<2) rec=entries.slice(Math.max(0,n-2));
-    var actualPace=rec.length>=2
-      ?(rec[rec.length-1].weight-rec[0].weight)/Math.max(0.01,(new Date(rec[rec.length-1].date)-new Date(rec[0].date))/(7*864e5))
-      :0;
-    var directedActual=goalIsGain?actualPace:-actualPace;
-    var tol=desiredPace*0.25;
-    var paceAhead=directedActual>desiredPace+tol;
-    var paceBehind=directedActual<desiredPace-tol;
-    var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
+    var chipMsg, chipClass, pdescMsg;
+    if(n<8){
+      chipClass='none'; chipMsg='Need '+(8-n)+' more log'+(8-n===1?'':'s');
+      pdescMsg='';
+    } else {
+      var curAvgP=wts.slice(n-7).reduce(function(a,b){return a+b;},0)/7;
+      var prevAvgP=wts.slice(n-14,n-7).reduce(function(a,b){return a+b;},0)/7;
+      var actualPaceP=curAvgP-prevAvgP; // positive = gaining, negative = losing
+      var directedActual=goalIsGain?actualPaceP:-actualPaceP;
+      var tol=desiredPace*0.25;
+      var paceAhead=directedActual>desiredPace+tol;
+      var paceBehind=directedActual<desiredPace-tol;
+      if(paceAhead){chipClass='fast';chipMsg=goalIsGain?'Eat less':'Eat more';pdescMsg='Slow down · need '+sign+kpw.toFixed(2)+' kg/wk';}
+      else if(paceBehind){chipClass='slow';chipMsg=goalIsGain?'Eat more':'Eat less';pdescMsg='Push harder · need '+sign+kpw.toFixed(2)+' kg/wk';}
+      else{chipClass='on';chipMsg='On track';pdescMsg=sign+kpw.toFixed(2)+' kg/wk needed';}
+    }
 
+    var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
     btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
-    if(paceAhead){chip.className='chip fast';chip.textContent=goalIsGain?'Eat less':'Eat more';pdesc.textContent='Slow down · need '+sign+kpw.toFixed(2)+' kg/wk';}
-    else if(paceBehind){chip.className='chip slow';chip.textContent=goalIsGain?'Eat more':'Eat less';pdesc.textContent='Push harder · need '+sign+kpw.toFixed(2)+' kg/wk';}
-    else{chip.className='chip on';chip.textContent='On track';pdesc.textContent=sign+kpw.toFixed(2)+' kg/wk needed';}
+    chip.className='chip '+chipClass; chip.textContent=chipMsg; pdesc.textContent=pdescMsg;
 
     // Projection
     proj.style.display='';
