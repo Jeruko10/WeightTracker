@@ -639,14 +639,22 @@ function render(){
     btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
     chip.className='chip '+chipClass; chip.textContent=chipMsg; pdesc.textContent=pdescMsg;
 
-    // Projection
+    // Projection — uses raw last-to-first rate normalized by time
+    var projPace=0;
+    if(n>=2){
+      var rec=entries.slice(Math.max(0,n-7));
+      if(rec.length>=2){
+        var recWeeks=Math.max(0.01,(new Date(rec[rec.length-1].date)-new Date(rec[0].date))/(7*864e5));
+        projPace=(rec[rec.length-1].weight-rec[0].weight)/recWeeks;
+      }
+    }
     proj.style.display='';
     if(n>=2){
-      var movRight=(goalIsGain&&actualPace>0)||(!goalIsGain&&actualPace<0);
-      if(Math.abs(actualPace)<0.001) proj.textContent='Trend is flat — log more data';
+      var movRight=(goalIsGain&&projPace>0)||(!goalIsGain&&projPace<0);
+      if(Math.abs(projPace)<0.001) proj.textContent='Trend is flat — log more data';
       else if(!movRight) proj.textContent='Current trend is moving away from goal';
       else{
-        var wn=(goal.weight-cur)/actualPace;
+        var wn=(goal.weight-cur)/projPace;
         var pd=new Date(); pd.setDate(pd.getDate()+Math.round(wn*7));
         var ps=(pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
         var dd=Math.round((pd-gE)/864e5);
