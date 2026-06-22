@@ -400,7 +400,7 @@ function render(){
       pdescMsg='';
     } else {
       var curSlice=entries.slice(n-7);
-      var prevSlice=entries.slice(n-14,n-7);
+      var prevSlice=entries.slice(Math.max(0,n-14),n-7);
       var curAvgP=curSlice.reduce(function(a,b){return a+b.weight;},0)/curSlice.length;
       var prevAvgP=prevSlice.reduce(function(a,b){return a+b.weight;},0)/prevSlice.length;
       var curMidDate=new Date(curSlice[Math.floor(curSlice.length/2)].date);
