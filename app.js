@@ -351,20 +351,24 @@ function render(){
   } else {cl.style.display='none';dv.style.display='none';}
 
   // Stats
-  document.getElementById('s-cur').textContent=cur?cur.toFixed(1)+' kg':'—';
   if(n>=1){
     var sl=wts.slice(Math.max(0,n-7));
     var curAvg=sl.reduce(function(a,b){return a+b;},0)/sl.length;
-    document.getElementById('s-avg').textContent=curAvg.toFixed(1)+' kg';
+    document.getElementById('s-cur').textContent=curAvg.toFixed(1)+' kg';
     var re=document.getElementById('s-rate');
     if(n>=8){
       var prev=wts.slice(Math.max(0,n-14),n-7);
       var prevAvg=prev.reduce(function(a,b){return a+b;},0)/prev.length;
+      document.getElementById('s-avg').textContent=prevAvg.toFixed(1)+' kg';
       var diff=curAvg-prevAvg;
       re.textContent=(diff>=0?'+':'')+diff.toFixed(1)+' kg';
       re.style.color=diff>0?'#6fcf97':diff<0?'#eb5757':'#e6e1e5';
-    } else re.textContent='—';
+    } else {
+      document.getElementById('s-avg').textContent='—';
+      re.textContent='—';
+    }
   } else {
+    document.getElementById('s-cur').textContent='—';
     document.getElementById('s-avg').textContent='—';
     document.getElementById('s-rate').textContent='—';
   }
@@ -454,22 +458,30 @@ function render(){
 
   renderGoalSummary();
 
-  // Chart
-  var labels=entries.map(function(e){var p=e.date.split('-');return p[2]+'/'+p[1];});
+  // Chart — day-based X axis, null for days with no entry (creates visible gaps)
+  var entryMap={};
+  entries.forEach(function(e){entryMap[e.date]=e.weight;});
+  var allDates=[];
+  if(n){
+    var dc=new Date(entries[0].date), de=new Date(entries[n-1].date);
+    while(dc<=de){allDates.push(dc.toISOString().slice(0,10));dc.setDate(dc.getDate()+1);}
+  }
+  var labels=allDates.map(function(d){var p=d.split('-');return p[2]+'/'+p[1];});
+  var chartWts=allDates.map(function(d){return entryMap[d]!==undefined?entryMap[d]:null;});
   var datasets=[{
-    label:'Weight',data:wts,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:4,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true
+    label:'Weight',data:chartWts,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
+    borderWidth:2,pointRadius:4,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
     var se2=entries.find(function(e){return e.date>=goal.start;})||entries[0];
     var sw2=se2.weight, totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    var ideal=entries.map(function(e){
-      if(e.date<goal.start) return null;
-      var t=(new Date(e.date)-sd)/(7*864e5);
+    var ideal=allDates.map(function(d){
+      if(d<goal.start) return null;
+      var t=(new Date(d)-sd)/(7*864e5);
       return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
     });
-    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false});
+    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false,spanGaps:true});
   }
 
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
