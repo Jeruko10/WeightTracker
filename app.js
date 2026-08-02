@@ -340,6 +340,9 @@ function render(){
   var n=entries.length;
   var wts=entries.map(function(e){return e.weight;});
   var cur=n?wts[n-1]:null;
+  // Current average — mean of the last 7 entries (same figure shown in the stats card)
+  var last7=wts.slice(Math.max(0,n-7));
+  var curAvg=n?last7.reduce(function(a,b){return a+b;},0)/last7.length:null;
 
   // Cycle label
   var cl=document.getElementById('cycle-label'), dv=document.getElementById('hdivider');
@@ -352,8 +355,6 @@ function render(){
 
   // Stats
   if(n>=1){
-    var sl=wts.slice(Math.max(0,n-7));
-    var curAvg=sl.reduce(function(a,b){return a+b;},0)/sl.length;
     document.getElementById('s-cur').textContent=curAvg.toFixed(1)+' kg';
     var re=document.getElementById('s-rate');
     if(n>=8){
@@ -448,12 +449,13 @@ function render(){
     document.getElementById('time-fill').style.width=timePct+'%';
     var dLeft=Math.max(0,Math.round((gE-now)/864e5));
     document.getElementById('time-sub').textContent='Time elapsed: '+timePct+'% · '+dLeft+' day'+(dLeft!==1?'s':'')+' left';
-    var totD=Math.abs(goal.weight-sw), doneD=Math.abs(cur-sw);
+    // Bar tracks the current average (last 7 entries), not the last logged weight
+    var totD=Math.abs(goal.weight-sw), doneD=Math.abs(curAvg-sw);
     var wPct=totD>0?Math.min(100,Math.round(doneD/totD*100)):100;
     document.getElementById('wl-s').textContent=sw.toFixed(1)+' kg';
     document.getElementById('wl-e').textContent=goal.weight.toFixed(1)+' kg';
     document.getElementById('wt-fill').style.width=wPct+'%';
-    document.getElementById('wt-sub').textContent='Weight progress: '+wPct+'% · '+Math.abs(goal.weight-cur).toFixed(1)+' kg left';
+    document.getElementById('wt-sub').textContent='Weight progress: '+wPct+'% · '+Math.abs(goal.weight-curAvg).toFixed(1)+' kg left';
   }
 
   renderGoalSummary();
