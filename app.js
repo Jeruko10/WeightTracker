@@ -13,7 +13,7 @@ var FB = initializeApp({
 var auth = getAuth(FB);
 var db   = getFirestore(FB);
 var currentUser = null;
-var entries = [], goal = null, goalHistory = [], chart = null;
+var entries = [], goal = null, goalHistory = [], chart = null, pendingReset = null;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function uDoc(p)  { return doc(db,'users',currentUser.uid,p); }
@@ -56,6 +56,17 @@ function windowAvg(series,endDate,spanDays,rangeStart){
     if(series[dd]!==undefined) vals.push(series[dd]);
   }
   return vals.length?vals.reduce(function(a,b){return a+b;},0)/vals.length:null;
+}
+// Walks day-by-day through the interpolated series to find when the 7-day average first
+// crossed the goal weight, so the congratulations message can report a real date, not "today".
+function findReachedDate(series,targetWeight,goalIsGain,rangeStart,rangeEnd){
+  var d=rangeStart;
+  while(d<=rangeEnd){
+    var avg=windowAvg(series,d,7,rangeStart);
+    if(avg!==null && (goalIsGain?avg>=targetWeight:avg<=targetWeight)) return d;
+    d=addDays(d,1);
+  }
+  return rangeEnd;
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -280,7 +291,7 @@ document.getElementById('btn-save-goal').addEventListener('click',async function
   }
   btn.dataset.confirm='0'; btn.textContent='Save goal'; btn.style.background=''; btn.style.color='';
   err.textContent='';
-  goal={weight:w,start:s,date:endDate,pace:p,isBulk:isBulk};
+  goal={weight:w,start:s,date:endDate,pace:p,isBulk:isBulk,startWeight:startW};
   document.getElementById('btn-clear-goal').style.display='';
   render(); await fbSaveGoal();
 });
@@ -301,6 +312,26 @@ document.getElementById('btn-clear-goal').addEventListener('click',async functio
   btn.style.display='none';
   document.getElementById('goal-summary').style.display='none';
   render(); await fbDeleteGoal();
+});
+
+// ── GOAL REACHED / MISSED ─────────────────────────────────────────────────────
+document.getElementById('btn-goal-reached-ok').addEventListener('click',async function(){
+  if(!goal) return;
+  var old={weight:goal.weight,start:goal.start,date:goal.date,pace:goal.pace||null,isBulk:goal.isBulk,savedOn:today()};
+  goalHistory.unshift(old); await fbSaveGH(old);
+  goal=null;
+  ['g-wt','g-start','g-pace'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('goal-preview').style.display='none';
+  document.getElementById('goal-summary').style.display='none';
+  render(); await fbDeleteGoal();
+});
+document.getElementById('btn-goal-reset').addEventListener('click',async function(){
+  if(!goal||!pendingReset) return;
+  var old={weight:goal.weight,start:goal.start,date:goal.date,pace:goal.pace||null,isBulk:goal.isBulk,savedOn:today()};
+  goalHistory.unshift(old); await fbSaveGH(old);
+  goal={weight:pendingReset.weight,start:pendingReset.start,date:pendingReset.date,pace:pendingReset.pace,isBulk:pendingReset.isBulk,startWeight:pendingReset.startWeight};
+  pendingReset=null;
+  render(); await fbSaveGoal();
 });
 
 // ── GOAL TAB ──────────────────────────────────────────────────────────────────
@@ -409,6 +440,10 @@ function render(){
   var bars=document.getElementById('bars');
   var proj=document.getElementById('proj-line');
   var btitle=document.getElementById('banner-title');
+  var reachedBox=document.getElementById('goal-reached-box');
+  var missedBox=document.getElementById('goal-missed-box');
+  reachedBox.style.display='none'; missedBox.style.display='none';
+  pendingReset=null;
 
   if(!goal||!goal.start||!goal.date||!cur){
     chip.className='chip none';
@@ -420,68 +455,103 @@ function render(){
     var totWk=Math.max(0.01,(gE-gS)/(7*864e5));
     var elWk=Math.max(0,(now-gS)/(7*864e5));
     var remWk=Math.max(0.01,(gE-now)/(7*864e5));
-    var se=entries.find(function(e){return e.date>=goal.start;})||entries[0];
-    var sw=se.weight;
+    // Prefer the weight recorded when the goal was set/reset — falling back to searching
+    // entries only for old goals saved before this field existed.
+    var sw=(goal.startWeight!==undefined&&goal.startWeight!==null)?goal.startWeight:(entries.find(function(e){return e.date>=goal.start;})||entries[0]).weight;
     var goalIsGain=goal.isBulk!==undefined?goal.isBulk:goal.weight>sw;
 
     var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
 
-    // Pace comparison — two consecutive 7-calendar-day windows (gaps interpolated),
-    // so a single log after several quiet days reads as a gradual change, not a sudden one
-    var desiredPace=goal.pace;
-    var chipMsg, chipClass, pdescMsg, actualPaceP;
-    if(!enoughData){
-      chipClass='none';
-      chipMsg=dataSpanDays<MIN_SPAN_DAYS
-        ?'Need '+(MIN_SPAN_DAYS-dataSpanDays)+' more day'+(MIN_SPAN_DAYS-dataSpanDays===1?'':'s')+' of data'
-        :'Need '+(MIN_ENTRIES-n)+' more log'+(MIN_ENTRIES-n===1?'':'s');
-      pdescMsg='';
-    } else {
-      actualPaceP=curAvg-prevAvg;
-      var directedActual=goalIsGain?actualPaceP:-actualPaceP;
-      var tol=desiredPace*0.25;
-      var paceAhead=directedActual>desiredPace+tol;
-      var paceBehind=directedActual<desiredPace-tol;
-      if(paceAhead){chipClass='fast';chipMsg=goalIsGain?'Eat less':'Eat more';pdescMsg='Slow down · need '+sign+kpw.toFixed(2)+' kg/wk';}
-      else if(paceBehind){chipClass='slow';chipMsg=goalIsGain?'Eat more':'Eat less';pdescMsg='Push harder · need '+sign+kpw.toFixed(2)+' kg/wk';}
-      else{chipClass='on';chipMsg='On track';pdescMsg=sign+kpw.toFixed(2)+' kg/wk needed';}
-    }
-
     btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
-    chip.className='chip '+chipClass; chip.textContent=chipMsg; pdesc.textContent=pdescMsg;
 
-    // Projection — based on the 7-day windowed pace above
-    proj.style.display='';
-    if(!enoughData){
-      proj.textContent='Log more entries to see projection';
+    // Reached: the 7-day average has crossed the target in the intended direction.
+    var reached=goalIsGain?curAvg>=goal.weight:curAvg<=goal.weight;
+    // Past due: the end date has passed without reaching it.
+    var pastDue=!reached&&now>gE;
+
+    if(reached){
+      proj.style.display='none'; bars.style.display='none';
+      chip.className='chip on'; chip.textContent='Goal reached!'; pdesc.textContent='';
+      reachedBox.style.display='';
+      var rangeStart=goal.start>firstDate?goal.start:firstDate;
+      var rd=findReachedDate(series,goal.weight,goalIsGain,rangeStart,lastDate);
+      var elapsedDays=Math.round((new Date(rd)-gS)/864e5);
+      var diffDays=Math.round((new Date(rd)-gE)/864e5);
+      var diffTxt=diffDays===0?'right on time':diffDays<0
+        ?Math.abs(diffDays)+' day'+(Math.abs(diffDays)===1?'':'s')+' early'
+        :diffDays+' day'+(diffDays===1?'':'s')+' late';
+      document.getElementById('goal-reached-text').innerHTML=
+        '🎉 You reached your goal of <b>'+goal.weight.toFixed(1)+' kg</b> in <b>'+(elapsedDays/7).toFixed(1)+' weeks</b> — <b>'+diffTxt+'</b> compared to your original plan!';
+    } else if(pastDue){
+      proj.style.display='none'; bars.style.display='none';
+      chip.className='chip slow'; chip.textContent='Goal date passed'; pdesc.textContent='';
+      missedBox.style.display='';
+      var newStart=today();
+      var delta2=goal.weight-curAvg;
+      var weeks2=Math.abs(delta2/goal.pace)||1;
+      var newEnd=addDays(newStart,Math.round(weeks2*7));
+      document.getElementById('goal-missed-text').innerHTML=
+        'You should have reached <b>'+goal.weight.toFixed(1)+' kg</b> by now. No worries, that happens! '+
+        'Recalculating from your current average of <b>'+curAvg.toFixed(1)+' kg</b> at your <b>'+(goalIsGain?'+':'-')+goal.pace+' kg/wk</b> pace, '+
+        'you can still get there by <b>'+fmt(newEnd)+'</b> if you stay focused.';
+      pendingReset={weight:goal.weight,start:newStart,date:newEnd,pace:goal.pace,isBulk:goal.isBulk,startWeight:curAvg};
     } else {
-      var movRight=(goalIsGain&&actualPaceP>0)||(!goalIsGain&&actualPaceP<0);
-      if(Math.abs(actualPaceP)<0.001) proj.textContent='Trend is flat — log more data';
-      else if(!movRight) proj.textContent='Current trend is moving away from goal';
-      else{
-        var wn=(goal.weight-curAvg)/actualPaceP;
-        var pd=new Date(); pd.setDate(pd.getDate()+Math.round(wn*7));
-        var ps=(pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
-        var dd=Math.round((pd-gE)/864e5);
-        var dt=dd===0?'right on time':dd<0?Math.abs(dd)+'d early':dd+'d late';
-        proj.innerHTML='At current rate, projected arrival: <b>'+ps+'</b> — <b>'+dt+'</b>';
+      // Pace comparison — two consecutive 7-calendar-day windows (gaps interpolated),
+      // so a single log after several quiet days reads as a gradual change, not a sudden one
+      var desiredPace=goal.pace;
+      var chipMsg, chipClass, pdescMsg, actualPaceP;
+      if(!enoughData){
+        chipClass='none';
+        chipMsg=dataSpanDays<MIN_SPAN_DAYS
+          ?'Need '+(MIN_SPAN_DAYS-dataSpanDays)+' more day'+(MIN_SPAN_DAYS-dataSpanDays===1?'':'s')+' of data'
+          :'Need '+(MIN_ENTRIES-n)+' more log'+(MIN_ENTRIES-n===1?'':'s');
+        pdescMsg='';
+      } else {
+        actualPaceP=curAvg-prevAvg;
+        var directedActual=goalIsGain?actualPaceP:-actualPaceP;
+        var tol=desiredPace*0.5;
+        var paceAhead=directedActual>desiredPace+tol;
+        var paceBehind=directedActual<desiredPace-tol;
+        if(paceAhead){chipClass='fast';chipMsg=goalIsGain?'Eat less':'Eat more';pdescMsg='Slow down · need '+sign+kpw.toFixed(2)+' kg/wk';}
+        else if(paceBehind){chipClass='slow';chipMsg=goalIsGain?'Eat more':'Eat less';pdescMsg='Push harder · need '+sign+kpw.toFixed(2)+' kg/wk';}
+        else{chipClass='on';chipMsg='On track';pdescMsg=sign+kpw.toFixed(2)+' kg/wk needed';}
       }
-    }
 
-    // Bars
-    bars.style.display='';
-    document.getElementById('tl-s').textContent=fmt(goal.start);
-    document.getElementById('tl-e').textContent=fmt(goal.date);
-    document.getElementById('time-fill').style.width=timePct+'%';
-    var dLeft=Math.max(0,Math.round((gE-now)/864e5));
-    document.getElementById('time-sub').textContent='Time elapsed: '+timePct+'% · '+dLeft+' day'+(dLeft!==1?'s':'')+' left';
-    // Bar tracks the current average (last 7 calendar days), not the last logged weight
-    var totD=Math.abs(goal.weight-sw), doneD=Math.abs(curAvg-sw);
-    var wPct=totD>0?Math.min(100,Math.round(doneD/totD*100)):100;
-    document.getElementById('wl-s').textContent=sw.toFixed(1)+' kg';
-    document.getElementById('wl-e').textContent=goal.weight.toFixed(1)+' kg';
-    document.getElementById('wt-fill').style.width=wPct+'%';
-    document.getElementById('wt-sub').textContent='Weight progress: '+wPct+'% · '+Math.abs(goal.weight-curAvg).toFixed(1)+' kg left';
+      chip.className='chip '+chipClass; chip.textContent=chipMsg; pdesc.textContent=pdescMsg;
+
+      // Projection — based on the 7-day windowed pace above
+      proj.style.display='';
+      if(!enoughData){
+        proj.textContent='Log more entries to see projection';
+      } else {
+        var movRight=(goalIsGain&&actualPaceP>0)||(!goalIsGain&&actualPaceP<0);
+        if(Math.abs(actualPaceP)<0.001) proj.textContent='Trend is flat — log more data';
+        else if(!movRight) proj.textContent='Current trend is moving away from goal';
+        else{
+          var wn=(goal.weight-curAvg)/actualPaceP;
+          var pd=new Date(); pd.setDate(pd.getDate()+Math.round(wn*7));
+          var ps=(pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
+          var dd=Math.round((pd-gE)/864e5);
+          var dt=dd===0?'right on time':dd<0?Math.abs(dd)+'d early':dd+'d late';
+          proj.innerHTML='At current rate, projected arrival: <b>'+ps+'</b> — <b>'+dt+'</b>';
+        }
+      }
+
+      // Bars
+      bars.style.display='';
+      document.getElementById('tl-s').textContent=fmt(goal.start);
+      document.getElementById('tl-e').textContent=fmt(goal.date);
+      document.getElementById('time-fill').style.width=timePct+'%';
+      var dLeft=Math.max(0,Math.round((gE-now)/864e5));
+      document.getElementById('time-sub').textContent='Time elapsed: '+timePct+'% · '+dLeft+' day'+(dLeft!==1?'s':'')+' left';
+      // Bar tracks the current average (last 7 calendar days), not the last logged weight
+      var totD=Math.abs(goal.weight-sw), doneD=Math.abs(curAvg-sw);
+      var wPct=totD>0?Math.min(100,Math.round(doneD/totD*100)):100;
+      document.getElementById('wl-s').textContent=sw.toFixed(1)+' kg';
+      document.getElementById('wl-e').textContent=goal.weight.toFixed(1)+' kg';
+      document.getElementById('wt-fill').style.width=wPct+'%';
+      document.getElementById('wt-sub').textContent='Weight progress: '+wPct+'% · '+Math.abs(goal.weight-curAvg).toFixed(1)+' kg left';
+    }
   }
 
   renderGoalSummary();
@@ -502,8 +572,8 @@ function render(){
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
-    var se2=entries.find(function(e){return e.date>=goal.start;})||entries[0];
-    var sw2=se2.weight, totW2=Math.max(0.01,(gd-sd)/(7*864e5));
+    var sw2=(goal.startWeight!==undefined&&goal.startWeight!==null)?goal.startWeight:(entries.find(function(e){return e.date>=goal.start;})||entries[0]).weight;
+    var totW2=Math.max(0.01,(gd-sd)/(7*864e5));
     var ideal=allDates.map(function(d){
       if(d<goal.start) return null;
       var t=(new Date(d)-sd)/(7*864e5);

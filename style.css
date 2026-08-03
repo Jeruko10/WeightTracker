@@ -37,6 +37,11 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .teal{background:#6fcf97}
 .purple{background:#d0bcff}
 .bar-sub{font-size:10px;color:#938f99;margin-top:2px}
+.goal-msg{margin-top:4px}
+.goal-msg p{font-size:13px;line-height:1.6;margin-bottom:10px}
+.goal-msg b{color:#e6e1e5}
+.goal-msg.success p{color:#cdeedd}
+.goal-msg.warn p{color:#f7e6c4}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:#938f99}
 .leg-item{display:flex;align-items:center;gap:6px}
 .leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
