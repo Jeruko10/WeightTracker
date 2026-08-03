@@ -32,6 +32,31 @@ function sync(msg,cls){
   var el=document.getElementById('sync-indicator');
   el.textContent=msg; el.className='sync-indicator '+(cls||'');
 }
+// Fills gaps between logged entries with a straight-line estimate per day, so a single
+// entry after a multi-day gap doesn't get treated as one sudden jump in the averages below.
+function buildDailySeries(){
+  var series={}, n=entries.length;
+  if(!n) return series;
+  if(n===1){ series[entries[0].date]=entries[0].weight; return series; }
+  for(var i=0;i<n-1;i++){
+    var d1=entries[i].date, w1=entries[i].weight;
+    var d2=entries[i+1].date, w2=entries[i+1].weight;
+    var days=Math.round((new Date(d2)-new Date(d1))/864e5);
+    for(var k=0;k<=days;k++){
+      series[addDays(d1,k)]=days>0?w1+(w2-w1)*(k/days):w1;
+    }
+  }
+  return series;
+}
+function windowAvg(series,endDate,spanDays,rangeStart){
+  var vals=[];
+  for(var k=0;k<spanDays;k++){
+    var dd=addDays(endDate,-k);
+    if(dd<rangeStart) break;
+    if(series[dd]!==undefined) vals.push(series[dd]);
+  }
+  return vals.length?vals.reduce(function(a,b){return a+b;},0)/vals.length:null;
+}
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
 document.getElementById('btn-google-sign-in').addEventListener('click',function(){
@@ -338,11 +363,16 @@ async function deleteGH(g,row,btn){
 // ── MAIN RENDER ───────────────────────────────────────────────────────────────
 function render(){
   var n=entries.length;
-  var wts=entries.map(function(e){return e.weight;});
-  var cur=n?wts[n-1]:null;
-  // Current average — mean of the last 7 entries (same figure shown in the stats card)
-  var last7=wts.slice(Math.max(0,n-7));
-  var curAvg=n?last7.reduce(function(a,b){return a+b;},0)/last7.length:null;
+  var cur=n?entries[n-1].weight:null;
+  var firstDate=n?entries[0].date:null, lastDate=n?entries[n-1].date:null;
+  var series=buildDailySeries();
+  // Current average — mean of the 7 calendar days ending on the last logged date (gaps interpolated above)
+  var curAvg=n?windowAvg(series,lastDate,7,firstDate):null;
+  var dataSpanDays=n?Math.round((new Date(lastDate)-new Date(firstDate))/864e5):0;
+  // Two conditions gate the trend stats: enough calendar coverage for two 7-day windows,
+  // AND enough real logs that those windows aren't mostly guessed via interpolation.
+  var MIN_ENTRIES=6, MIN_SPAN_DAYS=13;
+  var enoughData=n>=MIN_ENTRIES&&dataSpanDays>=MIN_SPAN_DAYS;
 
   // Cycle label
   var cl=document.getElementById('cycle-label'), dv=document.getElementById('hdivider');
@@ -354,12 +384,11 @@ function render(){
   } else {cl.style.display='none';dv.style.display='none';}
 
   // Stats
+  var prevAvg=enoughData?windowAvg(series,addDays(lastDate,-7),7,firstDate):null;
   if(n>=1){
     document.getElementById('s-cur').textContent=curAvg.toFixed(1)+' kg';
     var re=document.getElementById('s-rate');
-    if(n>=8){
-      var prev=wts.slice(Math.max(0,n-14),n-7);
-      var prevAvg=prev.reduce(function(a,b){return a+b;},0)/prev.length;
+    if(prevAvg!==null){
       document.getElementById('s-avg').textContent=prevAvg.toFixed(1)+' kg';
       var diff=curAvg-prevAvg;
       re.textContent=(diff>=0?'+':'')+diff.toFixed(1)+' kg';
@@ -397,21 +426,18 @@ function render(){
 
     var kpw=(goal.weight-cur)/remWk, sign=kpw>=0?'+':'';
 
-    // Pace comparison — entry-based, not day-based
+    // Pace comparison — two consecutive 7-calendar-day windows (gaps interpolated),
+    // so a single log after several quiet days reads as a gradual change, not a sudden one
     var desiredPace=goal.pace;
-    var chipMsg, chipClass, pdescMsg;
-    if(n<8){
-      chipClass='none'; chipMsg='Need '+(8-n)+' more log'+(8-n===1?'':'s');
+    var chipMsg, chipClass, pdescMsg, actualPaceP;
+    if(!enoughData){
+      chipClass='none';
+      chipMsg=dataSpanDays<MIN_SPAN_DAYS
+        ?'Need '+(MIN_SPAN_DAYS-dataSpanDays)+' more day'+(MIN_SPAN_DAYS-dataSpanDays===1?'':'s')+' of data'
+        :'Need '+(MIN_ENTRIES-n)+' more log'+(MIN_ENTRIES-n===1?'':'s');
       pdescMsg='';
     } else {
-      var curSlice=entries.slice(n-7);
-      var prevSlice=entries.slice(Math.max(0,n-14),n-7);
-      var curAvgP=curSlice.reduce(function(a,b){return a+b.weight;},0)/curSlice.length;
-      var prevAvgP=prevSlice.reduce(function(a,b){return a+b.weight;},0)/prevSlice.length;
-      var curMidDate=new Date(curSlice[Math.floor(curSlice.length/2)].date);
-      var prevMidDate=new Date(prevSlice[Math.floor(prevSlice.length/2)].date);
-      var weeksBetween=Math.max(0.01,(curMidDate-prevMidDate)/(7*864e5));
-      var actualPaceP=(curAvgP-prevAvgP)/weeksBetween;
+      actualPaceP=curAvg-prevAvg;
       var directedActual=goalIsGain?actualPaceP:-actualPaceP;
       var tol=desiredPace*0.25;
       var paceAhead=directedActual>desiredPace+tol;
@@ -424,16 +450,16 @@ function render(){
     btitle.textContent='Goal · '+goal.weight+' kg by '+fmt(goal.date);
     chip.className='chip '+chipClass; chip.textContent=chipMsg; pdesc.textContent=pdescMsg;
 
-    // Projection — two-average method (mirrors pace chip)
+    // Projection — based on the 7-day windowed pace above
     proj.style.display='';
-    if(n<8){
+    if(!enoughData){
       proj.textContent='Log more entries to see projection';
     } else {
       var movRight=(goalIsGain&&actualPaceP>0)||(!goalIsGain&&actualPaceP<0);
       if(Math.abs(actualPaceP)<0.001) proj.textContent='Trend is flat — log more data';
       else if(!movRight) proj.textContent='Current trend is moving away from goal';
       else{
-        var wn=(goal.weight-curAvgP)/actualPaceP;
+        var wn=(goal.weight-curAvg)/actualPaceP;
         var pd=new Date(); pd.setDate(pd.getDate()+Math.round(wn*7));
         var ps=(pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
         var dd=Math.round((pd-gE)/864e5);
@@ -449,7 +475,7 @@ function render(){
     document.getElementById('time-fill').style.width=timePct+'%';
     var dLeft=Math.max(0,Math.round((gE-now)/864e5));
     document.getElementById('time-sub').textContent='Time elapsed: '+timePct+'% · '+dLeft+' day'+(dLeft!==1?'s':'')+' left';
-    // Bar tracks the current average (last 7 entries), not the last logged weight
+    // Bar tracks the current average (last 7 calendar days), not the last logged weight
     var totD=Math.abs(goal.weight-sw), doneD=Math.abs(curAvg-sw);
     var wPct=totD>0?Math.min(100,Math.round(doneD/totD*100)):100;
     document.getElementById('wl-s').textContent=sw.toFixed(1)+' kg';
