@@ -363,9 +363,8 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
   // so that opacity is already a hard 0 for at least one frame either side of a tick-mode
   // switch — otherwise the last frame before a switch still carries a few percent of opacity
   // and can flash the old tick set.
-  // 500ms in total. The fades keep a slightly larger share than a straight scaling would give
-  // them: below roughly four frames a fade stops reading as a fade and turns into a blink.
-  var OUT=100, ZOOM=240, HOLD=15, IN=145, t0=performance.now(), phase3=false;
+  // 1000ms in total.
+  var OUT=195, ZOOM=485, HOLD=30, IN=290, t0=performance.now(), phase3=false;
   (function step(now){
     var t=now-t0, done=false;
     if(t<OUT){
@@ -962,23 +961,42 @@ function render(){
     borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointHitRadius:pointsVisible?HIT_R:0,
     pointBackgroundColor:'#d0bcff',tension:0,fill:true
   }];
-  if(goal&&goal.start&&goal.date&&n){
-    var sd=new Date(goal.start), gd=new Date(goal.date);
-    var sw2=(goal.startWeight!==undefined&&goal.startWeight!==null)?goal.startWeight:(entries.find(function(e){return e.date>=goal.start;})||entries[0]).weight;
-    var totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    // The ideal pace is a straight line in time, so its two ends describe it completely.
-    var iStart=Math.max(0,Math.min(lastIdx,dayIdx(goal.start)));
-    var idealAt=function(i){
+  // One dashed segment per goal cycle — the active one and every archived one — so the older
+  // stretches of the weight line can be read against the plan they were actually run against,
+  // not just on their own. The ideal pace is a straight line in time, so its two ends describe
+  // it completely.
+  function idealSegment(g,endDate){
+    if(!n||!g||!g.start||!g.date) return null;
+    var sd=new Date(g.start), gd=new Date(g.date);
+    var totW=Math.max(0.01,(gd-sd)/(7*864e5));
+    var sw=(g.startWeight!==undefined&&g.startWeight!==null)
+      ?g.startWeight
+      :(entries.find(function(e){return e.date>=g.start;})||entries[0]).weight;
+    var at=function(i){
       var t=(new Date(fullDates[i])-sd)/(7*864e5);
-      return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
+      return parseFloat((sw+(g.weight-sw)*(t/totW)).toFixed(2));
     };
-    if(iStart<lastIdx){
-      datasets.push({label:'Ideal pace',
-        data:[{x:iStart,y:idealAt(iStart)},{x:lastIdx,y:idealAt(lastIdx)}],
-        borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,pointHoverRadius:4,
-        pointHitRadius:pointsVisible?0:1,tension:0,fill:false});
-    }
+    var i0=Math.max(0,Math.min(lastIdx,dayIdx(g.start)));
+    var i1=Math.max(0,Math.min(lastIdx,dayIdx(endDate)));
+    if(i1<=i0) return null;
+    return [{x:i0,y:at(i0)},{x:i1,y:at(i1)}];
   }
+  function idealDataset(data){
+    return {label:'Ideal pace',data:data,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],
+      pointRadius:0,pointHoverRadius:4,pointHitRadius:pointsVisible?0:1,tension:0,fill:false};
+  }
+  if(goal){
+    var segNow=idealSegment(goal,fullDates[lastIdx]);   // the active cycle runs up to today
+    if(segNow) datasets.push(idealDataset(segNow));
+  }
+  goalHistory.forEach(function(g){
+    // An archived cycle's plan only means anything while that cycle was in force: up to its own
+    // end date, or to the day it was replaced if that came first. Past either point the formula
+    // would carry on extrapolating beyond the weight it was aiming at.
+    var end=(g.savedOn&&g.savedOn<g.date)?g.savedOn:g.date;
+    var seg=idealSegment(g,end);
+    if(seg) datasets.push(idealDataset(seg));
+  });
 
   chartState.dates=fullDates; chartState.pxPerDay=PX_PER_DAY; chartState.scrollable=scrollable;
 
