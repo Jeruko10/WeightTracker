@@ -618,6 +618,10 @@ function render(){
     chart=new Chart(document.getElementById('chart'),{
       type:'line',data:{labels:labels,datasets:datasets},
       options:{responsive:true,maintainAspectRatio:false,
+        // Quick, snappy transition when switching range — points stretch/compress into their
+        // new positions instead of jumping. The #chart-inner width transition (see style.css)
+        // is timed to match, so a scroll-threshold crossing resizes the canvas in sync too.
+        animation:{duration:400,easing:'easeOutQuart'},
         // With points hidden (pointRadius 0) the cursor can't land exactly on one, so hover/tooltip
         // trigger on the nearest x position instead of requiring a direct hit on the (invisible) point.
         interaction:{mode:'index',intersect:false},
@@ -634,7 +638,10 @@ function render(){
   } else {
     chart.data.labels=labels; chart.data.datasets=datasets;
     chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
-    chart.resize(); chart.update();
+    // No manual resize() here — #chart-inner's width transitions via CSS, and Chart.js's own
+    // ResizeObserver keeps redrawing the canvas at each intermediate size, so a scroll-threshold
+    // crossing stretches/compresses smoothly instead of snapping instantly.
+    chart.update();
   }
 
   // Weekly summary
