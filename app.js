@@ -13,7 +13,7 @@ var FB = initializeApp({
 var auth = getAuth(FB);
 var db   = getFirestore(FB);
 var currentUser = null;
-var entries = [], goal = null, goalHistory = [], chart = null, pendingReset = null, chartRange = '2w';
+var entries = [], goal = null, goalHistory = [], chart = null, pendingReset = null, chartRange = '2w', chartTransitionQueued = false;
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function uDoc(p)  { return doc(db,'users',currentUser.uid,p); }
@@ -163,7 +163,7 @@ document.querySelectorAll('.tab').forEach(function(tab){
 
 // ── CHART RANGE ───────────────────────────────────────────────────────────────
 document.getElementById('chart-range').addEventListener('change',function(){
-  chartRange=this.value; render();
+  chartTransitionQueued=true; chartRange=this.value; render();
 });
 
 // ── ADD ENTRY ─────────────────────────────────────────────────────────────────
@@ -636,12 +636,40 @@ function render(){
       }
     });
   } else {
+    // A range switch has no real point-to-point correspondence between old and new data (a
+    // week and a year aren't the same series resampled), so Chart.js's normal value animation
+    // can't morph one into the other — it just pops in. Instead: snapshot the current render,
+    // swap in the new data underneath instantly, then stretch/compress and fade the snapshot
+    // away on top, mimicking a timeframe-switch transition.
+    var snap=document.getElementById('chart-snap'), oldCount=chart.data.labels.length, snapOk=false;
+    if(chartTransitionQueued){
+      try{
+        snap.src=chart.canvas.toDataURL();
+        snap.style.transitionDuration='0s';
+        snap.style.transform='scaleX(1)';
+        snap.style.opacity='1';
+        snap.classList.remove('hidden');
+        snapOk=true;
+      }catch(err){ snap.classList.add('hidden'); }
+    }
+    chartTransitionQueued=false;
+
     chart.data.labels=labels; chart.data.datasets=datasets;
     chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
     // No manual resize() here — #chart-inner's width transitions via CSS, and Chart.js's own
     // ResizeObserver keeps redrawing the canvas at each intermediate size, so a scroll-threshold
     // crossing stretches/compresses smoothly instead of snapping instantly.
-    chart.update();
+    chart.update(snapOk?'none':undefined);
+
+    if(snapOk){
+      var zoomingOut=allDates.length>oldCount;
+      requestAnimationFrame(function(){
+        snap.style.transitionDuration='';
+        snap.style.transform='scaleX('+(zoomingOut?1.15:0.87)+')';
+        snap.style.opacity='0';
+      });
+      setTimeout(function(){ snap.classList.add('hidden'); },420);
+    }
   }
 
   // Weekly summary

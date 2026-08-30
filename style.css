@@ -46,7 +46,9 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .leg-item{display:flex;align-items:center;gap:6px}
 .leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
 .chart-wrap{position:relative;height:190px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
-#chart-inner{height:100%;transition:width .4s cubic-bezier(.22,.61,.36,1)}
+#chart-inner{height:100%;position:relative;transition:width .4s cubic-bezier(.22,.61,.36,1)}
+#chart-snap{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;pointer-events:none;transform-origin:right center;transition:transform .38s cubic-bezier(.22,.61,.36,1),opacity .38s ease}
+#chart-snap.hidden{display:none}
 .card-title-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
 .card-title-row .card-title{margin-bottom:0}
 .range-select{background:#3a3540;border:1.5px solid transparent;border-radius:8px;color:#e6e1e5;font-size:12px;padding:5px 8px;font-family:inherit;outline:none}
