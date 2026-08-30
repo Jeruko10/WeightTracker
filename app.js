@@ -329,7 +329,6 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
     setAxisChrome(1,false); applyFinalLayout(toMin,toMax,yTo); return;
   }
   var yPlan=planZoomY(fromV,toV,yFrom,yTo);
-  document.getElementById('chart-wrap').classList.add('zooming');
   // The fades finish slightly inside their phases (OUT*0.75, and HOLD ms before the fade-in)
   // so that opacity is already a hard 0 for at least one frame either side of a tick-mode
   // switch — otherwise the last frame before a switch still carries a few percent of opacity
@@ -364,12 +363,7 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
       applyChartWindow(toMin,toMax,yTo,null);
       done=q>=1;
     }
-    if(done){
-      chartAnimFrame=null;
-      // Width is final, so letting the scrollbar back now is a single settled state change
-      // rather than a bar sliding in and out mid-zoom.
-      document.getElementById('chart-wrap').classList.remove('zooming');
-    }
+    if(done) chartAnimFrame=null;
     else chartAnimFrame=requestAnimationFrame(step);
   })(t0);
 }
@@ -1013,7 +1007,6 @@ function render(){
       // Not a range switch — make sure the axes are fully opaque and back on automatic ticks,
       // in case a zoom was interrupted partway through its fade.
       if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
-      document.getElementById('chart-wrap').classList.remove('zooming');
       chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
       setAxisChrome(1,false);
       chartWin={min:winStart,max:winEnd};

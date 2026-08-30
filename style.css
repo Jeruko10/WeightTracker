@@ -45,10 +45,17 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:#938f99}
 .leg-item{display:flex;align-items:center;gap:6px}
 .leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
-.chart-wrap{position:relative;height:190px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
-/* Mid-zoom the canvas width is interpolated and can briefly exceed the container, which would
-   flash a scrollbar in and out. Suppressed while animating; restored once the width settles. */
-.chart-wrap.zooming{overflow-x:hidden}
+/* overflow-x:scroll (not auto) so the scrollbar's reserved space never depends on whether the
+   range needs scrolling. A classic, non-overlay scrollbar (the Windows/Chrome default, unlike
+   macOS's overlay one) occupies real height inside the box — with :auto that height only gets
+   taken when a range happens to be scrollable, so the chart's plot area was a few px taller in
+   "1 week" than in "All time". Always reserving it, kept thin via the scrollbar-* rules below,
+   makes every range render into an identical content height. */
+.chart-wrap{position:relative;height:190px;overflow-x:scroll;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:#45404d transparent}
+.chart-wrap::-webkit-scrollbar{height:6px}
+.chart-wrap::-webkit-scrollbar-track{background:transparent}
+.chart-wrap::-webkit-scrollbar-thumb{background:#45404d;border-radius:3px}
 /* Width is driven per-frame from JS during a range change, so no CSS transition here. */
 #chart-inner{height:100%;position:relative}
 .card-title-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
