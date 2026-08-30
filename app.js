@@ -574,6 +574,7 @@ function render(){
     var rangeStart, rangeEnd;
     if(chartRange==='1w'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-6); }
     else if(chartRange==='2w'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-13); }
+    else if(chartRange==='1m'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-29); }
     else if(chartRange==='1y'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-364); }
     else if(chartRange==='goal'&&goal&&goal.start){ rangeStart=goal.start; rangeEnd=today(); }
     else { rangeStart=entries[0].date; rangeEnd=entries[n-1].date; }
@@ -584,9 +585,15 @@ function render(){
   }
   var labels=allDates.map(function(d){var p=d.split('-');return p[2]+'/'+p[1];});
   var chartWts=allDates.map(function(d){return entryMap[d]!==undefined?entryMap[d]:null;});
+  // Horizontal scroll past CHART_SCROLL_THRESHOLD plotted days, at a fixed px/day so points
+  // never get more cramped as data grows. "1y" is exempt — it always compacts to fit instead,
+  // as a zoomed-out overview — below the threshold every other range fills the card as before.
+  var CHART_SCROLL_THRESHOLD=30, PX_PER_DAY=24;
+  var scrollable=chartRange!=='1y'&&allDates.length>CHART_SCROLL_THRESHOLD;
+  var pointRadius=(!scrollable&&allDates.length>60)?0:4;
   var datasets=[{
     label:'Weight',data:chartWts,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:4,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
+    borderWidth:2,pointRadius:pointRadius,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
@@ -600,10 +607,6 @@ function render(){
     datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false,spanGaps:true});
   }
 
-  // Horizontal scroll past CHART_SCROLL_THRESHOLD plotted days, at a fixed px/day so points
-  // never get more cramped as data grows — below the threshold the chart fills the card as before.
-  var CHART_SCROLL_THRESHOLD=30, PX_PER_DAY=24;
-  var scrollable=allDates.length>CHART_SCROLL_THRESHOLD;
   document.getElementById('chart-inner').style.width=scrollable?(allDates.length*PX_PER_DAY)+'px':'100%';
 
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
