@@ -734,10 +734,10 @@ function render(){
   // overview. "All time" gets a larger threshold (100) since it's meant to stay browsable
   // longer before handing off to scroll. Below the threshold, points hide past 60 days so a
   // dense compacted line doesn't turn into a blob — except "all", which always hides them.
-  var CHART_SCROLL_THRESHOLD=30, ALL_TIME_THRESHOLD=100, PX_PER_DAY=24;
+  var CHART_SCROLL_THRESHOLD=30, ALL_TIME_THRESHOLD=100, PX_PER_DAY=24, POINT_R=2.8;
   var scrollThreshold=chartRange==='all'?ALL_TIME_THRESHOLD:CHART_SCROLL_THRESHOLD;
   var scrollable=chartRange!=='1y'&&visibleDays>scrollThreshold;
-  var pointRadius=scrollable?4:(chartRange==='all'?0:(visibleDays>60?0:4));
+  var pointRadius=scrollable?POINT_R:(chartRange==='all'?0:(visibleDays>60?0:POINT_R));
 
   // tension:0 (straight segments between logged days) rather than a spline. A spline's control
   // points are derived from the points currently in the x window, so the curve between two
