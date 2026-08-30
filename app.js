@@ -86,10 +86,19 @@ function chartYBounds(minX,maxX){
   var mn=Infinity, mx=-Infinity;
   if(chart){
     chart.data.datasets.forEach(function(ds){
-      for(var i=lo;i<=hi;i++){
-        var p=ds.data[i];
+      var d=ds.data, i, p;
+      for(i=lo;i<=hi;i++){
+        p=d[i];
         if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; }
       }
+      // The segments crossing the left and right edges are anchored by the nearest logged day
+      // OUTSIDE the window, so those two points have to be in range as well. With gaps in the
+      // log that neighbour can be a week away at a very different weight, and leaving it out
+      // is what makes the line appear to shoot in from beyond the top or bottom edge.
+      for(i=lo-1;i>=0;i--){ p=d[i];
+        if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; break; } }
+      for(i=hi+1;i<d.length;i++){ p=d[i];
+        if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; break; } }
     });
   }
   if(mn===Infinity) return null;
@@ -143,16 +152,13 @@ function chartTargetWidth(days){
   return Math.round(days*chartState.pxPerDay);
 }
 
-// The vertical scale must never be tighter than the data currently on screen, or segments to
-// off-range points get drawn shooting in from beyond the plot edges. Interpolating y linearly
-// alongside x isn't enough: zooming out pulls new days into view faster than a linear y ramp
-// widens to fit them. So the scale leads the zoom — widening early when expanding, and holding
-// wide until late when contracting — and is then unioned with the real bounds of what is
-// actually visible, which guarantees containment even if the easing alone would fall short.
-function zoomYBounds(minX,maxX,e,yFrom,yTo,expanding){
+// Vertical scale for one frame of the zoom: interpolated on the same curve as the horizontal
+// window so the two move together, then widened if the frame's own data (edge anchors included)
+// would otherwise fall outside. The union is a guarantee rather than the main mechanism — with
+// anchor-aware bounds it rarely has to do anything, so it does not reintroduce stutter.
+function zoomYBounds(minX,maxX,e,yFrom,yTo){
   if(!yFrom||!yTo) return yTo||yFrom||null;
-  var eY=expanding?Math.pow(e,0.45):Math.pow(e,2.2);
-  var yb={min:yFrom.min+(yTo.min-yFrom.min)*eY, max:yFrom.max+(yTo.max-yFrom.max)*eY};
+  var yb={min:yFrom.min+(yTo.min-yFrom.min)*e, max:yFrom.max+(yTo.max-yFrom.max)*e};
   var actual=chartYBounds(minX,maxX);
   if(actual){
     if(actual.min<yb.min) yb.min=actual.min;
@@ -180,7 +186,6 @@ function animateChartWindow(toMin,toMax,tickLimit){
   // data each frame: recomputing makes the line jump every time a new day's high or low crosses
   // into view, which reads as vertical stutter during a large zoom.
   var yFrom=chartYBounds(fromMin,fromMax), yTo=chartYBounds(toMin,toMax);
-  var expanding=(toMax-toMin)>(fromMax-fromMin);
   var fromW=document.getElementById('chart-inner').offsetWidth;
   var toW=chartTargetWidth(toMax-toMin+1);
   document.getElementById('chart-wrap').classList.add('zooming');
@@ -201,7 +206,7 @@ function animateChartWindow(toMin,toMax,tickLimit){
       var p=(t-OUT)/ZOOM, e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
       var curMin=fromMin+(toMin-fromMin)*e, curMax=fromMax+(toMax-fromMax)*e;
       setAxisChrome(0,true);
-      applyChartWindow(curMin,curMax,zoomYBounds(curMin,curMax,e,yFrom,yTo,expanding),fromW+(toW-fromW)*e);
+      applyChartWindow(curMin,curMax,zoomYBounds(curMin,curMax,e,yFrom,yTo),fromW+(toW-fromW)*e);
     } else {
       // The new tick limit lands here, with the labels still invisible, so the fade-in is the
       // first time the final tick set is ever drawn.
