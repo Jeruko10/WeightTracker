@@ -363,8 +363,9 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
   // so that opacity is already a hard 0 for at least one frame either side of a tick-mode
   // switch — otherwise the last frame before a switch still carries a few percent of opacity
   // and can flash the old tick set.
-  // 2000ms in total, split in the same proportions as before.
-  var OUT=390, ZOOM=965, HOLD=65, IN=580, t0=performance.now(), phase3=false;
+  // 500ms in total. The fades keep a slightly larger share than a straight scaling would give
+  // them: below roughly four frames a fade stops reading as a fade and turns into a blink.
+  var OUT=100, ZOOM=240, HOLD=15, IN=145, t0=performance.now(), phase3=false;
   (function step(now){
     var t=now-t0, done=false;
     if(t<OUT){
