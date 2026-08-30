@@ -739,11 +739,16 @@ function render(){
   var scrollable=chartRange!=='1y'&&visibleDays>scrollThreshold;
   var pointRadius=scrollable?4:(chartRange==='all'?0:(visibleDays>60?0:4));
 
+  // tension:0 (straight segments between logged days) rather than a spline. A spline's control
+  // points are derived from the points currently in the x window, so the curve between two
+  // entries changed shape depending on the selected range. It also invented movement on days
+  // with no entry — bulging above or below the two weights it sits between. Straight segments
+  // are window-independent and match the linear interpolation the stats above already assume.
   var datasets=[{
     label:'Weight',
     data:fullDates.map(function(d,i){return {x:i,y:entryMap[d]!==undefined?entryMap[d]:null};}),
     borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
+    borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointBackgroundColor:'#d0bcff',tension:0,fill:true,spanGaps:true
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
