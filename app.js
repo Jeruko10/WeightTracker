@@ -97,13 +97,33 @@ function chartYBounds(minX,maxX){
   return {min:mn-pad,max:mx+pad};
 }
 
+// Axis labels and gridlines during a zoom. Two separate problems are handled here:
+//   • Chart.js regenerates ticks at "nice" round values every frame, so as the bounds move the
+//     gridlines snap between step sizes instead of gliding. Pinning a fixed tick count while
+//     animating makes them evenly spaced fractions of the window, which slide continuously.
+//   • Which labels fit also changes frame to frame, so text pops in and out. Rather than fight
+//     that, the labels and grid fade out at the start and back in once the zoom has settled.
+var CHART_TICK_RGB='147,143,153', CHART_GRID_ALPHA=0.06;
+function setAxisChrome(alpha,animating){
+  if(!chart) return;
+  var x=chart.options.scales.x, y=chart.options.scales.y;
+  var tc='rgba('+CHART_TICK_RGB+','+alpha+')';
+  var gc='rgba(255,255,255,'+(CHART_GRID_ALPHA*alpha).toFixed(4)+')';
+  x.ticks.color=tc; y.ticks.color=tc;
+  x.grid.color=gc;  y.grid.color=gc;
+  x.grid.tickColor=gc; y.grid.tickColor=gc;
+  x.ticks.count=animating?7:undefined;
+  y.ticks.count=animating?6:undefined;
+  x.ticks.autoSkip=!animating;
+}
+
 // Paints one frame of the zoom: x bounds, matching y bounds, and the scroll width that goes
 // with the number of days currently in view.
-function applyChartWindow(minX,maxX){
+function applyChartWindow(minX,maxX,yb){
   if(!chart) return;
   chart.options.scales.x.min=minX;
   chart.options.scales.x.max=maxX;
-  var yb=chartYBounds(minX,maxX);
+  if(yb===undefined) yb=chartYBounds(minX,maxX);
   if(yb){ chart.options.scales.y.min=yb.min; chart.options.scales.y.max=yb.max; }
   var days=maxX-minX+1;
   var inner=document.getElementById('chart-inner');
@@ -112,18 +132,33 @@ function applyChartWindow(minX,maxX){
   chart.update('none');
 }
 
+// Fades axis chrome out over the opening moments, holds it hidden while the bounds are moving
+// fastest, then brings it back once the line has settled into its new frame.
+function axisChromeAlpha(p){
+  if(p<0.18) return 1-p/0.18;
+  if(p<0.58) return 0;
+  return (p-0.58)/0.42;
+}
+
 function animateChartWindow(toMin,toMax){
   var fromMin=chartWin?chartWin.min:toMin, fromMax=chartWin?chartWin.max:toMax;
   chartWin={min:toMin,max:toMax};
   if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
-  if(fromMin===toMin&&fromMax===toMax){ applyChartWindow(toMin,toMax); return; }
+  if(fromMin===toMin&&fromMax===toMax){ setAxisChrome(1,false); applyChartWindow(toMin,toMax); return; }
+  // Interpolate the vertical scale between the two windows rather than re-deriving it from the
+  // data each frame: recomputing makes the line jump every time a new day's high or low crosses
+  // into view, which reads as vertical stutter during a large zoom.
+  var yFrom=chartYBounds(fromMin,fromMax), yTo=chartYBounds(toMin,toMax);
   var DUR=420, t0=performance.now();
   (function step(now){
     var p=Math.min(1,(now-t0)/DUR);
     var e=1-Math.pow(1-p,3); // easeOutCubic
-    applyChartWindow(fromMin+(toMin-fromMin)*e, fromMax+(toMax-fromMax)*e);
-    if(p<1) chartAnimFrame=requestAnimationFrame(step);
-    else chartAnimFrame=null;
+    var done=p>=1;
+    var yb=(yFrom&&yTo)?{min:yFrom.min+(yTo.min-yFrom.min)*e,max:yFrom.max+(yTo.max-yFrom.max)*e}:(yTo||yFrom||null);
+    setAxisChrome(done?1:axisChromeAlpha(p),!done);
+    applyChartWindow(fromMin+(toMin-fromMin)*e, fromMax+(toMax-fromMax)*e, done?yTo:yb);
+    if(done) chartAnimFrame=null;
+    else chartAnimFrame=requestAnimationFrame(step);
   })(t0);
 }
 
@@ -720,6 +755,10 @@ function render(){
       chartTransitionQueued=false;
       animateChartWindow(winStart,winEnd);
     } else {
+      // Not a range switch — make sure the axes are fully opaque and back on automatic ticks,
+      // in case a zoom was interrupted partway through its fade.
+      if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
+      setAxisChrome(1,false);
       chartWin={min:winStart,max:winEnd};
       applyChartWindow(winStart,winEnd);
     }
