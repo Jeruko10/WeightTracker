@@ -596,7 +596,7 @@ function render(){
   var pointRadius=scrollable?4:(chartRange==='all'?0:(allDates.length>60?0:4));
   var datasets=[{
     label:'Weight',data:chartWts,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:pointRadius,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
+    borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
@@ -607,7 +607,7 @@ function render(){
       var t=(new Date(d)-sd)/(7*864e5);
       return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
     });
-    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false,spanGaps:true});
+    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,pointHoverRadius:4,tension:0,fill:false,spanGaps:true});
   }
 
   document.getElementById('chart-inner').style.width=scrollable?(allDates.length*PX_PER_DAY)+'px':'100%';
@@ -618,7 +618,13 @@ function render(){
     chart=new Chart(document.getElementById('chart'),{
       type:'line',data:{labels:labels,datasets:datasets},
       options:{responsive:true,maintainAspectRatio:false,
-        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}}}},
+        // With points hidden (pointRadius 0) the cursor can't land exactly on one, so hover/tooltip
+        // trigger on the nearest x position instead of requiring a direct hit on the (invisible) point.
+        interaction:{mode:'index',intersect:false},
+        plugins:{legend:{display:false},tooltip:{
+          filter:function(item){return item.parsed.y!==null;},
+          callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}}
+        }},
         scales:{
           x:{ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit},grid:{color:gc}},
           y:{ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
