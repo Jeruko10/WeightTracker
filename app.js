@@ -79,28 +79,35 @@ function findReachedDate(series,targetWeight,goalIsGain,rangeStart,rangeEnd){
 var chartState={dates:[],pxPerDay:24,scrollable:false};
 var chartWin=null, chartAnimFrame=null;
 
-// y bounds for whatever slice of the series the given x window covers, so the vertical scale
-// tracks the zoom smoothly instead of jumping once at the end.
+// Exact min/max of the DRAWN line across a window whose edges may sit between logged days.
+// The fractional edges are the point: during a zoom the window grows continuously, so if the
+// bounds only ever consider whole logged days they jump the instant a day crosses the edge —
+// and the whole chart lurches vertically. Taking the line's interpolated value AT each edge
+// makes the bounds a continuous function of the window, so the vertical scale glides instead.
+// It is also tighter than reaching out to the neighbouring logged day, which with a long gap
+// could be at a very different weight and would inflate the range for no visible reason.
 function chartYBounds(minX,maxX){
-  var lo=Math.max(0,Math.floor(minX)), hi=Math.min(chartState.dates.length-1,Math.ceil(maxX));
+  if(!chart) return null;
   var mn=Infinity, mx=-Infinity;
-  if(chart){
-    chart.data.datasets.forEach(function(ds){
-      var d=ds.data, i, p;
-      for(i=lo;i<=hi;i++){
-        p=d[i];
-        if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; }
-      }
-      // The segments crossing the left and right edges are anchored by the nearest logged day
-      // OUTSIDE the window, so those two points have to be in range as well. With gaps in the
-      // log that neighbour can be a week away at a very different weight, and leaving it out
-      // is what makes the line appear to shoot in from beyond the top or bottom edge.
-      for(i=lo-1;i>=0;i--){ p=d[i];
-        if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; break; } }
-      for(i=hi+1;i<d.length;i++){ p=d[i];
-        if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; break; } }
-    });
-  }
+  chart.data.datasets.forEach(function(ds){
+    var d=ds.data, i, p;
+    // Where the drawn line crosses x — null if the line does not reach that far.
+    function valueAt(x){
+      var prev=null, next=null;
+      for(i=Math.min(d.length-1,Math.floor(x)); i>=0; i--){ p=d[i]; if(p&&p.y!==null&&p.y!==undefined){prev=p;break;} }
+      for(i=Math.max(0,Math.ceil(x)); i<d.length; i++){ p=d[i]; if(p&&p.y!==null&&p.y!==undefined){next=p;break;} }
+      if(!prev||!next) return null;
+      if(next.x===prev.x) return prev.y;
+      return prev.y+(next.y-prev.y)*((x-prev.x)/(next.x-prev.x));
+    }
+    var edges=[valueAt(minX),valueAt(maxX)];
+    for(var k=0;k<2;k++){ var v=edges[k];
+      if(v!==null){ if(v<mn)mn=v; if(v>mx)mx=v; } }
+    for(i=Math.max(0,Math.ceil(minX)); i<=Math.min(d.length-1,Math.floor(maxX)); i++){
+      p=d[i];
+      if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; }
+    }
+  });
   if(mn===Infinity) return null;
   var pad=Math.max(0.3,(mx-mn)*0.15);
   return {min:mn-pad,max:mx+pad};
@@ -173,13 +180,98 @@ function applyFinalLayout(winStart,winEnd,yb){
   if(chartState.scrollable) wrap.scrollLeft=wrap.scrollWidth-wrap.clientWidth;
 }
 
-// Vertical scale for one frame of the zoom: interpolated on the same curve as the horizontal
-// window so the two move together, then widened if the frame's own data (edge anchors included)
-// would otherwise fall outside. The union is a guarantee rather than the main mechanism — with
-// anchor-aware bounds it rarely has to do anything, so it does not reintroduce stutter.
-function zoomYBounds(minX,maxX,e,yFrom,yTo){
+// How far along yFrom→yTo the scale must already be for `v` to be inside it.
+function yProgressFor(from,to,v,isMin){
+  var d=to-from;
+  if(isMin){ if(d>=-1e-9) return 0; return Math.max(0,Math.min(1,(from-v)/(from-to))); }
+  if(d<=1e-9) return 0;
+  return Math.max(0,Math.min(1,(v-from)/d));
+}
+
+// Hull boundary through a set of samples: the smallest concave function above them all
+// (upper=true), or the largest convex function below them all (upper=false).
+function hullOf(pts,upper){
+  var h=[];
+  for(var i=0;i<pts.length;i++){
+    while(h.length>=2){
+      var a=h[h.length-2], b=h[h.length-1], c=pts[i];
+      var cross=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+      if(upper?cross>=0:cross<=0) h.pop(); else break;
+    }
+    h.push(pts[i]);
+  }
+  return h;
+}
+function evalHull(h,x){
+  for(var i=1;i<h.length;i++){
+    if(x<=h[i].x){
+      var a=h[i-1], b=h[i];
+      return b.x===a.x?b.y:a.y+(b.y-a.y)*((x-a.x)/(b.x-a.x));
+    }
+  }
+  return h[h.length-1].y;
+}
+
+// Plans the vertical scale for a whole zoom, before it starts.
+//
+// Driving y straight off the data in view does not work: as the window edge sweeps across a
+// steep segment the edge value changes fast, the scale chases it, and the chart lurches —
+// continuous, but with the rate changing sharply enough to read as a jump. So sample the
+// animation up front and derive, for each edge of the scale, the smoothest monotone path that
+// never clips the line. The two edges get their own path because they can be moving opposite
+// ways, and the constraint flips with direction:
+//   • an edge that WIDENS must be at least as far along as the data demands, so the smoothest
+//     safe path is the concave majorant of that demand — it widens early, never late.
+//   • an edge that NARROWS must be at most as far along as the data allows, so the smoothest
+//     safe path is the convex minorant — it holds its width until the data has actually left.
+// With nothing demanded either path degenerates to a straight line.
+function planZoomBound(reqs,from,to,isMin){
+  var N=reqs.length-1, i, pts=[{x:0,y:0}];
+  var widening=isMin?(to<from-1e-9):(to>from+1e-9);
+  var narrowing=isMin?(to>from+1e-9):(to<from-1e-9);
+  if(!widening&&!narrowing) return null;                 // edge does not move
+  if(widening){
+    var run=0;
+    for(i=0;i<=N;i++){
+      var need=reqs[i]?yProgressFor(from,to,isMin?reqs[i].min:reqs[i].max,isMin):0;
+      if(i===N) need=1;
+      if(need>run) run=need;
+      pts.push({x:i/N,y:run});
+    }
+    return hullOf(pts,true);
+  }
+  // Narrowing: allowance[i] is the furthest along the edge may be at sample i. An increasing
+  // path can only ever sit under the smallest allowance still ahead of it.
+  var allow=[];
+  for(i=0;i<=N;i++){
+    var v=reqs[i]?(isMin?reqs[i].min:reqs[i].max):null;
+    var t=1;
+    if(v!==null) t=Math.max(0,Math.min(1,isMin?(v-from)/(to-from):(from-v)/(from-to)));
+    allow.push(i===N?1:t);
+  }
+  for(i=N-1;i>=0;i--) if(allow[i+1]<allow[i]) allow[i]=allow[i+1];
+  for(i=0;i<=N;i++) pts.push({x:i/N,y:allow[i]});
+  return hullOf(pts,false);
+}
+
+function planZoomY(fromV,toV,yFrom,yTo){
+  if(!yFrom||!yTo) return null;
+  var N=24, reqs=[];
+  for(var i=0;i<=N;i++){
+    var e=i/N;
+    reqs.push(chartYBounds(fromV.min+(toV.min-fromV.min)*e, fromV.max+(toV.max-fromV.max)*e));
+  }
+  return {min:planZoomBound(reqs,yFrom.min,yTo.min,true),
+          max:planZoomBound(reqs,yFrom.max,yTo.max,false)};
+}
+
+// One frame's vertical scale, from the plan. The union with the live bounds stays as a
+// last-resort guarantee; with the plan in place it should never actually bite.
+function zoomYBounds(minX,maxX,e,yFrom,yTo,plan){
   if(!yFrom||!yTo) return yTo||yFrom||null;
-  var yb={min:yFrom.min+(yTo.min-yFrom.min)*e, max:yFrom.max+(yTo.max-yFrom.max)*e};
+  var gMin=(plan&&plan.min)?evalHull(plan.min,e):e;
+  var gMax=(plan&&plan.max)?evalHull(plan.max,e):e;
+  var yb={min:yFrom.min+(yTo.min-yFrom.min)*gMin, max:yFrom.max+(yTo.max-yFrom.max)*gMax};
   var actual=chartYBounds(minX,maxX);
   if(actual){
     if(actual.min<yb.min) yb.min=actual.min;
@@ -200,14 +292,19 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
   var fromV=chartVisibleWindow(prevWin), toV=chartTargetVisible(toMin,toMax);
   chartWin={min:toMin,max:toMax};
   if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
-  // A scrolling range keeps one vertical scale across its whole window, so both ends of the
-  // animation use full-window bounds and the handoff needs no vertical adjustment.
-  var yFrom=prevWin?chartYBounds(prevWin.min,prevWin.max):null;
+  // Start from the scale actually on screen, not a recomputed one — a scrolling range settles
+  // with the vertical scale of its WHOLE window, which is wider than the visible slice's own
+  // bounds, and recomputing here would make the line jump the moment the zoom begins.
+  var ySc=chart.options.scales.y;
+  var yFrom=(typeof ySc.min==='number'&&typeof ySc.max==='number')
+    ?{min:ySc.min,max:ySc.max}
+    :(prevWin?chartYBounds(prevWin.min,prevWin.max):null);
   var yTo=chartYBounds(toMin,toMax);
   if(!fromV||(fromV.min===toV.min&&fromV.max===toV.max)){
     chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
     setAxisChrome(1,false); applyFinalLayout(toMin,toMax,yTo); return;
   }
+  var yPlan=planZoomY(fromV,toV,yFrom,yTo);
   document.getElementById('chart-wrap').classList.add('zooming');
   // The fades finish slightly inside their phases (OUT*0.75, and HOLD ms before the fade-in)
   // so that opacity is already a hard 0 for at least one frame either side of a tick-mode
@@ -228,7 +325,7 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
       var p=(t-OUT)/ZOOM, e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
       var cMin=fromV.min+(toV.min-fromV.min)*e, cMax=fromV.max+(toV.max-fromV.max)*e;
       setAxisChrome(0,true);
-      applyChartWindow(cMin,cMax,zoomYBounds(cMin,cMax,e,yFrom,yTo),'100%');
+      applyChartWindow(cMin,cMax,zoomYBounds(cMin,cMax,e,yFrom,yTo,yPlan),'100%');
     } else {
       // The new tick limit and the scrolling canvas both land here, with the labels still
       // invisible, so the fade-in is the first time the final layout is ever drawn.
