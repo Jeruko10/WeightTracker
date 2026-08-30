@@ -128,7 +128,29 @@ var CHART_TICK_RGB='147,143,153', CHART_GRID_ALPHA=0.06;
 // CHART_X_PAD is the side room the x axis keeps so an end date label is never clipped: half a
 // label's width. Chart.js would otherwise size this from wherever the outermost tick happens to
 // land, which autoSkip places differently in each range — that is what moved the right edge.
-var CHART_Y_AXIS_W=40, CHART_X_AXIS_H=26, CHART_X_PAD=20;
+var CHART_Y_AXIS_W=48, CHART_X_AXIS_H=30, CHART_X_PAD=20, CHART_TICK_PAD=8;
+
+// Closes the right-hand edge of the plot box. The other three sides come for free — the two
+// scale borders draw the left and bottom, and the top is the last horizontal gridline — but the
+// right edge would need a vertical gridline exactly at the window's end, and there is only one
+// when a date tick happens to land there. Ranges where it does not (1 month, 1 year, All time)
+// were left with the box open on that side. Uses the grid's current colour so it fades out with
+// the rest of the grid during a zoom.
+var chartBoxPlugin={
+  id:'chartBox',
+  afterDraw:function(c){
+    var a=c.chartArea; if(!a) return;
+    var ctx=c.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.strokeStyle=c.options.scales.x.grid.color;
+    ctx.lineWidth=1;
+    ctx.moveTo(a.right-0.5,a.top);
+    ctx.lineTo(a.right-0.5,a.bottom);
+    ctx.stroke();
+    ctx.restore();
+  }
+};
 function setAxisChrome(alpha,animating){
   if(!chart) return;
   var x=chart.options.scales.x, y=chart.options.scales.y;
@@ -966,7 +988,7 @@ function render(){
     : {mode:'nearest',axis:'x',intersect:false};  // no points to aim at — snap to nearest day
   if(!chart){
     chart=new Chart(document.getElementById('chart'),{
-      type:'line',data:{datasets:datasets},
+      type:'line',data:{datasets:datasets},plugins:[chartBoxPlugin],
       options:{responsive:true,maintainAspectRatio:false,
         // Every frame of a range change is computed and painted by animateChartWindow, so
         // Chart.js must not also animate. Left on, it interpolates element positions toward
@@ -999,7 +1021,7 @@ function render(){
               s.paddingLeft=CHART_X_PAD; s.paddingRight=CHART_X_PAD;
             },
             ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit,autoSkip:true,includeBounds:false,
-            maxRotation:0,minRotation:0,
+            maxRotation:0,minRotation:0,padding:CHART_TICK_PAD,
             callback:function(v){
               var d=chartState.dates[Math.round(v)];
               if(!d) return '';
@@ -1014,7 +1036,7 @@ function render(){
           // at "nice" values stop short of them. Asking for a fixed count of evenly spaced ticks
           // puts the first and last exactly on the bounds, closing the box on all four sides.
           y:{afterFit:function(s){ s.width=CHART_Y_AXIS_W; },
-            ticks:{color:tc,font:{size:11},count:6,includeBounds:true,
+            ticks:{color:tc,font:{size:11},count:6,includeBounds:true,padding:CHART_TICK_PAD,
               callback:function(v){return v.toFixed(1);}},
             grid:{color:gc,tickLength:0}}
         }
