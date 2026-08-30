@@ -291,7 +291,7 @@ document.getElementById('btn-save-goal').addEventListener('click',async function
     return;
   }
   if(goal){
-    var old={weight:goal.weight,start:goal.start,date:goal.date,pace:goal.pace||null,isBulk:goal.isBulk,savedOn:today()};
+    var old={weight:goal.weight,start:goal.start,date:goal.date,pace:goal.pace||null,isBulk:goal.isBulk,startWeight:goal.startWeight,savedOn:today()};
     goalHistory.unshift(old); await fbSaveGH(old);
   }
   btn.dataset.confirm='0'; btn.textContent='Save goal'; btn.style.background=''; btn.style.color='';
@@ -363,7 +363,11 @@ function renderGoalTab(){
       var info=document.createElement('div');
       info.innerHTML='<span style="font-size:12px;font-weight:500;color:'+(isBulk?'#6fcf97':'#eb5757')+'">'+(isBulk?'Bulk':'Cut')+'</span><span style="font-size:13px;color:#938f99;margin-left:8px">'+fmt(g.start)+' → '+fmt(g.date)+'</span>';
       var right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:10px';
-      var ws=document.createElement('span'); ws.style.cssText='font-size:14px;font-weight:500;color:#e6e1e5'; ws.textContent=g.weight+' kg';
+      // Prefer the weight stored on the goal itself; for cycles archived before that field
+      // existed, fall back to the entry logged around when the cycle started.
+      var ghStartW=(g.startWeight!==undefined&&g.startWeight!==null)?g.startWeight:(function(){var e=entries.find(function(e){return e.date>=g.start;});return e?e.weight:null;})();
+      var ws=document.createElement('span'); ws.style.cssText='font-size:14px;font-weight:500;color:#e6e1e5';
+      ws.textContent=ghStartW!==null?ghStartW.toFixed(1)+' → '+g.weight.toFixed(1)+' kg':g.weight.toFixed(1)+' kg';
       var db=document.createElement('button'); db.className='ebtn'; db.textContent='Delete';
       (function(gh,row,btn){db.addEventListener('click',function(){deleteGH(gh,row,btn);});})(g,div,db);
       right.appendChild(ws); right.appendChild(db);
