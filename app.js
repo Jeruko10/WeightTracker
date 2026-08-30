@@ -123,6 +123,9 @@ function chartYBounds(minX,maxX){
 //   • Which labels fit also changes frame to frame, so text pops in and out. Rather than fight
 //     that, the labels and grid fade out at the start and back in once the zoom has settled.
 var CHART_TICK_RGB='147,143,153', CHART_GRID_ALPHA=0.06;
+// Fixed axis sizes — see the afterFit hooks on the scales. Wide/tall enough for the longest
+// label either axis can produce ("100.0" for a three-digit weight, "17/08" unrotated).
+var CHART_Y_AXIS_W=40, CHART_X_AXIS_H=26;
 function setAxisChrome(alpha,animating){
   if(!chart) return;
   var x=chart.options.scales.x, y=chart.options.scales.y;
@@ -979,13 +982,23 @@ function render(){
         scales:{
           // includeBounds:false — with an explicit min/max, Chart.js also forces a tick at each
           // bound, which sits right next to the first generated one and overlaps its label.
-          x:{type:'linear',ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit,autoSkip:true,includeBounds:false,
+          // Both axes are pinned to a fixed size so the plotting rectangle is identical in every
+          // range. Left to itself Chart.js sizes them from their content, and that content
+          // changes with the range: the y column widens or narrows with the label text ("76.9"
+          // vs "84.1", worse once a weight reaches three digits), and the x row grows taller
+          // whenever it decides to tilt the dates to fit more of them in. Either one moves the
+          // edge of the chart box between views.
+          x:{type:'linear',
+            afterFit:function(s){ s.height=CHART_X_AXIS_H; },
+            ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit,autoSkip:true,includeBounds:false,
+            maxRotation:0,minRotation:0,
             callback:function(v){
               var d=chartState.dates[Math.round(v)];
               if(!d) return '';
               var p=d.split('-'); return p[2]+'/'+p[1];
             }},grid:{color:gc}},
-          y:{ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
+          y:{afterFit:function(s){ s.width=CHART_Y_AXIS_W; },
+            ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
         }
       }
     });
