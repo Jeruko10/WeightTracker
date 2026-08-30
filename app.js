@@ -585,12 +585,15 @@ function render(){
   }
   var labels=allDates.map(function(d){var p=d.split('-');return p[2]+'/'+p[1];});
   var chartWts=allDates.map(function(d){return entryMap[d]!==undefined?entryMap[d]:null;});
-  // Horizontal scroll past CHART_SCROLL_THRESHOLD plotted days, at a fixed px/day so points
-  // never get more cramped as data grows. "1y" is exempt — it always compacts to fit instead,
-  // as a zoomed-out overview — below the threshold every other range fills the card as before.
-  var CHART_SCROLL_THRESHOLD=30, PX_PER_DAY=24;
-  var scrollable=chartRange!=='1y'&&allDates.length>CHART_SCROLL_THRESHOLD;
-  var pointRadius=(!scrollable&&allDates.length>60)?0:4;
+  // Horizontal scroll past the range's day threshold, at a fixed px/day so points never get
+  // more cramped as data grows. "1y" is exempt — always compacts to fit, as a zoomed-out
+  // overview. "All time" gets a larger threshold (100) since it's meant to stay browsable
+  // longer before handing off to scroll. Below the threshold, points hide past 60 days so a
+  // dense compacted line doesn't turn into a blob — except "all", which always hides them.
+  var CHART_SCROLL_THRESHOLD=30, ALL_TIME_THRESHOLD=100, PX_PER_DAY=24;
+  var scrollThreshold=chartRange==='all'?ALL_TIME_THRESHOLD:CHART_SCROLL_THRESHOLD;
+  var scrollable=chartRange!=='1y'&&allDates.length>scrollThreshold;
+  var pointRadius=scrollable?4:(chartRange==='all'?0:(allDates.length>60?0:4));
   var datasets=[{
     label:'Weight',data:chartWts,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
     borderWidth:2,pointRadius:pointRadius,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
