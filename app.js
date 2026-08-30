@@ -13,7 +13,7 @@ var FB = initializeApp({
 var auth = getAuth(FB);
 var db   = getFirestore(FB);
 var currentUser = null;
-var entries = [], goal = null, goalHistory = [], chart = null, pendingReset = null;
+var entries = [], goal = null, goalHistory = [], chart = null, pendingReset = null, chartRange = '2w';
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function uDoc(p)  { return doc(db,'users',currentUser.uid,p); }
@@ -159,6 +159,11 @@ document.querySelectorAll('.tab').forEach(function(tab){
     document.getElementById(tab.dataset.tab).classList.add('active');
     if(tab.dataset.tab==='goal') renderGoalTab();
   });
+});
+
+// ── CHART RANGE ───────────────────────────────────────────────────────────────
+document.getElementById('chart-range').addEventListener('change',function(){
+  chartRange=this.value; render();
 });
 
 // ── ADD ENTRY ─────────────────────────────────────────────────────────────────
@@ -556,12 +561,21 @@ function render(){
 
   renderGoalSummary();
 
-  // Chart — day-based X axis, null for days with no entry (creates visible gaps)
+  // Chart — day-based X axis, null for days with no entry (creates visible gaps).
+  // The range dropdown picks the date window to plot.
   var entryMap={};
   entries.forEach(function(e){entryMap[e.date]=e.weight;});
   var allDates=[];
   if(n){
-    var dc=new Date(entries[0].date), de=new Date(entries[n-1].date);
+    var rangeStart, rangeEnd;
+    if(chartRange==='1w'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-6); }
+    else if(chartRange==='2w'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-13); }
+    else if(chartRange==='1y'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-364); }
+    else if(chartRange==='goal'&&goal&&goal.start){ rangeStart=goal.start; rangeEnd=today(); }
+    else { rangeStart=entries[0].date; rangeEnd=entries[n-1].date; }
+    if(rangeStart<entries[0].date) rangeStart=entries[0].date;
+    if(rangeEnd<rangeStart) rangeEnd=rangeStart;
+    var dc=new Date(rangeStart), de=new Date(rangeEnd);
     while(dc<=de){allDates.push(dc.toISOString().slice(0,10));dc.setDate(dc.getDate()+1);}
   }
   var labels=allDates.map(function(d){var p=d.split('-');return p[2]+'/'+p[1];});
@@ -582,20 +596,29 @@ function render(){
     datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,tension:0,fill:false,spanGaps:true});
   }
 
+  // Horizontal scroll past CHART_SCROLL_THRESHOLD plotted days, at a fixed px/day so points
+  // never get more cramped as data grows — below the threshold the chart fills the card as before.
+  var CHART_SCROLL_THRESHOLD=30, PX_PER_DAY=24;
+  var scrollable=allDates.length>CHART_SCROLL_THRESHOLD;
+  document.getElementById('chart-inner').style.width=scrollable?(allDates.length*PX_PER_DAY)+'px':'100%';
+
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
+  var tickLimit=scrollable?allDates.length:10;
   if(!chart){
     chart=new Chart(document.getElementById('chart'),{
       type:'line',data:{labels:labels,datasets:datasets},
       options:{responsive:true,maintainAspectRatio:false,
         plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}}}},
         scales:{
-          x:{ticks:{color:tc,font:{size:11},maxTicksLimit:10},grid:{color:gc}},
+          x:{ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit},grid:{color:gc}},
           y:{ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
         }
       }
     });
   } else {
-    chart.data.labels=labels; chart.data.datasets=datasets; chart.update();
+    chart.data.labels=labels; chart.data.datasets=datasets;
+    chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
+    chart.resize(); chart.update();
   }
 
   // Weekly summary

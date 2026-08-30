@@ -78,12 +78,21 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-title">Progress</div>
+        <div class="card-title-row">
+          <div class="card-title">Progress</div>
+          <select class="range-select" id="chart-range">
+            <option value="1w">1 week</option>
+            <option value="2w" selected>2 weeks</option>
+            <option value="1y">1 year</option>
+            <option value="all">All time</option>
+            <option value="goal">Current goal</option>
+          </select>
+        </div>
         <div class="legend">
           <span class="leg-item"><span class="leg-solid"></span>Weight</span>
           <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
         </div>
-        <div class="chart-wrap"><canvas id="chart"></canvas></div>
+        <div class="chart-wrap" id="chart-wrap"><div id="chart-inner"><canvas id="chart"></canvas></div></div>
       </div>
       <div class="card">
         <div class="card-title">Weekly summary</div>

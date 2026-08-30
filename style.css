@@ -45,7 +45,12 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:#938f99}
 .leg-item{display:flex;align-items:center;gap:6px}
 .leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
-.chart-wrap{position:relative;height:190px}
+.chart-wrap{position:relative;height:190px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+#chart-inner{height:100%}
+.card-title-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
+.card-title-row .card-title{margin-bottom:0}
+.range-select{background:#3a3540;border:1.5px solid transparent;border-radius:8px;color:#e6e1e5;font-size:12px;padding:5px 8px;font-family:inherit;outline:none}
+.range-select:focus{border-color:#d0bcff}
 input[type=date],input[type=number]{background:#3a3540;border:1.5px solid transparent;border-radius:10px;color:#e6e1e5;font-size:15px;padding:10px 12px;width:100%;outline:none;font-family:inherit;transition:border-color .15s;color-scheme:dark}
 input:focus{border-color:#d0bcff;background:#45404d}
 .row2{display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:10px}
