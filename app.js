@@ -119,44 +119,78 @@ function setAxisChrome(alpha,animating){
 
 // Paints one frame of the zoom: x bounds, matching y bounds, and the scroll width that goes
 // with the number of days currently in view.
-function applyChartWindow(minX,maxX,yb){
+// `width` omitted → derive it from the range's scroll rule; a number → that many px (used to
+// interpolate the width mid-zoom); null → leave the current width untouched.
+function applyChartWindow(minX,maxX,yb,width){
   if(!chart) return;
   chart.options.scales.x.min=minX;
   chart.options.scales.x.max=maxX;
   if(yb===undefined) yb=chartYBounds(minX,maxX);
   if(yb){ chart.options.scales.y.min=yb.min; chart.options.scales.y.max=yb.max; }
-  var days=maxX-minX+1;
   var inner=document.getElementById('chart-inner');
-  var w=chartState.scrollable?(Math.round(days*chartState.pxPerDay))+'px':'100%';
+  var w;
+  if(width===undefined) w=chartState.scrollable?(Math.round((maxX-minX+1)*chartState.pxPerDay))+'px':'100%';
+  else if(width===null) w=inner.style.width;
+  else w=Math.round(width)+'px';
   if(inner.style.width!==w){ inner.style.width=w; chart.resize(); }
   chart.update('none');
 }
 
-// Fades axis chrome out over the opening moments, holds it hidden while the bounds are moving
-// fastest, then brings it back once the line has settled into its new frame.
-function axisChromeAlpha(p){
-  if(p<0.18) return 1-p/0.18;
-  if(p<0.58) return 0;
-  return (p-0.58)/0.42;
+// Pixel width the canvas should settle at for a given window, so the zoom can interpolate
+// towards it instead of snapping when a range crosses the scroll threshold.
+function chartTargetWidth(days){
+  if(!chartState.scrollable) return document.getElementById('chart-wrap').clientWidth;
+  return Math.round(days*chartState.pxPerDay);
 }
 
-function animateChartWindow(toMin,toMax){
+// The zoom runs in three phases so that every change to the tick set happens while the labels
+// are at zero opacity. Switching tick modes (auto ↔ pinned count) or bounds while they are
+// visible is what makes labels appear from nowhere and reshuffle:
+//   1. fade out  — nothing moves; the old frame and its own tick set just dim away
+//   2. zoom      — labels hidden, tick count pinned so the grid glides with the bounds
+//   3. fade in   — bounds already final and ticks back on automatic, so the labels appear
+//                  directly in their end positions and never re-lay-out afterwards
+function animateChartWindow(toMin,toMax,tickLimit){
   var fromMin=chartWin?chartWin.min:toMin, fromMax=chartWin?chartWin.max:toMax;
   chartWin={min:toMin,max:toMax};
   if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
-  if(fromMin===toMin&&fromMax===toMax){ setAxisChrome(1,false); applyChartWindow(toMin,toMax); return; }
+  if(fromMin===toMin&&fromMax===toMax){
+    chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
+    setAxisChrome(1,false); applyChartWindow(toMin,toMax); return;
+  }
   // Interpolate the vertical scale between the two windows rather than re-deriving it from the
   // data each frame: recomputing makes the line jump every time a new day's high or low crosses
   // into view, which reads as vertical stutter during a large zoom.
   var yFrom=chartYBounds(fromMin,fromMax), yTo=chartYBounds(toMin,toMax);
-  var DUR=420, t0=performance.now();
+  var fromW=document.getElementById('chart-inner').offsetWidth;
+  var toW=chartTargetWidth(toMax-toMin+1);
+  // The fades finish slightly inside their phases (OUT*0.75, and HOLD ms before the fade-in)
+  // so that opacity is already a hard 0 for at least one frame either side of a tick-mode
+  // switch — otherwise the last frame before a switch still carries a few percent of opacity
+  // and can flash the old tick set.
+  var OUT=120, ZOOM=300, HOLD=20, IN=180, t0=performance.now(), phase3=false;
   (function step(now){
-    var p=Math.min(1,(now-t0)/DUR);
-    var e=1-Math.pow(1-p,3); // easeOutCubic
-    var done=p>=1;
-    var yb=(yFrom&&yTo)?{min:yFrom.min+(yTo.min-yFrom.min)*e,max:yFrom.max+(yTo.max-yFrom.max)*e}:(yTo||yFrom||null);
-    setAxisChrome(done?1:axisChromeAlpha(p),!done);
-    applyChartWindow(fromMin+(toMin-fromMin)*e, fromMax+(toMax-fromMax)*e, done?yTo:yb);
+    var t=now-t0, done=false;
+    if(t<OUT){
+      setAxisChrome(Math.max(0,1-t/(OUT*0.75)),false);
+      applyChartWindow(fromMin,fromMax,yFrom,null);
+    } else if(t<OUT+ZOOM){
+      var p=(t-OUT)/ZOOM, e=1-Math.pow(1-p,3); // easeOutCubic
+      setAxisChrome(0,true);
+      applyChartWindow(
+        fromMin+(toMin-fromMin)*e, fromMax+(toMax-fromMax)*e,
+        (yFrom&&yTo)?{min:yFrom.min+(yTo.min-yFrom.min)*e,max:yFrom.max+(yTo.max-yFrom.max)*e}:(yTo||yFrom||null),
+        fromW+(toW-fromW)*e
+      );
+    } else {
+      // The new tick limit lands here, with the labels still invisible, so the fade-in is the
+      // first time the final tick set is ever drawn.
+      if(!phase3){ phase3=true; chart.options.scales.x.ticks.maxTicksLimit=tickLimit; }
+      var q=Math.max(0,Math.min(1,(t-OUT-ZOOM-HOLD)/IN));
+      setAxisChrome(q,false);
+      applyChartWindow(toMin,toMax,yTo);
+      done=q>=1;
+    }
     if(done) chartAnimFrame=null;
     else chartAnimFrame=requestAnimationFrame(step);
   })(t0);
@@ -750,14 +784,16 @@ function render(){
     applyChartWindow(winStart,winEnd);
   } else {
     chart.data.datasets=datasets;
-    chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
     if(chartTransitionQueued){
+      // maxTicksLimit is deliberately left alone here — animateChartWindow applies it mid-zoom,
+      // while the labels are hidden, so the change never shows as a reshuffle.
       chartTransitionQueued=false;
-      animateChartWindow(winStart,winEnd);
+      animateChartWindow(winStart,winEnd,tickLimit);
     } else {
       // Not a range switch — make sure the axes are fully opaque and back on automatic ticks,
       // in case a zoom was interrupted partway through its fade.
       if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
+      chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
       setAxisChrome(1,false);
       chartWin={min:winStart,max:winEnd};
       applyChartWindow(winStart,winEnd);
