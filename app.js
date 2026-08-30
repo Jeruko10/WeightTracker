@@ -90,22 +90,25 @@ function chartYBounds(minX,maxX){
   if(!chart) return null;
   var mn=Infinity, mx=-Infinity;
   chart.data.datasets.forEach(function(ds){
-    var d=ds.data, i, p;
-    // Where the drawn line crosses x — null if the line does not reach that far.
+    var d=ds.data, n=d.length, i;
+    if(!n) return;
+    // Where the drawn line crosses x — null when the line does not reach that far.
     function valueAt(x){
-      var prev=null, next=null;
-      for(i=Math.min(d.length-1,Math.floor(x)); i>=0; i--){ p=d[i]; if(p&&p.y!==null&&p.y!==undefined){prev=p;break;} }
-      for(i=Math.max(0,Math.ceil(x)); i<d.length; i++){ p=d[i]; if(p&&p.y!==null&&p.y!==undefined){next=p;break;} }
-      if(!prev||!next) return null;
-      if(next.x===prev.x) return prev.y;
-      return prev.y+(next.y-prev.y)*((x-prev.x)/(next.x-prev.x));
+      if(x<=d[0].x||x>=d[n-1].x) return null;
+      for(i=1;i<n;i++){
+        if(d[i].x>=x){
+          var a=d[i-1], b=d[i];
+          return b.x===a.x?b.y:a.y+(b.y-a.y)*((x-a.x)/(b.x-a.x));
+        }
+      }
+      return null;
     }
     var edges=[valueAt(minX),valueAt(maxX)];
     for(var k=0;k<2;k++){ var v=edges[k];
       if(v!==null){ if(v<mn)mn=v; if(v>mx)mx=v; } }
-    for(i=Math.max(0,Math.ceil(minX)); i<=Math.min(d.length-1,Math.floor(maxX)); i++){
-      p=d[i];
-      if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; }
+    for(i=0;i<n;i++){
+      var p=d[i];
+      if(p.x>=minX&&p.x<=maxX){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; }
     }
   });
   if(mn===Infinity) return null;
@@ -875,8 +878,6 @@ function render(){
   // linear x axis. The range dropdown only moves the x-axis window over that series, so a range
   // switch animates as a real zoom (the same line stretches/compresses) rather than swapping in
   // a different dataset. Days with no entry stay null, drawn through via spanGaps.
-  var entryMap={};
-  entries.forEach(function(e){entryMap[e.date]=e.weight;});
   var fullDates=[];
   if(n){
     var lastDay=today()>entries[n-1].date?today():entries[n-1].date;
@@ -923,23 +924,35 @@ function render(){
   // point on the x axis", which has no distance limit by design.
   var pointsVisible=pointRadius>0;
   var HIT_R=9;
+  // Only the days that were actually logged become points. Padding the series with one element
+  // per calendar day and letting spanGaps skip the empty ones drew exactly the same line — the
+  // segments between logged days are straight either way — but it left hundreds of null
+  // elements in the dataset. As the x window slides over them during a zoom, Chart.js pulls
+  // them into the range it paints and they can land at the base of the chart for a frame,
+  // which is the line dropping to the bottom-left and snapping back. No empty days, no flicker.
   var datasets=[{
     label:'Weight',
-    data:fullDates.map(function(d,i){return {x:i,y:entryMap[d]!==undefined?entryMap[d]:null};}),
+    data:entries.map(function(e){return {x:dayIdx(e.date),y:e.weight};}),
     borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
     borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointHitRadius:pointsVisible?HIT_R:0,
-    pointBackgroundColor:'#d0bcff',tension:0,fill:true,spanGaps:true
+    pointBackgroundColor:'#d0bcff',tension:0,fill:true
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
     var sw2=(goal.startWeight!==undefined&&goal.startWeight!==null)?goal.startWeight:(entries.find(function(e){return e.date>=goal.start;})||entries[0]).weight;
     var totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    var ideal=fullDates.map(function(d,i){
-      if(d<goal.start) return {x:i,y:null};
-      var t=(new Date(d)-sd)/(7*864e5);
-      return {x:i,y:parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2))};
-    });
-    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,pointHoverRadius:4,pointHitRadius:pointsVisible?0:1,tension:0,fill:false,spanGaps:true});
+    // The ideal pace is a straight line in time, so its two ends describe it completely.
+    var iStart=Math.max(0,Math.min(lastIdx,dayIdx(goal.start)));
+    var idealAt=function(i){
+      var t=(new Date(fullDates[i])-sd)/(7*864e5);
+      return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
+    };
+    if(iStart<lastIdx){
+      datasets.push({label:'Ideal pace',
+        data:[{x:iStart,y:idealAt(iStart)},{x:lastIdx,y:idealAt(lastIdx)}],
+        borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,pointHoverRadius:4,
+        pointHitRadius:pointsVisible?0:1,tension:0,fill:false});
+    }
   }
 
   chartState.dates=fullDates; chartState.pxPerDay=PX_PER_DAY; chartState.scrollable=scrollable;
