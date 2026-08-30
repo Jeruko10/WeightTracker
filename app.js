@@ -126,30 +126,51 @@ function setAxisChrome(alpha,animating){
   x.ticks.autoSkip=!animating;
 }
 
-// Paints one frame of the zoom: x bounds, matching y bounds, and the scroll width that goes
-// with the number of days currently in view.
-// `width` omitted → derive it from the range's scroll rule; a number → that many px (used to
-// interpolate the width mid-zoom); null → leave the current width untouched.
-function applyChartWindow(minX,maxX,yb,width){
+// Paints one frame: x bounds, matching y bounds, and optionally the canvas width.
+// `widthCss` null → leave the current width alone.
+function applyChartWindow(minX,maxX,yb,widthCss){
   if(!chart) return;
   chart.options.scales.x.min=minX;
   chart.options.scales.x.max=maxX;
   if(yb===undefined) yb=chartYBounds(minX,maxX);
   if(yb){ chart.options.scales.y.min=yb.min; chart.options.scales.y.max=yb.max; }
-  var inner=document.getElementById('chart-inner');
-  var w;
-  if(width===undefined) w=chartState.scrollable?(Math.round((maxX-minX+1)*chartState.pxPerDay))+'px':'100%';
-  else if(width===null) w=inner.style.width;
-  else w=Math.round(width)+'px';
-  if(inner.style.width!==w){ inner.style.width=w; chart.resize(); }
+  if(widthCss){
+    var inner=document.getElementById('chart-inner');
+    if(inner.style.width!==widthCss){ inner.style.width=widthCss; chart.resize(); }
+  }
   chart.update('none');
 }
 
-// Pixel width the canvas should settle at for a given window, so the zoom can interpolate
-// towards it instead of snapping when a range crosses the scroll threshold.
-function chartTargetWidth(days){
-  if(!chartState.scrollable) return document.getElementById('chart-wrap').clientWidth;
-  return Math.round(days*chartState.pxPerDay);
+// Which days are on screen right now. For a scrolling range the canvas is far wider than its
+// container, so only a slice is visible; the zoom has to animate THAT slice. Animating the whole
+// window instead means growing the canvas underneath a fixed-size viewport, and the line tears
+// across the visible strip while the rest of it is drawn off-screen.
+function chartVisibleWindow(fullWin){
+  if(!fullWin) return null;
+  var wrap=document.getElementById('chart-wrap'), inner=document.getElementById('chart-inner');
+  var wrapW=wrap.clientWidth, innerW=inner.offsetWidth||wrapW;
+  if(innerW<=wrapW+1) return {min:fullWin.min,max:fullWin.max};
+  var perDay=innerW/(fullWin.max-fullWin.min+1);
+  var start=fullWin.min+wrap.scrollLeft/perDay;
+  return {min:start,max:start+wrapW/perDay};
+}
+
+// Where the zoom should land visually: the whole window when it fits, otherwise the most recent
+// days at the scroll density — a scrolling range settles showing today, not the oldest entries.
+function chartTargetVisible(winStart,winEnd){
+  if(!chartState.scrollable) return {min:winStart,max:winEnd};
+  var viewDays=document.getElementById('chart-wrap').clientWidth/chartState.pxPerDay;
+  return {min:Math.max(winStart,winEnd-viewDays+1),max:winEnd};
+}
+
+// The settled state: the full window on a canvas sized for the range, scrolled to today. Taking
+// over from the animation is invisible because its last frame already shows exactly these days
+// at exactly this px-per-day.
+function applyFinalLayout(winStart,winEnd,yb){
+  var wrap=document.getElementById('chart-wrap');
+  var w=chartState.scrollable?Math.round((winEnd-winStart+1)*chartState.pxPerDay)+'px':'100%';
+  applyChartWindow(winStart,winEnd,yb,w);
+  if(chartState.scrollable) wrap.scrollLeft=wrap.scrollWidth-wrap.clientWidth;
 }
 
 // Vertical scale for one frame of the zoom: interpolated on the same curve as the horizontal
@@ -174,20 +195,19 @@ function zoomYBounds(minX,maxX,e,yFrom,yTo){
 //   2. zoom      — labels hidden, tick count pinned so the grid glides with the bounds
 //   3. fade in   — bounds already final and ticks back on automatic, so the labels appear
 //                  directly in their end positions and never re-lay-out afterwards
-function animateChartWindow(toMin,toMax,tickLimit){
-  var fromMin=chartWin?chartWin.min:toMin, fromMax=chartWin?chartWin.max:toMax;
+function animateChartWindow(toMin,toMax,tickLimit,prevWin){
+  // Read what is on screen BEFORE anything touches the layout.
+  var fromV=chartVisibleWindow(prevWin), toV=chartTargetVisible(toMin,toMax);
   chartWin={min:toMin,max:toMax};
   if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
-  if(fromMin===toMin&&fromMax===toMax){
+  // A scrolling range keeps one vertical scale across its whole window, so both ends of the
+  // animation use full-window bounds and the handoff needs no vertical adjustment.
+  var yFrom=prevWin?chartYBounds(prevWin.min,prevWin.max):null;
+  var yTo=chartYBounds(toMin,toMax);
+  if(!fromV||(fromV.min===toV.min&&fromV.max===toV.max)){
     chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
-    setAxisChrome(1,false); applyChartWindow(toMin,toMax); return;
+    setAxisChrome(1,false); applyFinalLayout(toMin,toMax,yTo); return;
   }
-  // Interpolate the vertical scale between the two windows rather than re-deriving it from the
-  // data each frame: recomputing makes the line jump every time a new day's high or low crosses
-  // into view, which reads as vertical stutter during a large zoom.
-  var yFrom=chartYBounds(fromMin,fromMax), yTo=chartYBounds(toMin,toMax);
-  var fromW=document.getElementById('chart-inner').offsetWidth;
-  var toW=chartTargetWidth(toMax-toMin+1);
   document.getElementById('chart-wrap').classList.add('zooming');
   // The fades finish slightly inside their phases (OUT*0.75, and HOLD ms before the fade-in)
   // so that opacity is already a hard 0 for at least one frame either side of a tick-mode
@@ -197,23 +217,29 @@ function animateChartWindow(toMin,toMax,tickLimit){
   (function step(now){
     var t=now-t0, done=false;
     if(t<OUT){
+      // Fit the canvas to the container up front. Coming from a scrolling range this is
+      // invisible: the same days stay under the cursor at the same px-per-day.
       setAxisChrome(Math.max(0,1-t/(OUT*0.75)),false);
-      applyChartWindow(fromMin,fromMax,yFrom,null);
+      applyChartWindow(fromV.min,fromV.max,yFrom,'100%');
     } else if(t<OUT+ZOOM){
       // easeInOutCubic: easeOut alone starts so fast that the first frames jump a large slice
       // of the zoom at once, which shows up as the vertical scale lurching. Easing in as well
       // spreads that motion out.
       var p=(t-OUT)/ZOOM, e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
-      var curMin=fromMin+(toMin-fromMin)*e, curMax=fromMax+(toMax-fromMax)*e;
+      var cMin=fromV.min+(toV.min-fromV.min)*e, cMax=fromV.max+(toV.max-fromV.max)*e;
       setAxisChrome(0,true);
-      applyChartWindow(curMin,curMax,zoomYBounds(curMin,curMax,e,yFrom,yTo),fromW+(toW-fromW)*e);
+      applyChartWindow(cMin,cMax,zoomYBounds(cMin,cMax,e,yFrom,yTo),'100%');
     } else {
-      // The new tick limit lands here, with the labels still invisible, so the fade-in is the
-      // first time the final tick set is ever drawn.
-      if(!phase3){ phase3=true; chart.options.scales.x.ticks.maxTicksLimit=tickLimit; }
+      // The new tick limit and the scrolling canvas both land here, with the labels still
+      // invisible, so the fade-in is the first time the final layout is ever drawn.
+      if(!phase3){
+        phase3=true;
+        chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
+        applyFinalLayout(toMin,toMax,yTo);
+      }
       var q=Math.max(0,Math.min(1,(t-OUT-ZOOM-HOLD)/IN));
       setAxisChrome(q,false);
-      applyChartWindow(toMin,toMax,yTo);
+      applyChartWindow(toMin,toMax,yTo,null);
       done=q>=1;
     }
     if(done){
@@ -808,6 +834,14 @@ function render(){
     chart=new Chart(document.getElementById('chart'),{
       type:'line',data:{datasets:datasets},
       options:{responsive:true,maintainAspectRatio:false,
+        // Every frame of a range change is computed and painted by animateChartWindow, so
+        // Chart.js must not also animate. Left on, it interpolates element positions toward
+        // each frame's target while the target is itself still moving: the drawn line trails
+        // the scale (visible as the line distorting mid-zoom) and then snaps into place when
+        // the zoom stops. resize() in particular starts one of these on every width change.
+        animation:false,
+        animations:{colors:false,numbers:false},
+        transitions:{resize:{animation:{duration:0}},active:{animation:{duration:0}}},
         interaction:interaction,
         plugins:{legend:{display:false},tooltip:{
           filter:function(item){return item.parsed.y!==null;},
@@ -830,18 +864,19 @@ function render(){
       }
     });
     chartWin={min:winStart,max:winEnd};
-    applyChartWindow(winStart,winEnd);
+    applyFinalLayout(winStart,winEnd);
   } else {
     chart.data.datasets=datasets;
     // Whether points are drawn changes with the range, so the hover mode has to follow it.
     chart.options.interaction.mode=interaction.mode;
     chart.options.interaction.axis=interaction.axis;
     chart.options.interaction.intersect=interaction.intersect;
+    var prevWin=chartWin;
     if(chartTransitionQueued){
       // maxTicksLimit is deliberately left alone here — animateChartWindow applies it mid-zoom,
       // while the labels are hidden, so the change never shows as a reshuffle.
       chartTransitionQueued=false;
-      animateChartWindow(winStart,winEnd,tickLimit);
+      animateChartWindow(winStart,winEnd,tickLimit,prevWin);
     } else {
       // Not a range switch — make sure the axes are fully opaque and back on automatic ticks,
       // in case a zoom was interrupted partway through its fade.
@@ -850,7 +885,7 @@ function render(){
       chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
       setAxisChrome(1,false);
       chartWin={min:winStart,max:winEnd};
-      applyChartWindow(winStart,winEnd);
+      applyFinalLayout(winStart,winEnd);
     }
   }
 
