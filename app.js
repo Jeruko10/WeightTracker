@@ -138,8 +138,10 @@ function setAxisChrome(alpha,animating){
   x.grid.color=gc;  y.grid.color=gc;
   x.grid.tickColor=gc; y.grid.tickColor=gc;
   x.ticks.count=animating?7:undefined;
-  y.ticks.count=animating?6:undefined;
   x.ticks.autoSkip=!animating;
+  // y keeps its fixed count at rest too — evenly spaced ticks are what put a gridline exactly on
+  // the top and bottom edges of the box. Handing it back to automatic would reopen that gap, and
+  // it also means the y grid does not change at all when the animation ends.
 }
 
 // Paints one frame: x bounds, matching y bounds, and optionally the canvas width.
@@ -1002,9 +1004,19 @@ function render(){
               var d=chartState.dates[Math.round(v)];
               if(!d) return '';
               var p=d.split('-'); return p[2]+'/'+p[1];
-            }},grid:{color:gc}},
+            }},
+            // tickLength:0 — the default draws an 8px stub of every gridline OUTSIDE the plot
+            // rectangle, into the label strip, which is the grid poking past the bottom edge.
+            grid:{color:gc,tickLength:0}},
+          // The vertical lines span the full box height, so unless a horizontal line sits exactly
+          // on the top and bottom edges the grid looks like it runs past the last one. The bounds
+          // here are data-derived (min/max plus padding), never round numbers, so ticks generated
+          // at "nice" values stop short of them. Asking for a fixed count of evenly spaced ticks
+          // puts the first and last exactly on the bounds, closing the box on all four sides.
           y:{afterFit:function(s){ s.width=CHART_Y_AXIS_W; },
-            ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
+            ticks:{color:tc,font:{size:11},count:6,includeBounds:true,
+              callback:function(v){return v.toFixed(1);}},
+            grid:{color:gc,tickLength:0}}
         }
       }
     });
