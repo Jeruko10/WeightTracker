@@ -817,7 +817,9 @@ function render(){
           }
         }},
         scales:{
-          x:{type:'linear',ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit,autoSkip:true,
+          // includeBounds:false — with an explicit min/max, Chart.js also forces a tick at each
+          // bound, which sits right next to the first generated one and overlaps its label.
+          x:{type:'linear',ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit,autoSkip:true,includeBounds:false,
             callback:function(v){
               var d=chartState.dates[Math.round(v)];
               if(!d) return '';
