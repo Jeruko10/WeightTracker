@@ -44,99 +44,107 @@
     <div class="sync-indicator" id="sync-indicator"></div>
 
     <div id="overview" class="section active">
-      <div class="stats">
-        <div class="stat"><div class="stat-label">Current avg</div><div class="stat-val ac" id="s-cur">—</div></div>
-        <div class="stat"><div class="stat-label">Prev avg</div><div class="stat-val" id="s-avg">—</div></div>
-        <div class="stat"><div class="stat-label">Avg change</div><div class="stat-val" id="s-rate">—</div></div>
-      </div>
-      <div class="goal-banner">
-        <div class="banner-title" id="banner-title">Goal</div>
-        <div class="pace-row">
-          <span class="chip none" id="pace-chip">No goal set</span>
-          <span class="pace-desc" id="pace-desc"></span>
-        </div>
-        <div class="proj" id="proj-line" style="display:none"></div>
-        <div class="bars" id="bars" style="display:none">
-          <div class="bar-row">
-            <div class="bar-labels"><span id="tl-s"></span><span id="tl-e"></span></div>
-            <div class="bar-track"><div class="bar-fill teal" id="time-fill" style="width:0%"></div></div>
-            <div class="bar-sub" id="time-sub"></div>
+      <div class="overview-grid">
+        <div class="ov-group">
+          <div class="stats">
+            <div class="stat"><div class="stat-label">Current avg</div><div class="stat-val ac" id="s-cur">—</div></div>
+            <div class="stat"><div class="stat-label">Prev avg</div><div class="stat-val" id="s-avg">—</div></div>
+            <div class="stat"><div class="stat-label">Avg change</div><div class="stat-val" id="s-rate">—</div></div>
           </div>
-          <div class="bar-row">
-            <div class="bar-labels"><span id="wl-s"></span><span id="wl-e"></span></div>
-            <div class="bar-track"><div class="bar-fill purple" id="wt-fill" style="width:0%"></div></div>
-            <div class="bar-sub" id="wt-sub"></div>
+          <div class="goal-banner">
+            <div class="banner-title" id="banner-title">Goal</div>
+            <div class="pace-row">
+              <span class="chip none" id="pace-chip">No goal set</span>
+              <span class="pace-desc" id="pace-desc"></span>
+            </div>
+            <div class="proj" id="proj-line" style="display:none"></div>
+            <div class="bars" id="bars" style="display:none">
+              <div class="bar-row">
+                <div class="bar-labels"><span id="tl-s"></span><span id="tl-e"></span></div>
+                <div class="bar-track"><div class="bar-fill teal" id="time-fill" style="width:0%"></div></div>
+                <div class="bar-sub" id="time-sub"></div>
+              </div>
+              <div class="bar-row">
+                <div class="bar-labels"><span id="wl-s"></span><span id="wl-e"></span></div>
+                <div class="bar-track"><div class="bar-fill purple" id="wt-fill" style="width:0%"></div></div>
+                <div class="bar-sub" id="wt-sub"></div>
+              </div>
+            </div>
+            <div class="goal-msg success" id="goal-reached-box" style="display:none">
+              <p id="goal-reached-text"></p>
+              <button class="btn primary" id="btn-goal-reached-ok">Nice!</button>
+            </div>
+            <div class="goal-msg warn" id="goal-missed-box" style="display:none">
+              <p id="goal-missed-text"></p>
+              <button class="btn primary" id="btn-goal-reset">Accept &amp; reset goal</button>
+            </div>
           </div>
         </div>
-        <div class="goal-msg success" id="goal-reached-box" style="display:none">
-          <p id="goal-reached-text"></p>
-          <button class="btn primary" id="btn-goal-reached-ok">Nice!</button>
+        <div class="card">
+          <div class="card-title-row">
+            <div class="card-title">Progress</div>
+            <select class="range-select" id="chart-range">
+              <option value="1w">1 week</option>
+              <option value="2w" selected>2 weeks</option>
+              <option value="1m">1 month</option>
+              <option value="1y">1 year</option>
+              <option value="all">All time</option>
+              <option value="goal">Current goal</option>
+            </select>
+          </div>
+          <div class="legend">
+            <span class="leg-item"><span class="leg-solid"></span>Weight</span>
+            <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
+          </div>
+          <div class="chart-wrap" id="chart-wrap"><div id="chart-inner"><canvas id="chart"></canvas></div></div>
         </div>
-        <div class="goal-msg warn" id="goal-missed-box" style="display:none">
-          <p id="goal-missed-text"></p>
-          <button class="btn primary" id="btn-goal-reset">Accept &amp; reset goal</button>
+        <div class="card">
+          <div class="card-title">Weekly summary</div>
+          <div id="week-summary"><p class="empty">No entries yet</p></div>
         </div>
-      </div>
-      <div class="card">
-        <div class="card-title-row">
-          <div class="card-title">Progress</div>
-          <select class="range-select" id="chart-range">
-            <option value="1w">1 week</option>
-            <option value="2w" selected>2 weeks</option>
-            <option value="1m">1 month</option>
-            <option value="1y">1 year</option>
-            <option value="all">All time</option>
-            <option value="goal">Current goal</option>
-          </select>
-        </div>
-        <div class="legend">
-          <span class="leg-item"><span class="leg-solid"></span>Weight</span>
-          <span class="leg-item"><span style="width:12px;height:0;border-top:2px dashed #6fcf97;display:inline-block"></span>Ideal pace</span>
-        </div>
-        <div class="chart-wrap" id="chart-wrap"><div id="chart-inner"><canvas id="chart"></canvas></div></div>
-      </div>
-      <div class="card">
-        <div class="card-title">Weekly summary</div>
-        <div id="week-summary"><p class="empty">No entries yet</p></div>
       </div>
     </div>
 
     <div id="log" class="section">
-      <div class="card">
-        <div class="card-title">Add entry</div>
-        <div class="row2">
-          <input type="date" id="inp-date">
-          <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+      <div class="log-grid">
+        <div class="card">
+          <div class="card-title">Add entry</div>
+          <div class="row2">
+            <input type="date" id="inp-date">
+            <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+          </div>
+          <button class="btn primary" id="btn-add">Add</button>
+          <p class="err" id="add-err"></p>
         </div>
-        <button class="btn primary" id="btn-add">Add</button>
-        <p class="err" id="add-err"></p>
-      </div>
-      <div class="card">
-        <div class="card-title">History</div>
-        <div class="entry-list" id="entry-list"><p class="empty">No entries yet</p></div>
+        <div class="card">
+          <div class="card-title">History</div>
+          <div class="entry-list" id="entry-list"><p class="empty">No entries yet</p></div>
+        </div>
       </div>
     </div>
 
     <div id="goal" class="section">
-      <div class="card">
-        <div class="card-title">Set your goal</div>
-        <div class="goal-form">
-          <div><div class="field-label">Target weight (kg)</div><input type="number" id="g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
-          <div><div class="field-label">Start date</div><input type="date" id="g-start"></div>
-          <div><div class="field-label">Desired pace (kg / week)</div><input type="number" id="g-pace" placeholder="e.g. 0.25" step="0.05" min="0.05" max="2"></div>
-          <div class="goal-preview" id="goal-preview"></div>
-          <button class="btn primary" id="btn-save-goal">Save goal</button>
-          <button class="btn secondary" id="btn-clear-goal" style="display:none">Remove goal</button>
+      <div class="goal-grid">
+        <div class="card">
+          <div class="card-title">Set your goal</div>
+          <div class="goal-form">
+            <div><div class="field-label">Target weight (kg)</div><input type="number" id="g-wt" placeholder="e.g. 87" step="0.1" min="30" max="250"></div>
+            <div><div class="field-label">Start date</div><input type="date" id="g-start"></div>
+            <div><div class="field-label">Desired pace (kg / week)</div><input type="number" id="g-pace" placeholder="e.g. 0.25" step="0.05" min="0.05" max="2"></div>
+            <div class="goal-preview" id="goal-preview"></div>
+            <button class="btn primary" id="btn-save-goal">Save goal</button>
+            <button class="btn secondary" id="btn-clear-goal" style="display:none">Remove goal</button>
+          </div>
+          <p class="err" id="goal-err"></p>
         </div>
-        <p class="err" id="goal-err"></p>
-      </div>
-      <div class="card" id="goal-summary" style="display:none">
-        <div class="card-title">Current goal</div>
-        <div id="goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
-      </div>
-      <div class="card" id="goal-history-card" style="display:none">
-        <div class="card-title">Past goals</div>
-        <div id="goal-history-list"></div>
+        <div class="card" id="goal-summary" style="display:none">
+          <div class="card-title">Current goal</div>
+          <div id="goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
+        </div>
+        <div class="card" id="goal-history-card" style="display:none">
+          <div class="card-title">Past goals</div>
+          <div id="goal-history-list"></div>
+        </div>
       </div>
     </div>
   </div>

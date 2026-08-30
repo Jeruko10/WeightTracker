@@ -100,3 +100,13 @@ input:focus{border-color:#d0bcff;background:#45404d}
 .sync-indicator.saving{color:#f2c94c}
 .sync-indicator.saved{color:#6fcf97}
 .sync-indicator.error{color:#eb5757}
+
+/* Desktop: same markup, laid out as horizontal columns instead of stacked. Below this width
+   everything stays exactly as it was — single column, top to bottom. */
+@media (min-width:900px){
+  .app{max-width:1200px}
+  .overview-grid,.log-grid,.goal-grid{display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px}
+  .overview-grid>.ov-group,.overview-grid>.card,.log-grid>.card,.goal-grid>.card{flex:1 1 300px;min-width:0;margin-bottom:0}
+  .ov-group{display:flex;flex-direction:column;gap:12px}
+  .ov-group>.stats,.ov-group>.goal-banner{margin-bottom:0}
+}
