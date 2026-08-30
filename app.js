@@ -744,11 +744,18 @@ function render(){
   // entries changed shape depending on the selected range. It also invented movement on days
   // with no entry — bulging above or below the two weights it sits between. Straight segments
   // are window-independent and match the linear interpolation the stats above already assume.
+  // Hover reach depends on whether the points are drawn. With points visible, detection is
+  // bounded to a radius around each one (they're small, so the hit area is padded well past
+  // the dot). With points hidden there is nothing to aim at, so it falls back to "closest
+  // point on the x axis", which has no distance limit by design.
+  var pointsVisible=pointRadius>0;
+  var HIT_R=9;
   var datasets=[{
     label:'Weight',
     data:fullDates.map(function(d,i){return {x:i,y:entryMap[d]!==undefined?entryMap[d]:null};}),
     borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
-    borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointBackgroundColor:'#d0bcff',tension:0,fill:true,spanGaps:true
+    borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointHitRadius:pointsVisible?HIT_R:0,
+    pointBackgroundColor:'#d0bcff',tension:0,fill:true,spanGaps:true
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
@@ -759,20 +766,21 @@ function render(){
       var t=(new Date(d)-sd)/(7*864e5);
       return {x:i,y:parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2))};
     });
-    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,pointHoverRadius:4,tension:0,fill:false,spanGaps:true});
+    datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,pointHoverRadius:4,pointHitRadius:pointsVisible?0:1,tension:0,fill:false,spanGaps:true});
   }
 
   chartState.dates=fullDates; chartState.pxPerDay=PX_PER_DAY; chartState.scrollable=scrollable;
 
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
   var tickLimit=scrollable?Math.min(visibleDays,60):8;
+  var interaction=pointsVisible
+    ? {mode:'nearest',axis:'xy',intersect:true}   // bounded by each point's hit radius
+    : {mode:'nearest',axis:'x',intersect:false};  // no points to aim at — snap to nearest day
   if(!chart){
     chart=new Chart(document.getElementById('chart'),{
       type:'line',data:{datasets:datasets},
       options:{responsive:true,maintainAspectRatio:false,
-        // With points hidden (pointRadius 0) the cursor can't land exactly on one, so hover/tooltip
-        // trigger on the nearest x position instead of requiring a direct hit on the (invisible) point.
-        interaction:{mode:'nearest',axis:'x',intersect:false},
+        interaction:interaction,
         plugins:{legend:{display:false},tooltip:{
           filter:function(item){return item.parsed.y!==null;},
           callbacks:{
@@ -795,6 +803,10 @@ function render(){
     applyChartWindow(winStart,winEnd);
   } else {
     chart.data.datasets=datasets;
+    // Whether points are drawn changes with the range, so the hover mode has to follow it.
+    chart.options.interaction.mode=interaction.mode;
+    chart.options.interaction.axis=interaction.axis;
+    chart.options.interaction.intersect=interaction.intersect;
     if(chartTransitionQueued){
       // maxTicksLimit is deliberately left alone here — animateChartWindow applies it mid-zoom,
       // while the labels are hidden, so the change never shows as a reshuffle.
