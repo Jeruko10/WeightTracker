@@ -20,13 +20,16 @@ function uDoc(p)  { return doc(db,'users',currentUser.uid,p); }
 function uCol(p)  { return collection(db,'users',currentUser.uid,p); }
 function eDoc(id) { return doc(db,'users',currentUser.uid,'entries',id); }
 function ghDoc(id){ return doc(db,'users',currentUser.uid,'goalHistory',id); }
-function today()  { return new Date().toISOString().slice(0,10); }
+// Date keys are plain calendar days ('YYYY-MM-DD'), which JS parses as UTC midnight. All day
+// arithmetic below therefore stays in UTC — mixing in local getters/setters silently loses or
+// repeats a day when the clock crosses a daylight-saving boundary.
+function today()  { var d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); }
 function fmt(s)   { if(!s) return '—'; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
-function addDays(s,d){ var dt=new Date(s); dt.setDate(dt.getDate()+d); return dt.toISOString().slice(0,10); }
+function addDays(s,d){ var dt=new Date(s); dt.setUTCDate(dt.getUTCDate()+d); return dt.toISOString().slice(0,10); }
 function weekKey(s){
-  var dt=new Date(s), jan=new Date(dt.getFullYear(),0,1);
-  var wk=Math.ceil(((dt-jan)/864e5+jan.getDay()+1)/7);
-  return dt.getFullYear()+'-W'+(wk<10?'0':'')+wk;
+  var dt=new Date(s), jan=new Date(Date.UTC(dt.getUTCFullYear(),0,1));
+  var wk=Math.ceil(((dt-jan)/864e5+jan.getUTCDay()+1)/7);
+  return dt.getUTCFullYear()+'-W'+(wk<10?'0':'')+wk;
 }
 function sync(msg,cls){
   var el=document.getElementById('sync-indicator');
@@ -67,6 +70,61 @@ function findReachedDate(series,targetWeight,goalIsGain,rangeStart,rangeEnd){
     d=addDays(d,1);
   }
   return rangeEnd;
+}
+
+// ── CHART WINDOW ──────────────────────────────────────────────────────────────
+// The chart always holds the FULL day-by-day series; the range dropdown only moves the
+// x-axis bounds over it. Switching range therefore animates as a true zoom — the same line
+// stretches or compresses — instead of swapping in a different dataset that has to pop in.
+var chartState={dates:[],pxPerDay:24,scrollable:false};
+var chartWin=null, chartAnimFrame=null;
+
+// y bounds for whatever slice of the series the given x window covers, so the vertical scale
+// tracks the zoom smoothly instead of jumping once at the end.
+function chartYBounds(minX,maxX){
+  var lo=Math.max(0,Math.floor(minX)), hi=Math.min(chartState.dates.length-1,Math.ceil(maxX));
+  var mn=Infinity, mx=-Infinity;
+  if(chart){
+    chart.data.datasets.forEach(function(ds){
+      for(var i=lo;i<=hi;i++){
+        var p=ds.data[i];
+        if(p&&p.y!==null&&p.y!==undefined){ if(p.y<mn)mn=p.y; if(p.y>mx)mx=p.y; }
+      }
+    });
+  }
+  if(mn===Infinity) return null;
+  var pad=Math.max(0.3,(mx-mn)*0.15);
+  return {min:mn-pad,max:mx+pad};
+}
+
+// Paints one frame of the zoom: x bounds, matching y bounds, and the scroll width that goes
+// with the number of days currently in view.
+function applyChartWindow(minX,maxX){
+  if(!chart) return;
+  chart.options.scales.x.min=minX;
+  chart.options.scales.x.max=maxX;
+  var yb=chartYBounds(minX,maxX);
+  if(yb){ chart.options.scales.y.min=yb.min; chart.options.scales.y.max=yb.max; }
+  var days=maxX-minX+1;
+  var inner=document.getElementById('chart-inner');
+  var w=chartState.scrollable?(Math.round(days*chartState.pxPerDay))+'px':'100%';
+  if(inner.style.width!==w){ inner.style.width=w; chart.resize(); }
+  chart.update('none');
+}
+
+function animateChartWindow(toMin,toMax){
+  var fromMin=chartWin?chartWin.min:toMin, fromMax=chartWin?chartWin.max:toMax;
+  chartWin={min:toMin,max:toMax};
+  if(chartAnimFrame){ cancelAnimationFrame(chartAnimFrame); chartAnimFrame=null; }
+  if(fromMin===toMin&&fromMax===toMax){ applyChartWindow(toMin,toMax); return; }
+  var DUR=420, t0=performance.now();
+  (function step(now){
+    var p=Math.min(1,(now-t0)/DUR);
+    var e=1-Math.pow(1-p,3); // easeOutCubic
+    applyChartWindow(fromMin+(toMin-fromMin)*e, fromMax+(toMax-fromMax)*e);
+    if(p<1) chartAnimFrame=requestAnimationFrame(step);
+    else chartAnimFrame=null;
+  })(t0);
 }
 
 // ── AUTH ──────────────────────────────────────────────────────────────────────
@@ -565,26 +623,37 @@ function render(){
 
   renderGoalSummary();
 
-  // Chart — day-based X axis, null for days with no entry (creates visible gaps).
-  // The range dropdown picks the date window to plot.
+  // Chart — the full day-by-day series is always loaded as {x:dayIndex,y:weight} points on a
+  // linear x axis. The range dropdown only moves the x-axis window over that series, so a range
+  // switch animates as a real zoom (the same line stretches/compresses) rather than swapping in
+  // a different dataset. Days with no entry stay null, drawn through via spanGaps.
   var entryMap={};
   entries.forEach(function(e){entryMap[e.date]=e.weight;});
-  var allDates=[];
+  var fullDates=[];
   if(n){
-    var rangeStart, rangeEnd;
-    if(chartRange==='1w'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-6); }
-    else if(chartRange==='2w'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-13); }
-    else if(chartRange==='1m'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-29); }
-    else if(chartRange==='1y'){ rangeEnd=today(); rangeStart=addDays(rangeEnd,-364); }
-    else if(chartRange==='goal'&&goal&&goal.start){ rangeStart=goal.start; rangeEnd=today(); }
-    else { rangeStart=entries[0].date; rangeEnd=entries[n-1].date; }
-    if(rangeStart<entries[0].date) rangeStart=entries[0].date;
-    if(rangeEnd<rangeStart) rangeEnd=rangeStart;
-    var dc=new Date(rangeStart), de=new Date(rangeEnd);
-    while(dc<=de){allDates.push(dc.toISOString().slice(0,10));dc.setDate(dc.getDate()+1);}
+    var lastDay=today()>entries[n-1].date?today():entries[n-1].date;
+    var dc=new Date(entries[0].date), de=new Date(lastDay);
+    while(dc<=de){fullDates.push(dc.toISOString().slice(0,10));dc.setUTCDate(dc.getUTCDate()+1);}
   }
-  var labels=allDates.map(function(d){var p=d.split('-');return p[2]+'/'+p[1];});
-  var chartWts=allDates.map(function(d){return entryMap[d]!==undefined?entryMap[d]:null;});
+  var lastIdx=fullDates.length-1;
+  var dayIdx=function(d){return Math.round((new Date(d)-new Date(fullDates[0]))/864e5);};
+
+  // The x window for the selected range, clamped to the data we actually have.
+  var winStart=0, winEnd=Math.max(0,lastIdx);
+  if(n){
+    var todayIdx=Math.min(lastIdx,dayIdx(today()));
+    if(chartRange==='1w'){ winEnd=todayIdx; winStart=winEnd-6; }
+    else if(chartRange==='2w'){ winEnd=todayIdx; winStart=winEnd-13; }
+    else if(chartRange==='1m'){ winEnd=todayIdx; winStart=winEnd-29; }
+    else if(chartRange==='1y'){ winEnd=todayIdx; winStart=winEnd-364; }
+    else if(chartRange==='goal'&&goal&&goal.start){ winEnd=todayIdx; winStart=dayIdx(goal.start); }
+    else { winStart=0; winEnd=lastIdx; }
+    if(winStart<0) winStart=0;
+    if(winEnd>lastIdx) winEnd=lastIdx;
+    if(winEnd<winStart) winEnd=winStart;
+  }
+  var visibleDays=winEnd-winStart+1;
+
   // Horizontal scroll past the range's day threshold, at a fixed px/day so points never get
   // more cramped as data grows. "1y" is exempt — always compacts to fit, as a zoomed-out
   // overview. "All time" gets a larger threshold (100) since it's meant to stay browsable
@@ -592,83 +661,67 @@ function render(){
   // dense compacted line doesn't turn into a blob — except "all", which always hides them.
   var CHART_SCROLL_THRESHOLD=30, ALL_TIME_THRESHOLD=100, PX_PER_DAY=24;
   var scrollThreshold=chartRange==='all'?ALL_TIME_THRESHOLD:CHART_SCROLL_THRESHOLD;
-  var scrollable=chartRange!=='1y'&&allDates.length>scrollThreshold;
-  var pointRadius=scrollable?4:(chartRange==='all'?0:(allDates.length>60?0:4));
+  var scrollable=chartRange!=='1y'&&visibleDays>scrollThreshold;
+  var pointRadius=scrollable?4:(chartRange==='all'?0:(visibleDays>60?0:4));
+
   var datasets=[{
-    label:'Weight',data:chartWts,borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
+    label:'Weight',
+    data:fullDates.map(function(d,i){return {x:i,y:entryMap[d]!==undefined?entryMap[d]:null};}),
+    borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
     borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointBackgroundColor:'#d0bcff',tension:0.3,fill:true,spanGaps:true
   }];
   if(goal&&goal.start&&goal.date&&n){
     var sd=new Date(goal.start), gd=new Date(goal.date);
     var sw2=(goal.startWeight!==undefined&&goal.startWeight!==null)?goal.startWeight:(entries.find(function(e){return e.date>=goal.start;})||entries[0]).weight;
     var totW2=Math.max(0.01,(gd-sd)/(7*864e5));
-    var ideal=allDates.map(function(d){
-      if(d<goal.start) return null;
+    var ideal=fullDates.map(function(d,i){
+      if(d<goal.start) return {x:i,y:null};
       var t=(new Date(d)-sd)/(7*864e5);
-      return parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2));
+      return {x:i,y:parseFloat((sw2+(goal.weight-sw2)*(t/totW2)).toFixed(2))};
     });
     datasets.push({label:'Ideal pace',data:ideal,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],pointRadius:0,pointHoverRadius:4,tension:0,fill:false,spanGaps:true});
   }
 
-  document.getElementById('chart-inner').style.width=scrollable?(allDates.length*PX_PER_DAY)+'px':'100%';
+  chartState.dates=fullDates; chartState.pxPerDay=PX_PER_DAY; chartState.scrollable=scrollable;
 
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
-  var tickLimit=scrollable?allDates.length:10;
+  var tickLimit=scrollable?Math.min(visibleDays,60):8;
   if(!chart){
     chart=new Chart(document.getElementById('chart'),{
-      type:'line',data:{labels:labels,datasets:datasets},
+      type:'line',data:{datasets:datasets},
       options:{responsive:true,maintainAspectRatio:false,
-        // Quick, snappy transition when switching range — points stretch/compress into their
-        // new positions instead of jumping. The #chart-inner width transition (see style.css)
-        // is timed to match, so a scroll-threshold crossing resizes the canvas in sync too.
-        animation:{duration:400,easing:'easeOutQuart'},
         // With points hidden (pointRadius 0) the cursor can't land exactly on one, so hover/tooltip
         // trigger on the nearest x position instead of requiring a direct hit on the (invisible) point.
-        interaction:{mode:'index',intersect:false},
+        interaction:{mode:'nearest',axis:'x',intersect:false},
         plugins:{legend:{display:false},tooltip:{
           filter:function(item){return item.parsed.y!==null;},
-          callbacks:{label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}}
+          callbacks:{
+            title:function(items){var d=chartState.dates[Math.round(items[0].parsed.x)];return d?fmt(d):'';},
+            label:function(ctx){return ctx.dataset.label+': '+ctx.parsed.y.toFixed(1)+' kg';}
+          }
         }},
         scales:{
-          x:{ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit},grid:{color:gc}},
+          x:{type:'linear',ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit,autoSkip:true,
+            callback:function(v){
+              var d=chartState.dates[Math.round(v)];
+              if(!d) return '';
+              var p=d.split('-'); return p[2]+'/'+p[1];
+            }},grid:{color:gc}},
           y:{ticks:{color:tc,font:{size:11},callback:function(v){return v.toFixed(1);}},grid:{color:gc}}
         }
       }
     });
+    chartWin={min:winStart,max:winEnd};
+    applyChartWindow(winStart,winEnd);
   } else {
-    // A range switch has no real point-to-point correspondence between old and new data (a
-    // week and a year aren't the same series resampled), so Chart.js's normal value animation
-    // can't morph one into the other — it just pops in. Instead: snapshot the current render,
-    // swap in the new data underneath instantly, then stretch/compress and fade the snapshot
-    // away on top, mimicking a timeframe-switch transition.
-    var snap=document.getElementById('chart-snap'), oldCount=chart.data.labels.length, snapOk=false;
-    if(chartTransitionQueued){
-      try{
-        snap.src=chart.canvas.toDataURL();
-        snap.style.transitionDuration='0s';
-        snap.style.transform='scaleX(1)';
-        snap.style.opacity='1';
-        snap.classList.remove('hidden');
-        snapOk=true;
-      }catch(err){ snap.classList.add('hidden'); }
-    }
-    chartTransitionQueued=false;
-
-    chart.data.labels=labels; chart.data.datasets=datasets;
+    chart.data.datasets=datasets;
     chart.options.scales.x.ticks.maxTicksLimit=tickLimit;
-    // No manual resize() here — #chart-inner's width transitions via CSS, and Chart.js's own
-    // ResizeObserver keeps redrawing the canvas at each intermediate size, so a scroll-threshold
-    // crossing stretches/compresses smoothly instead of snapping instantly.
-    chart.update(snapOk?'none':undefined);
-
-    if(snapOk){
-      var zoomingOut=allDates.length>oldCount;
-      requestAnimationFrame(function(){
-        snap.style.transitionDuration='';
-        snap.style.transform='scaleX('+(zoomingOut?1.15:0.87)+')';
-        snap.style.opacity='0';
-      });
-      setTimeout(function(){ snap.classList.add('hidden'); },420);
+    if(chartTransitionQueued){
+      chartTransitionQueued=false;
+      animateChartWindow(winStart,winEnd);
+    } else {
+      chartWin={min:winStart,max:winEnd};
+      applyChartWindow(winStart,winEnd);
     }
   }
 
