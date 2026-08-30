@@ -143,6 +143,24 @@ function chartTargetWidth(days){
   return Math.round(days*chartState.pxPerDay);
 }
 
+// The vertical scale must never be tighter than the data currently on screen, or segments to
+// off-range points get drawn shooting in from beyond the plot edges. Interpolating y linearly
+// alongside x isn't enough: zooming out pulls new days into view faster than a linear y ramp
+// widens to fit them. So the scale leads the zoom — widening early when expanding, and holding
+// wide until late when contracting — and is then unioned with the real bounds of what is
+// actually visible, which guarantees containment even if the easing alone would fall short.
+function zoomYBounds(minX,maxX,e,yFrom,yTo,expanding){
+  if(!yFrom||!yTo) return yTo||yFrom||null;
+  var eY=expanding?Math.pow(e,0.45):Math.pow(e,2.2);
+  var yb={min:yFrom.min+(yTo.min-yFrom.min)*eY, max:yFrom.max+(yTo.max-yFrom.max)*eY};
+  var actual=chartYBounds(minX,maxX);
+  if(actual){
+    if(actual.min<yb.min) yb.min=actual.min;
+    if(actual.max>yb.max) yb.max=actual.max;
+  }
+  return yb;
+}
+
 // The zoom runs in three phases so that every change to the tick set happens while the labels
 // are at zero opacity. Switching tick modes (auto ↔ pinned count) or bounds while they are
 // visible is what makes labels appear from nowhere and reshuffle:
@@ -162,6 +180,7 @@ function animateChartWindow(toMin,toMax,tickLimit){
   // data each frame: recomputing makes the line jump every time a new day's high or low crosses
   // into view, which reads as vertical stutter during a large zoom.
   var yFrom=chartYBounds(fromMin,fromMax), yTo=chartYBounds(toMin,toMax);
+  var expanding=(toMax-toMin)>(fromMax-fromMin);
   var fromW=document.getElementById('chart-inner').offsetWidth;
   var toW=chartTargetWidth(toMax-toMin+1);
   document.getElementById('chart-wrap').classList.add('zooming');
@@ -176,13 +195,13 @@ function animateChartWindow(toMin,toMax,tickLimit){
       setAxisChrome(Math.max(0,1-t/(OUT*0.75)),false);
       applyChartWindow(fromMin,fromMax,yFrom,null);
     } else if(t<OUT+ZOOM){
-      var p=(t-OUT)/ZOOM, e=1-Math.pow(1-p,3); // easeOutCubic
+      // easeInOutCubic: easeOut alone starts so fast that the first frames jump a large slice
+      // of the zoom at once, which shows up as the vertical scale lurching. Easing in as well
+      // spreads that motion out.
+      var p=(t-OUT)/ZOOM, e=p<0.5?4*p*p*p:1-Math.pow(-2*p+2,3)/2;
+      var curMin=fromMin+(toMin-fromMin)*e, curMax=fromMax+(toMax-fromMax)*e;
       setAxisChrome(0,true);
-      applyChartWindow(
-        fromMin+(toMin-fromMin)*e, fromMax+(toMax-fromMax)*e,
-        (yFrom&&yTo)?{min:yFrom.min+(yTo.min-yFrom.min)*e,max:yFrom.max+(yTo.max-yFrom.max)*e}:(yTo||yFrom||null),
-        fromW+(toW-fromW)*e
-      );
+      applyChartWindow(curMin,curMax,zoomYBounds(curMin,curMax,e,yFrom,yTo,expanding),fromW+(toW-fromW)*e);
     } else {
       // The new tick limit lands here, with the labels still invisible, so the fade-in is the
       // first time the final tick set is ever drawn.
@@ -295,6 +314,10 @@ document.querySelectorAll('.tab').forEach(function(tab){
 });
 
 // ── CHART RANGE ───────────────────────────────────────────────────────────────
+// Browsers restore <select> state across reloads and back-navigation, which would leave the
+// dropdown showing one range while chartRange still held the default — the chart and its own
+// label disagreeing. Force the control back to the default so the two can't drift apart.
+document.getElementById('chart-range').value=chartRange;
 document.getElementById('chart-range').addEventListener('change',function(){
   chartTransitionQueued=true; chartRange=this.value; render();
 });
