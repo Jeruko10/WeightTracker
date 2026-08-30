@@ -46,6 +46,9 @@ h1{font-size:22px;font-weight:500;color:#e6e1e5;letter-spacing:-.3px}
 .leg-item{display:flex;align-items:center;gap:6px}
 .leg-solid{width:12px;height:3px;background:#d0bcff;border-radius:2px;display:inline-block}
 .chart-wrap{position:relative;height:190px;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+/* Mid-zoom the canvas width is interpolated and can briefly exceed the container, which would
+   flash a scrollbar in and out. Suppressed while animating; restored once the width settles. */
+.chart-wrap.zooming{overflow-x:hidden}
 /* Width is driven per-frame from JS during a range change, so no CSS transition here. */
 #chart-inner{height:100%;position:relative}
 .card-title-row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:12px}
