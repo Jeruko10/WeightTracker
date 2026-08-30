@@ -963,8 +963,13 @@ function render(){
   }];
   // One dashed segment per goal cycle — the active one and every archived one — so the older
   // stretches of the weight line can be read against the plan they were actually run against,
-  // not just on their own. The ideal pace is a straight line in time, so its two ends describe
-  // it completely.
+  // not just on their own.
+  //
+  // A point per day rather than just the two ends. The line is straight either way, so this
+  // changes nothing visually, but a two-point line can only be hovered at its endpoints: there
+  // is nothing under the cursor anywhere in between. One point per day makes the whole segment
+  // queryable and each reading lands on the exact date. Cycles do not overlap, so all the
+  // segments together hold about one point per day of history in total.
   function idealSegment(g,endDate){
     if(!n||!g||!g.start||!g.date) return null;
     var sd=new Date(g.start), gd=new Date(g.date);
@@ -972,18 +977,21 @@ function render(){
     var sw=(g.startWeight!==undefined&&g.startWeight!==null)
       ?g.startWeight
       :(entries.find(function(e){return e.date>=g.start;})||entries[0]).weight;
-    var at=function(i){
-      var t=(new Date(fullDates[i])-sd)/(7*864e5);
-      return parseFloat((sw+(g.weight-sw)*(t/totW)).toFixed(2));
-    };
     var i0=Math.max(0,Math.min(lastIdx,dayIdx(g.start)));
     var i1=Math.max(0,Math.min(lastIdx,dayIdx(endDate)));
     if(i1<=i0) return null;
-    return [{x:i0,y:at(i0)},{x:i1,y:at(i1)}];
+    var pts=[];
+    for(var i=i0;i<=i1;i++){
+      var t=(new Date(fullDates[i])-sd)/(7*864e5);
+      pts.push({x:i,y:parseFloat((sw+(g.weight-sw)*(t/totW)).toFixed(2))});
+    }
+    return pts;
   }
+  // A smaller hit radius than the weight line's, so a reading near a logged weight still
+  // resolves to the weight rather than to the plan drawn beside it.
   function idealDataset(data){
     return {label:'Ideal pace',data:data,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],
-      pointRadius:0,pointHoverRadius:4,pointHitRadius:pointsVisible?0:1,tension:0,fill:false};
+      pointRadius:0,pointHoverRadius:4,pointHitRadius:Math.round(HIT_R*0.6),tension:0,fill:false};
   }
   if(goal){
     var segNow=idealSegment(goal,fullDates[lastIdx]);   // the active cycle runs up to today
@@ -1003,8 +1011,12 @@ function render(){
   var gc='rgba(255,255,255,0.06)', tc='#938f99';
   var tickLimit=scrollable?Math.min(visibleDays,60):8;
   var interaction=pointsVisible
-    ? {mode:'nearest',axis:'xy',intersect:true}   // bounded by each point's hit radius
-    : {mode:'nearest',axis:'x',intersect:false};  // no points to aim at — snap to nearest day
+    ? {mode:'nearest',axis:'xy',intersect:true}    // bounded by each point's hit radius
+    // Nothing is drawn to aim at, so the reading is not required to land on a point — but it is
+    // still measured in both axes. Picking purely by horizontal distance would tie between the
+    // weight line and the pace line, which now both carry a point at nearly every date, and the
+    // winner would be arbitrary; with both axes it is whichever line the cursor is nearer to.
+    : {mode:'nearest',axis:'xy',intersect:false};
   if(!chart){
     chart=new Chart(document.getElementById('chart'),{
       type:'line',data:{datasets:datasets},plugins:[chartBoxPlugin],
