@@ -125,7 +125,10 @@ function chartYBounds(minX,maxX){
 var CHART_TICK_RGB='147,143,153', CHART_GRID_ALPHA=0.06;
 // Fixed axis sizes — see the afterFit hooks on the scales. Wide/tall enough for the longest
 // label either axis can produce ("100.0" for a three-digit weight, "17/08" unrotated).
-var CHART_Y_AXIS_W=40, CHART_X_AXIS_H=26;
+// CHART_X_PAD is the side room the x axis keeps so an end date label is never clipped: half a
+// label's width. Chart.js would otherwise size this from wherever the outermost tick happens to
+// land, which autoSkip places differently in each range — that is what moved the right edge.
+var CHART_Y_AXIS_W=40, CHART_X_AXIS_H=26, CHART_X_PAD=20;
 function setAxisChrome(alpha,animating){
   if(!chart) return;
   var x=chart.options.scales.x, y=chart.options.scales.y;
@@ -989,7 +992,10 @@ function render(){
           // whenever it decides to tilt the dates to fit more of them in. Either one moves the
           // edge of the chart box between views.
           x:{type:'linear',
-            afterFit:function(s){ s.height=CHART_X_AXIS_H; },
+            afterFit:function(s){
+              s.height=CHART_X_AXIS_H;
+              s.paddingLeft=CHART_X_PAD; s.paddingRight=CHART_X_PAD;
+            },
             ticks:{color:tc,font:{size:11},maxTicksLimit:tickLimit,autoSkip:true,includeBounds:false,
             maxRotation:0,minRotation:0,
             callback:function(v){
