@@ -188,29 +188,6 @@ function yProgressFor(from,to,v,isMin){
   return Math.max(0,Math.min(1,(v-from)/d));
 }
 
-// Hull boundary through a set of samples: the smallest concave function above them all
-// (upper=true), or the largest convex function below them all (upper=false).
-function hullOf(pts,upper){
-  var h=[];
-  for(var i=0;i<pts.length;i++){
-    while(h.length>=2){
-      var a=h[h.length-2], b=h[h.length-1], c=pts[i];
-      var cross=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
-      if(upper?cross>=0:cross<=0) h.pop(); else break;
-    }
-    h.push(pts[i]);
-  }
-  return h;
-}
-function evalHull(h,x){
-  for(var i=1;i<h.length;i++){
-    if(x<=h[i].x){
-      var a=h[i-1], b=h[i];
-      return b.x===a.x?b.y:a.y+(b.y-a.y)*((x-a.x)/(b.x-a.x));
-    }
-  }
-  return h[h.length-1].y;
-}
 
 // Plans the vertical scale for a whole zoom, before it starts.
 //
@@ -225,18 +202,61 @@ function evalHull(h,x){
 //   • an edge that NARROWS must be at most as far along as the data allows, so the smoothest
 //     safe path is the convex minorant — it holds its width until the data has actually left.
 // With nothing demanded either path degenerates to a straight line.
+// Hull boundary through a set of samples: the smallest concave function above them all
+// (upper=true), or the largest convex function below them all (upper=false).
+function hullOf(pts,upper){
+  var h=[];
+  for(var i=0;i<pts.length;i++){
+    while(h.length>=2){
+      var a=h[h.length-2], b=h[h.length-1], c=pts[i];
+      var cross=(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+      if(upper?cross>=0:cross<=0) h.pop(); else break;
+    }
+    h.push(pts[i]);
+  }
+  return h;
+}
+
+// Evaluates the hull as a rounded curve rather than a polygon. Straight segments meeting at a
+// corner change speed instantly, which at this duration reads as a stutter; blending each
+// vertex's two slopes gives a path with no corners at all. The rounding only ever cuts inside
+// the polygon, which the margin baked into the samples already covers.
+function evalHull(h,x){
+  var n=h.length;
+  if(n===1) return h[0].y;
+  var i=1;
+  while(i<n-1&&x>h[i].x) i++;
+  var a=h[i-1], b=h[i], dx=b.x-a.x;
+  if(dx<=0) return b.y;
+  var t=(x-a.x)/dx; if(t<0)t=0; if(t>1)t=1;
+  var m=(b.y-a.y)/dx;
+  // Neighbouring slopes, skipped when the neighbour sits at the same x — dividing by that zero
+  // width would poison the tangent, and with it the whole scale, with NaN.
+  var mPrev=m, mNext=m;
+  if(i>=2&&a.x!==h[i-2].x) mPrev=(a.y-h[i-2].y)/(a.x-h[i-2].x);
+  if(i<=n-2&&h[i+1].x!==b.x) mNext=(h[i+1].y-b.y)/(h[i+1].x-b.x);
+  var ta=(mPrev+m)/2, tb=(m+mNext)/2;
+  var t2=t*t, t3=t2*t;
+  return (2*t3-3*t2+1)*a.y + (t3-2*t2+t)*dx*ta + (-2*t3+3*t2)*b.y + (t3-t2)*dx*tb;
+}
+
 function planZoomBound(reqs,from,to,isMin){
-  var N=reqs.length-1, i, pts=[{x:0,y:0}];
+  var N=reqs.length-1, i, pts=[];
   var widening=isMin?(to<from-1e-9):(to>from+1e-9);
   var narrowing=isMin?(to>from+1e-9):(to<from-1e-9);
   if(!widening&&!narrowing) return null;                 // edge does not move
+  // MARGIN keeps the fitted path clear of the requirement between samples. Without it the path
+  // can fall a hair short for a single frame, the last-resort union takes over for exactly that
+  // frame, and the scale twitches.
+  var MARGIN=0.04;
   if(widening){
     var run=0;
     for(i=0;i<=N;i++){
       var need=reqs[i]?yProgressFor(from,to,isMin?reqs[i].min:reqs[i].max,isMin):0;
+      need=Math.min(1,need+MARGIN);
       if(i===N) need=1;
       if(need>run) run=need;
-      pts.push({x:i/N,y:run});
+      pts.push({x:i/N,y:i===0?0:run});      // the path always starts from the scale on screen
     }
     return hullOf(pts,true);
   }
@@ -247,16 +267,17 @@ function planZoomBound(reqs,from,to,isMin){
     var v=reqs[i]?(isMin?reqs[i].min:reqs[i].max):null;
     var t=1;
     if(v!==null) t=Math.max(0,Math.min(1,isMin?(v-from)/(to-from):(from-v)/(from-to)));
-    allow.push(i===N?1:t);
+    allow.push(i===N?1:Math.max(0,t-MARGIN));
   }
   for(i=N-1;i>=0;i--) if(allow[i+1]<allow[i]) allow[i]=allow[i+1];
+  allow[0]=0;                               // the path always starts from the scale on screen
   for(i=0;i<=N;i++) pts.push({x:i/N,y:allow[i]});
   return hullOf(pts,false);
 }
 
 function planZoomY(fromV,toV,yFrom,yTo){
   if(!yFrom||!yTo) return null;
-  var N=24, reqs=[];
+  var N=48, reqs=[];
   for(var i=0;i<=N;i++){
     var e=i/N;
     reqs.push(chartYBounds(fromV.min+(toV.min-fromV.min)*e, fromV.max+(toV.max-fromV.max)*e));
@@ -310,7 +331,8 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
   // so that opacity is already a hard 0 for at least one frame either side of a tick-mode
   // switch — otherwise the last frame before a switch still carries a few percent of opacity
   // and can flash the old tick set.
-  var OUT=120, ZOOM=300, HOLD=20, IN=180, t0=performance.now(), phase3=false;
+  // 2000ms in total, split in the same proportions as before.
+  var OUT=390, ZOOM=965, HOLD=65, IN=580, t0=performance.now(), phase3=false;
   (function step(now){
     var t=now-t0, done=false;
     if(t<OUT){
