@@ -10,7 +10,12 @@ import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch } fr
 // added, removed or reordered — an index would silently shift history onto another set.
 var db=null, uid=null, sync=function(){};
 var days=[], exercises=[], logs=[], deloads=[], loaded=false, loadError=false;
-var editMode=false;
+// View (default), Edit (structural changes) or Focus (one day, nothing else). Mode and the
+// focused day are remembered per viewer, so a reload mid-workout lands back in Focus.
+var MODES=['view','edit','focus'], MODE_LABEL={view:'View',edit:'Edit',focus:'Focus'};
+var MODE_KEY='wt-ex-mode', FOCUS_KEY='wt-ex-focus-day';
+var mode=loadPref(MODE_KEY,'view'), focusDay=loadPref(FOCUS_KEY,null);
+if(MODES.indexOf(mode)<0) mode='view';
 var showAll=new Set();
 // Which inline form is open, if any. Only one at a time keeps the tree calm.
 var ui={addFor:null,editLog:null,editDay:null,editEx:null,newExFor:null,editDeload:null};
@@ -29,7 +34,10 @@ var ICON={
   up:icon('M8 13V3M4 7l4-4 4 4'),
   down:icon('M8 3v10M4 9l4 4 4-4'),
   edit:icon('M10.5 2.5l3 3L6 13H3v-3z'),
-  del:icon('M4 4l8 8M12 4l-8 8')
+  del:icon('M4 4l8 8M12 4l-8 8'),
+  plus:icon('M8 3v10M3 8h10'),
+  check:icon('M3 8.5l3 3 7-7'),
+  cycle:icon('M13 3v3h-3M12.6 6A5 5 0 0 0 3.2 7M3 13v-3h3M3.4 10a5 5 0 0 0 9.4-1')
 };
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────
@@ -52,6 +60,10 @@ function setLogs(exId,sId){ return logs.filter(function(l){return l.exerciseId==
 function rangeText(s){ return s.min===s.max?String(s.min):s.min+'–'+s.max; }
 function repsState(reps,s){ return reps>s.max?'up':reps<s.min?'down':'in'; }
 function uniformRange(x){ return x.sets.every(function(s){return s.min===x.sets[0].min&&s.max===x.sets[0].max;}); }
+
+function isEdit(){ return mode==='edit'; }
+function loadPref(k,def){ try{ var v=localStorage.getItem(k); return v===null?def:v; }catch(e){ return def; } }
+function savePref(k,v){ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
 
 function loadOpen(){
   try{ return new Set(JSON.parse(localStorage.getItem(OPEN_KEY)||'[]')); }catch(e){ return new Set(); }
@@ -116,7 +128,8 @@ export async function loadExercises(userId){
 }
 
 export function clearExercises(){
-  uid=null; days=[]; exercises=[]; logs=[]; deloads=[]; loaded=false; editMode=false;
+  uid=null; days=[]; exercises=[]; logs=[]; deloads=[]; loaded=false;
+  mode='view'; focusDay=null; savePref(MODE_KEY,mode); savePref(FOCUS_KEY,null);
   resetForms(); ui.addFor=null;
   render();
 }
@@ -149,7 +162,7 @@ function dayHtml(d,i,arr){
         editActions('day',d.id,i,arr.length)+'</div>';
   var body=exs.length
     ? exs.map(function(x,j){return exHtml(x,j,exs.length);}).join('')
-    : '<p class="hist-empty">No exercises yet'+(editMode?'':'. Turn on Edit mode to add some')+'</p>';
+    : '<p class="hist-empty">No exercises yet'+(isEdit()?'':'. Switch to Edit mode to add some')+'</p>';
   body+=ui.newExFor===d.id
     ? '<div class="edit-only">'+exerciseForm(null,d.id)+'</div>'
     : textBtn('+ Add exercise','ex-new',d.id,'add-ex-btn edit-only');
@@ -258,8 +271,12 @@ function render(){
   var tree=document.getElementById('ex-tree');
   if(!tree) return;
   destroyCharts();
-  document.getElementById('exercises-view').classList.toggle('editing',editMode);
-  document.getElementById('edit-toggle').checked=editMode;
+  document.getElementById('exercises-view').classList.toggle('editing',isEdit());
+  // data-focus lets the stylesheet strip the shared chrome (section switch, user bar) too.
+  var app=document.querySelector('.app');
+  if(mode==='focus') app.setAttribute('data-focus',''); else app.removeAttribute('data-focus');
+  document.getElementById('focus-title').innerHTML='';
+  updateModeBtn();
   if(!uid){ tree.innerHTML=''; updateExpandBtn(); return; }
   if(!loaded){
     tree.innerHTML=loadError
@@ -267,12 +284,85 @@ function render(){
       : '<p class="empty">Loading…</p>';
     updateExpandBtn(); return;
   }
+  if(mode==='focus'){ renderFocus(tree); return; }
   var ds=sortedDays();
   tree.innerHTML=deloadHtml()+(ds.length
     ? ds.map(dayHtml).join('')
-    : '<p class="empty">'+(editMode?'Create your first training day above.':'No training days yet. Turn on <b>Edit mode</b> to create one.')+'</p>');
+    : '<p class="empty">'+(isEdit()?'Create your first training day above.':'No training days yet. Switch to <b>Edit mode</b> to create one.')+'</p>');
   Array.from(open).forEach(function(k){ if(k.indexOf('c:')===0) mountChart(k.slice(2)); });
   updateExpandBtn();
+}
+
+// ── MODES ─────────────────────────────────────────────────────────────────────
+function updateModeBtn(){
+  var b=document.getElementById('mode-btn'), next=MODES[(MODES.indexOf(mode)+1)%MODES.length];
+  b.dataset.mode=mode;
+  b.innerHTML='<span class="mode-dot"></span>'+MODE_LABEL[mode]+ICON.cycle;
+  b.title='Mode: '+MODE_LABEL[mode]+'. Click for '+MODE_LABEL[next]+'.';
+  b.setAttribute('aria-label',b.title);
+}
+function cycleMode(){
+  mode=MODES[(MODES.indexOf(mode)+1)%MODES.length];
+  savePref(MODE_KEY,mode);
+  resetForms(); ui.addFor=null;
+  document.getElementById('new-day-err').textContent='';
+  render();
+  if(mode==='focus') window.scrollTo(0,0);
+}
+
+// ── FOCUS ─────────────────────────────────────────────────────────────────────
+// One training day and nothing else: each set's range, its latest reps and weight, and a
+// button to log. No folds, no charts. The log form drops the date field and logs for today.
+function renderFocus(tree){
+  var title=document.getElementById('focus-title');
+  var d=days.find(function(o){return o.id===focusDay;});
+  if(!d){
+    if(focusDay){ focusDay=null; savePref(FOCUS_KEY,null); }
+    title.innerHTML='<span class="focus-day">Focus</span>';
+    var ds=sortedDays();
+    tree.innerHTML='<div class="focus-wrap"><div><p class="focus-prompt">Choose a day to train</p><div class="focus-days">'+
+      (ds.length?ds.map(function(o){
+        var n=dayExercises(o.id).length;
+        return '<button class="focus-pick" data-action="focus-pick" data-id="'+o.id+'"><span class="fp-name">'+esc(o.name)+'</span><span class="meta">'+n+' exercise'+(n===1?'':'s')+'</span></button>';
+      }).join(''):'<p class="empty">No training days yet. Switch to Edit mode to create one.</p>')+
+      '</div></div></div>';
+    return;
+  }
+  title.innerHTML='<span class="focus-day">'+esc(d.name)+'</span>'+textBtn('Change day','focus-change','','link-btn focus-change');
+  var exs=dayExercises(d.id);
+  tree.innerHTML='<div class="focus-wrap">'+(exs.length
+    ? exs.map(function(x){
+        return '<section class="focus-ex"><h2 class="focus-ex-name">'+esc(x.name)+'</h2>'+
+          x.sets.map(function(s,k){return focusSetHtml(x,s,k);}).join('')+'</section>';
+      }).join('')
+    : '<p class="empty">No exercises in this day yet.</p>')+'</div>';
+}
+
+function focusSetHtml(x,s,k){
+  var sk=x.id+':'+s.id, h=setLogs(x.id,s.id), last=h.length?h[h.length-1]:null;
+  var doneToday=!!last&&last.date===today(), lastHtml;
+  if(last){
+    var st=repsState(last.reps,s);
+    lastHtml='<span class="reps-cell '+st+'">'+(st==='up'?ICON.up:st==='down'?ICON.down:'')+last.reps+' <small>reps</small></span>'+
+      '<span class="focus-wt">'+fmtW(last.weight)+' <small>kg</small></span>'+
+      '<span class="focus-today" title="'+(doneToday?'Logged today':'Last: '+fmtShort(last.date))+'">'+(doneToday?ICON.check:fmtShort(last.date).slice(0,5))+'</span>';
+  } else lastHtml='<span class="focus-none">No entries yet</span>';
+  var html='<div class="focus-set'+(doneToday?' done':'')+'">'+
+    '<span class="set-dot" style="background:'+SET_COLORS[k]+'"></span>'+
+    '<div class="focus-set-label"><span class="set-name">Set '+(k+1)+'</span><span class="set-range">'+rangeText(s)+' reps</span></div>'+
+    '<div class="focus-last">'+lastHtml+'</div>'+
+    (ui.addFor===sk?'':'<button class="focus-add" data-action="log-open" data-id="'+sk+'" aria-label="Log set '+(k+1)+'" title="Log set '+(k+1)+'">'+ICON.plus+'</button>')+
+    '</div>';
+  if(ui.addFor===sk) html+=
+    '<div class="log-form focus-form" data-form="'+sk+'">'+
+      '<input type="hidden" name="date" value="'+today()+'">'+
+      '<div class="focus-form-grid">'+
+        '<label><span class="field-label">Reps</span><input type="number" name="reps" inputmode="numeric" min="0" max="'+MAX_REPS+'" step="1" value=""></label>'+
+        '<label><span class="field-label">Weight (kg)</span><input type="number" name="weight" inputmode="decimal" min="0" max="1000" step="0.25" value="'+lastWeight(x,k)+'"></label>'+
+      '</div>'+
+      '<div class="form-actions">'+textBtn('Save','log-save',sk,'btn primary sm')+textBtn('Cancel','cancel','','btn secondary sm')+'</div>'+
+      '<p class="err"></p></div>';
+  return html;
 }
 
 // ── EXPAND / COLLAPSE ─────────────────────────────────────────────────────────
@@ -576,8 +666,12 @@ function handle(t){
       var nd={id:newId('deloads'),date:dd,createdAt:Date.now()};
       deloads.push(nd); open.add('deload'); saveOpen(); render();
       persist(function(){return setDoc(ref('deloads',nd.id),{date:nd.date,createdAt:nd.createdAt});}); return;
+    case 'focus-pick':
+      focusDay=id; savePref(FOCUS_KEY,id); resetForms(); ui.addFor=null; render(); window.scrollTo(0,0); return;
+    case 'focus-change':
+      focusDay=null; savePref(FOCUS_KEY,null); ui.addFor=null; render(); return;
   }
-  if(!editMode) return;
+  if(!isEdit()) return;
   switch(a){
     case 'deload-edit':
       resetForms(); ui.addFor=null; ui.editDeload=id; render();
@@ -672,10 +766,11 @@ export function initExercises(opts){
   db=opts.db; sync=opts.sync;
   var view=document.getElementById('exercises-view');
   var tree=document.getElementById('ex-tree');
-  // One delegated listener for the whole tree; every control carries a data-action.
-  tree.addEventListener('click',function(e){
+  var focusTitle=document.getElementById('focus-title');
+  // One delegated listener for the tree and the Focus title ("Change day").
+  view.addEventListener('click',function(e){
     var t=e.target.closest('[data-action]');
-    if(t&&tree.contains(t)) handle(t);
+    if(t&&(tree.contains(t)||focusTitle.contains(t))) handle(t);
   });
   view.addEventListener('keydown',function(e){
     if(e.key!=='Enter'&&e.key!==' ') return;
@@ -692,11 +787,6 @@ export function initExercises(opts){
   });
   document.getElementById('btn-add-day').addEventListener('click',addDay);
   document.getElementById('btn-expand-all').addEventListener('click',expandAll);
-  document.getElementById('edit-toggle').addEventListener('change',function(){
-    editMode=this.checked;
-    if(!editMode) resetForms();
-    document.getElementById('new-day-err').textContent='';
-    render();
-  });
+  document.getElementById('mode-btn').addEventListener('click',cycleMode);
   render();
 }
