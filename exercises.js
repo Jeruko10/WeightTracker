@@ -330,12 +330,26 @@ function renderFocus(tree){
   }
   title.innerHTML='<span class="focus-day">'+esc(d.name)+'</span>'+textBtn('Change day','focus-change','','link-btn focus-change');
   var exs=dayExercises(d.id);
-  tree.innerHTML='<div class="focus-wrap">'+(exs.length
-    ? exs.map(function(x){
-        return '<section class="focus-ex"><h2 class="focus-ex-name">'+esc(x.name)+'</h2>'+
-          x.sets.map(function(s,k){return focusSetHtml(x,s,k);}).join('')+'</section>';
-      }).join('')
-    : '<p class="empty">No exercises in this day yet.</p>')+'</div>';
+  tree.innerHTML='<div class="focus-wrap">'+(exs.length?exs.map(focusExHtml).join(''):'<p class="empty">No exercises in this day yet.</p>')+'</div>';
+}
+
+// An exercise is finished for today once every set's latest log is dated today. Finished
+// exercises fold away on their own (the user can reopen them); pending ones always stay open.
+var focusExpanded=new Set(), justCompleted=null;
+function setDoneToday(x,s){ var h=setLogs(x.id,s.id); return h.length>0&&h[h.length-1].date===today(); }
+function exDoneToday(x){ return x.sets.length>0&&x.sets.every(function(s){return setDoneToday(x,s);}); }
+
+function focusExHtml(x){
+  var sets='<div class="focus-sets">'+x.sets.map(function(s,k){return focusSetHtml(x,s,k);}).join('')+'</div>';
+  var name='<span class="focus-ex-name">'+esc(x.name)+'</span>';
+  if(!exDoneToday(x))
+    return '<section class="focus-ex"><div class="focus-ex-head"><span></span>'+name+'<span></span></div>'+sets+'</section>';
+  // The exercise just finished renders open, then folds shut so the collapse is seen happening.
+  var isOpen=focusExpanded.has(x.id)||justCompleted===x.id;
+  return '<section class="focus-ex done foldable'+(isOpen?' open':'')+'" data-key="f:'+x.id+'">'+
+    '<button class="fold-head focus-ex-head" data-action="focus-fold" data-id="'+x.id+'" aria-expanded="'+isOpen+'">'+
+      '<span class="focus-ex-check" title="All sets done today">'+ICON.check+'</span>'+name+CHEV+'</button>'+
+    '<div class="fold"><div class="fold-inner">'+sets+'</div></div></section>';
 }
 
 function focusSetHtml(x,s,k){
@@ -656,9 +670,18 @@ function handle(t){
       focusIn('[data-form="'+id+'"] [name=reps]'); return;
     case 'log-save':
       var v=readLogForm(f); if(!v) return;
-      var parts=id.split(':');
+      var parts=id.split(':'), lx=exercises.find(function(o){return o.id===parts[0];});
+      var wasDone=!!lx&&exDoneToday(lx);
       l={id:newId('exerciseLogs'),exerciseId:parts[0],setId:parts[1],date:v.date,reps:v.reps,weight:v.weight,createdAt:Date.now()};
-      logs.push(l); ui.addFor=null; render();
+      logs.push(l); ui.addFor=null;
+      // In Focus, logging the last pending set finishes the exercise: show its ✓, then fold it.
+      if(mode==='focus'&&lx&&!wasDone&&exDoneToday(lx)){
+        focusExpanded.delete(lx.id); justCompleted=lx.id; render(); justCompleted=null;
+        setTimeout(function(){
+          var box=document.querySelector('#ex-tree [data-key="f:'+lx.id+'"]');
+          if(box&&!focusExpanded.has(lx.id)){ box.classList.remove('open'); box.querySelector('.focus-ex-head').setAttribute('aria-expanded','false'); }
+        },500);
+      } else render();
       persist(function(){return setDoc(ref('exerciseLogs',l.id),logData(l));}); return;
     // Marking a deload start is logging too, so it also works outside edit mode.
     case 'deload-add':
@@ -666,8 +689,13 @@ function handle(t){
       var nd={id:newId('deloads'),date:dd,createdAt:Date.now()};
       deloads.push(nd); open.add('deload'); saveOpen(); render();
       persist(function(){return setDoc(ref('deloads',nd.id),{date:nd.date,createdAt:nd.createdAt});}); return;
+    case 'focus-fold':
+      var fb=t.closest('.foldable'), fo=!fb.classList.contains('open');
+      fb.classList.toggle('open',fo); t.setAttribute('aria-expanded',String(fo));
+      if(fo) focusExpanded.add(id); else focusExpanded.delete(id);
+      return;
     case 'focus-pick':
-      focusDay=id; savePref(FOCUS_KEY,id); resetForms(); ui.addFor=null; render(); window.scrollTo(0,0); return;
+      focusDay=id; savePref(FOCUS_KEY,id); focusExpanded.clear(); resetForms(); ui.addFor=null; render(); window.scrollTo(0,0); return;
     case 'focus-change':
       focusDay=null; savePref(FOCUS_KEY,null); ui.addFor=null; render(); return;
   }
