@@ -118,6 +118,8 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 .user-name{font-size:13px;color:#8c9ea5}
 .signout-btn{background:none;border:none;color:#8c9ea5;font-size:12px;cursor:pointer;font-family:inherit;padding:4px 8px;border-radius:6px}
 .signout-btn:hover{background:#222c31;color:#e4eef0}
+.user-actions{display:flex;align-items:center;gap:6px}
+.user-actions .tool-btn{padding:6px 12px;font-size:12px}
 .sync-indicator{font-size:11px;padding:0 20px 8px;text-align:right;min-height:20px;color:#8c9ea5}
 .sync-indicator.saving{color:#f2c46d}
 .sync-indicator.saved{color:#5fd4c4}
@@ -137,7 +139,6 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 .ex-wrap{max-width:760px;margin:0 auto}
 #exercises-view:not(.editing) .edit-only{display:none!important}
 .ex-toolbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 0 12px;background:#0f1417}
-.tool-group{display:flex;gap:8px}
 .tool-btn.done{background:#123a36;color:#5fd4c4}
 .tool-btn{display:inline-flex;align-items:center;gap:6px;background:#222c31;border:none;border-radius:10px;color:#e4eef0;font-family:inherit;font-size:13px;font-weight:500;padding:8px 12px;cursor:pointer;transition:background .15s}
 .tool-btn:hover:not(:disabled){background:#2b383e}
@@ -186,6 +187,26 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 .ex-body{padding:0 12px 12px;display:flex;flex-direction:column;gap:10px}
 .add-ex-btn{width:100%;background:none;border:1.5px dashed #2b383e;border-radius:12px;color:#5fd4c4;padding:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s,border-color .15s}
 .add-ex-btn:hover{background:#223036;border-color:#5fd4c4}
+
+/* Deload card: amber, the triad's third colour, so it reads apart from the training days. */
+.deload-card{padding:0;border-left:3px solid #f2c46d}
+.deload-head{padding:14px 16px}
+.deload-card.open>.fold-head .chev{stroke:#f2c46d}
+.deload-card .day-name{color:#f2c46d}
+.deload-chip{font-size:11px;padding:4px 10px;background:#3b2e12;color:#f2c46d;flex-shrink:0}
+.deload-body{padding:0 16px 14px;display:flex;flex-direction:column;gap:10px}
+.deload-form{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.deload-form input{flex:1 1 140px;min-width:0;font-size:14px;padding:8px 10px}
+.deload-form .btn.secondary{margin-top:0}
+.deload-form .btn.primary{background:#f2c46d;color:#3b2e12}
+.deload-form .btn.primary:hover{background:#f7d796}
+.deload-form .err{flex-basis:100%;margin-top:0;min-height:0}
+.deload-form .err:empty{display:none}
+.deload-list{display:flex;flex-direction:column}
+.deload-row{display:flex;align-items:center;gap:12px;padding:6px 0;border-top:1px solid #223036;font-size:13px}
+.deload-row:first-child{border-top:none}
+.deload-date{font-weight:500}
+.deload-row .row-actions{margin-left:auto}
 
 .set{border-top:1px solid #223036;padding-top:10px}
 .set:first-child{border-top:none;padding-top:0}

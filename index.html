@@ -26,6 +26,16 @@
       <a class="mode-link active" href="#/bodyweight" data-mode="bodyweight">Bodyweight</a>
       <a class="mode-link" href="#/exercises" data-mode="exercises">Exercises</a>
     </nav>
+    <div class="user-bar">
+      <div class="user-info">
+        <div class="user-avatar" id="user-avatar"></div>
+        <span class="user-name" id="user-name"></span>
+      </div>
+      <div class="user-actions">
+        <button class="tool-btn" id="btn-export">Export</button>
+        <button class="signout-btn" id="btn-signout">Sign out</button>
+      </div>
+    </div>
     <div class="header">
       <div class="header-titles" id="header-titles" style="display:none">
         <span id="cycle-label"></span>
@@ -35,13 +45,6 @@
         <div class="tab" data-tab="log">Log</div>
         <div class="tab" data-tab="goal">Goal</div>
       </div>
-    </div>
-    <div class="user-bar">
-      <div class="user-info">
-        <div class="user-avatar" id="user-avatar"></div>
-        <span class="user-name" id="user-name"></span>
-      </div>
-      <button class="signout-btn" id="btn-signout">Sign out</button>
     </div>
     <div class="sync-indicator" id="sync-indicator"></div>
 
@@ -155,10 +158,7 @@
     <div id="exercises-view" style="display:none">
       <div class="ex-wrap">
         <div class="ex-toolbar">
-          <div class="tool-group">
-            <button class="tool-btn" id="btn-expand-all" disabled>Expand all</button>
-            <button class="tool-btn" id="btn-export" disabled>Export</button>
-          </div>
+          <button class="tool-btn" id="btn-expand-all" disabled>Expand all</button>
           <label class="edit-switch">
             <span>Edit mode</span>
             <input type="checkbox" id="edit-toggle">

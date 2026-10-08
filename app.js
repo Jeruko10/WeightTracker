@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { initExercises, loadExercises, clearExercises } from './exercises.js';
+import { initExercises, loadExercises, clearExercises, exportSections } from './exercises.js';
 
 var FB = initializeApp({
   apiKey:"AIzaSyCyLBXgZeYsTW8s7IiGr5foJzLmzo3D9z4",
@@ -32,6 +32,9 @@ function weekKey(s){
   var wk=Math.ceil(((dt-jan)/864e5+jan.getUTCDay()+1)/7);
   return dt.getUTCFullYear()+'-W'+(wk<10?'0':'')+wk;
 }
+// Two conditions gate the trend stats: enough calendar coverage for two 7-day windows,
+// AND enough real logs that those windows aren't mostly guessed via interpolation.
+var MIN_ENTRIES=6, MIN_SPAN_DAYS=13;
 function sync(msg,cls){
   var el=document.getElementById('sync-indicator');
   el.textContent=msg; el.className='sync-indicator '+(cls||'');
@@ -445,6 +448,77 @@ function route(){
 window.addEventListener('hashchange',route);
 route();
 
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+// One plain-text snapshot of everything, copied to the clipboard from either section:
+// the training log first, then the deload cycle, then bodyweight (only when there is any).
+var EXPORT_WEIGH_INS=10, exportTimer=null;
+function exportRule(title){ var r=new Array(Math.max(title.length,24)+1).join('='); return [r,title,r,'']; }
+
+// Same averages and the same data threshold as the Overview stats, so the two always agree.
+function exportBodyweight(){
+  var n=entries.length, out=[];
+  if(!n&&!(goal&&goal.start&&goal.date)) return null;
+  if(n){
+    var last=entries[n-1], first=entries[0].date, series=buildDailySeries();
+    var curAvg=windowAvg(series,last.date,7,first);
+    var span=Math.round((new Date(last.date)-new Date(first))/864e5);
+    var prevAvg=(n>=MIN_ENTRIES&&span>=MIN_SPAN_DAYS)?windowAvg(series,addDays(last.date,-7),7,first):null;
+    out.push('Latest weigh-in       '+last.weight.toFixed(1)+' kg  ('+fmt(last.date)+')');
+    out.push('7-day average         '+curAvg.toFixed(1)+' kg');
+    if(prevAvg!==null){
+      var d=curAvg-prevAvg;
+      out.push('Previous 7 days       '+prevAvg.toFixed(1)+' kg  ('+(d>=0?'+':'')+d.toFixed(1)+' kg)');
+    }
+  }
+  if(goal&&goal.start&&goal.date){
+    out.push('Goal                  '+(goal.isBulk?'Bulk':'Cut')+' to '+Number(goal.weight).toFixed(1)+' kg by '+fmt(goal.date)+
+      (goal.pace?'  ('+(goal.isBulk?'+':'-')+goal.pace+' kg/wk)':''));
+  }
+  if(n){
+    out.push('','Last '+Math.min(n,EXPORT_WEIGH_INS)+' weigh-ins, newest first');
+    entries.slice(-EXPORT_WEIGH_INS).reverse().forEach(function(e){
+      var w=e.weight.toFixed(1); while(w.length<6) w=' '+w;
+      out.push('    '+fmt(e.date)+'   '+w+' kg');
+    });
+  }
+  return out;
+}
+
+function buildExport(){
+  var ex=exportSections();
+  var out=['TRAINING LOG','Exported '+fmt(today()),'Last '+ex.entries+' entries per set, newest first. ↑ above target range, ↓ below.',''];
+  out=out.concat(ex.training,[''],exportRule('DELOAD'),ex.deload);
+  var bw=exportBodyweight();
+  if(bw) out=out.concat([''],exportRule('BODYWEIGHT'),bw);
+  return out.join('\n').replace(/\n{3,}/g,'\n\n').replace(/\s+$/,'')+'\n';
+}
+
+// Clipboard API where allowed; the hidden-textarea fallback covers older browsers and
+// non-secure contexts (plain http) where navigator.clipboard is unavailable.
+function copyText(text){
+  if(navigator.clipboard&&window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise(function(resolve,reject){
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    ta.remove();
+    if(ok) resolve(); else reject(new Error('copy failed'));
+  });
+}
+document.getElementById('btn-export').addEventListener('click',function(){
+  var b=this;
+  copyText(buildExport()).then(function(){
+    b.textContent='Copied to clipboard!'; b.classList.add('done');
+  },function(e){
+    console.error(e); b.textContent='Couldn\'t copy';
+  }).then(function(){
+    clearTimeout(exportTimer);
+    exportTimer=setTimeout(function(){ b.textContent='Export'; b.classList.remove('done'); },2000);
+  });
+});
+
 // ── FIREBASE LOAD ─────────────────────────────────────────────────────────────
 async function loadAll(){
   sync('Loading…');
@@ -763,9 +837,6 @@ function render(){
   // Current average — mean of the 7 calendar days ending on the last logged date (gaps interpolated above)
   var curAvg=n?windowAvg(series,lastDate,7,firstDate):null;
   var dataSpanDays=n?Math.round((new Date(lastDate)-new Date(firstDate))/864e5):0;
-  // Two conditions gate the trend stats: enough calendar coverage for two 7-day windows,
-  // AND enough real logs that those windows aren't mostly guessed via interpolation.
-  var MIN_ENTRIES=6, MIN_SPAN_DAYS=13;
   var enoughData=n>=MIN_ENTRIES&&dataSpanDays>=MIN_SPAN_DAYS;
 
   // Cycle label — its row is hidden entirely without a goal, so it leaves no empty gap.

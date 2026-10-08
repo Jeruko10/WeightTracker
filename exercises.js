@@ -5,14 +5,15 @@ import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch } fr
 //   trainingDays/{id}  {name, order, createdAt}
 //   exercises/{id}     {dayId, name, order, sets:[{id,min,max}]}
 //   exerciseLogs/{id}  {exerciseId, setId, date, reps, weight, createdAt}
+//   deloads/{id}       {date, createdAt}   (each doc marks the day a deload starts)
 // Sets carry their own stable id so a log stays attached to the right set when sets are
 // added, removed or reordered — an index would silently shift history onto another set.
 var db=null, uid=null, sync=function(){};
-var days=[], exercises=[], logs=[], loaded=false, loadError=false;
+var days=[], exercises=[], logs=[], deloads=[], loaded=false, loadError=false;
 var editMode=false;
 var showAll=new Set();
 // Which inline form is open, if any. Only one at a time keeps the tree calm.
-var ui={addFor:null,editLog:null,editDay:null,editEx:null,newExFor:null};
+var ui={addFor:null,editLog:null,editDay:null,editEx:null,newExFor:null,editDeload:null};
 var charts={};
 var OPEN_KEY='wt-ex-open';
 var open=loadOpen();
@@ -34,6 +35,9 @@ var ICON={
 // ── HELPERS ───────────────────────────────────────────────────────────────────
 function today()  { var d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); }
 function fmtShort(s){ var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0].slice(2); }
+function fmtLong(s){ var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function daysBetween(a,b){ return Math.round((new Date(b)-new Date(a))/864e5); }
+function weeksText(n){ var w=n/7; return (n%7===0?String(w):w.toFixed(1))+' week'+(w===1?'':'s'); }
 function fmtW(w)  { return String(Math.round((w||0)*100)/100); }
 function esc(s)   { return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];}); }
 function col(n)   { return collection(db,'users',uid,n); }
@@ -96,9 +100,9 @@ function logData(l){ return {exerciseId:l.exerciseId,setId:l.setId,date:l.date,r
 export async function loadExercises(userId){
   uid=userId; loaded=false; loadError=false; render();
   try{
-    var r=await Promise.all([getDocs(col('trainingDays')),getDocs(col('exercises')),getDocs(col('exerciseLogs'))]);
+    var r=await Promise.all([getDocs(col('trainingDays')),getDocs(col('exercises')),getDocs(col('exerciseLogs')),getDocs(col('deloads'))]);
     var rows=function(s){ return s.docs.map(function(d){return Object.assign({id:d.id},d.data());}); };
-    days=rows(r[0]); exercises=rows(r[1]); logs=rows(r[2]);
+    days=rows(r[0]); exercises=rows(r[1]); logs=rows(r[2]); deloads=rows(r[3]);
     loaded=true;
     // Forget remembered folds for things deleted on another device.
     var live=new Set(foldKeys().concat(exercises.map(function(x){return 'c:'+x.id;})));
@@ -112,7 +116,7 @@ export async function loadExercises(userId){
 }
 
 export function clearExercises(){
-  uid=null; days=[]; exercises=[]; logs=[]; loaded=false; editMode=false;
+  uid=null; days=[]; exercises=[]; logs=[]; deloads=[]; loaded=false; editMode=false;
   resetForms(); ui.addFor=null;
   render();
 }
@@ -264,16 +268,16 @@ function render(){
     updateExpandBtn(); return;
   }
   var ds=sortedDays();
-  tree.innerHTML=ds.length
+  tree.innerHTML=deloadHtml()+(ds.length
     ? ds.map(dayHtml).join('')
-    : '<p class="empty">'+(editMode?'Create your first training day above.':'No training days yet. Turn on <b>Edit mode</b> to create one.')+'</p>';
+    : '<p class="empty">'+(editMode?'Create your first training day above.':'No training days yet. Turn on <b>Edit mode</b> to create one.')+'</p>');
   Array.from(open).forEach(function(k){ if(k.indexOf('c:')===0) mountChart(k.slice(2)); });
   updateExpandBtn();
 }
 
 // ── EXPAND / COLLAPSE ─────────────────────────────────────────────────────────
 function foldKeys(){
-  return days.map(function(d){return 'd:'+d.id;}).concat(exercises.map(function(x){return 'e:'+x.id;}));
+  return ['deload'].concat(days.map(function(d){return 'd:'+d.id;})).concat(exercises.map(function(x){return 'e:'+x.id;}));
 }
 function allExpanded(){
   var k=foldKeys();
@@ -282,24 +286,67 @@ function allExpanded(){
 function updateExpandBtn(){
   var b=document.getElementById('btn-expand-all');
   var all=allExpanded();
-  b.disabled=!loaded||!days.length;
+  b.disabled=!loaded;
   b.innerHTML='<svg class="chev'+(all?' up':'')+'" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>'+(all?'Collapse all':'Expand all');
-  document.getElementById('btn-export').disabled=!loaded||!days.length;
+}
+
+// ── DELOAD ────────────────────────────────────────────────────────────────────
+// A deload is recorded as the date it starts. The current cycle runs from the latest start on
+// or before today; a start in the future is shown as planned rather than active.
+function deloadsDesc(){ return deloads.slice().sort(function(a,b){return b.date.localeCompare(a.date)||(b.createdAt||0)-(a.createdAt||0);}); }
+function currentDeload(){ var t=today(); return deloadsDesc().find(function(d){return d.date<=t;})||null; }
+function nextDeload(){ var t=today(), up=deloadsDesc().filter(function(d){return d.date>t;}); return up.length?up[up.length-1]:null; }
+function previousDeload(d){ var asc=deloadsDesc().reverse(), i=asc.indexOf(d); return i>0?asc[i-1]:null; }
+// Day 0–6 after a start is the deload week itself; from day 7 on, training weeks are counted.
+function cyclePhase(d){
+  var n=daysBetween(d.date,today());
+  return n<7?{deloadWeek:true,text:'Deload week, day '+(n+1)}:{deloadWeek:false,text:'Week '+(Math.floor((n-7)/7)+1)+' after deload'};
+}
+
+function deloadHtml(){
+  var key='deload', cur=currentDeload(), next=nextDeload(), list=deloadsDesc();
+  var phase=cur?cyclePhase(cur):null;
+  var summary=cur?phase.text+' · started '+fmtShort(cur.date):next?'Next deload starts '+fmtShort(next.date):'No deload recorded yet';
+  var rows=list.map(function(d){
+    if(ui.editDeload===d.id)
+      return '<div class="deload-form" data-form="deload:'+d.id+'">'+
+        '<input type="date" name="date" value="'+d.date+'" aria-label="Deload start date">'+
+        textBtn('Save','deloadedit-save',d.id,'btn primary sm')+textBtn('Cancel','cancel','','btn secondary sm')+
+        '<p class="err"></p></div>';
+    var prev=previousDeload(d);
+    return '<div class="deload-row">'+
+      '<span class="deload-date">'+fmtLong(d.date)+'</span>'+
+      '<span class="meta">'+(d.date>today()?'Planned':prev?weeksText(daysBetween(prev.date,d.date))+' after previous':'First recorded')+'</span>'+
+      '<span class="row-actions edit-only">'+iconBtn(ICON.edit,'deload-edit',d.id,'Edit deload')+iconBtn(ICON.del,'deload-del',d.id,'Delete deload',false,true)+'</span>'+
+      '</div>';
+  }).join('');
+  return '<div class="card deload-card '+foldClass(key)+'" data-key="'+key+'">'+
+    '<div class="fold-head deload-head" data-action="toggle" role="button" tabindex="0">'+CHEV+
+      '<div class="ex-titles"><span class="day-name">Deload</span><span class="meta">'+summary+'</span></div>'+
+      (phase&&phase.deloadWeek?'<span class="chip deload-chip">Deload week</span>':'')+'</div>'+
+    '<div class="fold"><div class="fold-inner"><div class="deload-body">'+
+      '<div class="deload-form" data-form="deload-new">'+
+        '<input type="date" name="date" value="'+today()+'" aria-label="Deload start date">'+
+        textBtn('Mark deload start','deload-add','','btn primary sm')+
+        '<p class="err"></p></div>'+
+      (rows?'<div class="deload-list">'+rows+'</div>':'')+
+    '</div></div></div></div>';
 }
 
 // ── EXPORT ────────────────────────────────────────────────────────────────────
-// Plain-text snapshot of the whole routine: every day, exercise and set, with each set's
-// last EXPORT_ENTRIES logs newest first. Columns are padded so it reads cleanly in any
-// monospaced viewer, and the arrows match the app's above/below-range marks.
-var EXPORT_ENTRIES=10, exportTimer=null;
-function fmtLong(s){ var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+// Plain-text sections for the clipboard export, which app.js assembles together with the
+// bodyweight summary. Columns are padded so they line up in any monospaced viewer, and the
+// arrows match the app's above/below-range marks.
+var EXPORT_ENTRIES=10;
 function pad(s,n){ s=String(s); while(s.length<n) s+=' '; return s; }
 function padL(s,n){ s=String(s); while(s.length<n) s=' '+s; return s; }
 function asciiRange(s){ return s.min===s.max?String(s.min):s.min+'-'+s.max; }
 
-function buildExport(){
-  var out=['TRAINING LOG','Exported '+fmtLong(today()),'Last '+EXPORT_ENTRIES+' entries per set, newest first. ↑ above target range, ↓ below.',''];
-  sortedDays().forEach(function(d){
+function exportTraining(){
+  if(!loaded) return ['(exercises are still loading)'];
+  var out=[], ds=sortedDays();
+  if(!ds.length) return ['(no training days yet)'];
+  ds.forEach(function(d){
     var rule=new Array(Math.max(d.name.length,24)+1).join('=');
     out.push(rule,d.name.toUpperCase(),rule,'');
     var exs=dayExercises(d.id);
@@ -318,34 +365,28 @@ function buildExport(){
       out.push('');
     });
   });
-  return out.join('\n').replace(/\n+$/,'')+'\n';
+  return out;
 }
 
-// Clipboard API where allowed; the hidden-textarea fallback covers older browsers and
-// non-secure contexts (plain http) where navigator.clipboard is unavailable.
-function copyText(text){
-  if(navigator.clipboard&&window.isSecureContext) return navigator.clipboard.writeText(text);
-  return new Promise(function(resolve,reject){
-    var ta=document.createElement('textarea');
-    ta.value=text; ta.setAttribute('readonly','');
-    ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
-    document.body.appendChild(ta); ta.select();
-    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
-    ta.remove();
-    if(ok) resolve(); else reject(new Error('copy failed'));
-  });
+function exportDeload(){
+  if(!loaded) return ['(still loading)'];
+  var cur=currentDeload(), next=nextDeload();
+  if(!cur&&!next) return ['No deload recorded.'];
+  var out=[];
+  if(cur){
+    var n=daysBetween(cur.date,today()), prev=previousDeload(cur);
+    out.push('Last deload started   '+fmtLong(cur.date)+'  ('+n+' day'+(n===1?'':'s')+' ago)');
+    out.push('Current status        '+cyclePhase(cur).text);
+    if(prev) out.push('Previous deload       '+fmtLong(prev.date)+'  ('+weeksText(daysBetween(prev.date,cur.date))+' between deloads)');
+  }
+  if(next) out.push('Next deload planned   '+fmtLong(next.date));
+  return out;
 }
-function exportRoutine(){
-  var b=document.getElementById('btn-export');
-  copyText(buildExport()).then(function(){
-    b.textContent='Copied to clipboard!'; b.classList.add('done');
-  },function(e){
-    console.error(e); b.textContent='Couldn\'t copy';
-  }).then(function(){
-    clearTimeout(exportTimer);
-    exportTimer=setTimeout(function(){ b.textContent='Export'; b.classList.remove('done'); },2000);
-  });
+
+export function exportSections(){
+  return {training:exportTraining(),deload:exportDeload(),entries:EXPORT_ENTRIES};
 }
+
 // Toggles classes on the existing nodes instead of re-rendering, so the CSS transition plays.
 function setOpen(box,isOpen){
   var key=box.dataset.key;
@@ -426,7 +467,7 @@ function mountChart(exId){
 }
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
-function resetForms(){ ui.editLog=null; ui.editDay=null; ui.editEx=null; ui.newExFor=null; }
+function resetForms(){ ui.editLog=null; ui.editDay=null; ui.editEx=null; ui.newExFor=null; ui.editDeload=null; }
 function focusIn(sel){ var el=document.querySelector(sel); if(el){ el.focus(); if(el.select&&el.type==='text') el.select(); } }
 function fail(form,msg){ form.querySelector('.err').textContent=msg; return null; }
 
@@ -458,6 +499,14 @@ function readLogForm(f){
   if(rv===''||!Number.isInteger(reps)||reps<0||reps>MAX_REPS) return fail(f,'Reps must be a whole number from 0 to '+MAX_REPS+'.');
   if(!isFinite(weight)||weight<0||weight>1000) return fail(f,'Weight must be between 0 and 1000 kg.');
   return {date:date,reps:reps,weight:Math.round(weight*100)/100};
+}
+
+// selfId: the deload being edited, so keeping its own date doesn't count as a duplicate.
+function readDeloadDate(f,selfId){
+  var date=f.querySelector('[name=date]').value;
+  if(!date) return fail(f,'Pick a date.');
+  if(deloads.some(function(o){return o.date===date&&o.id!==selfId;})) return fail(f,'That date is already marked as a deload start.');
+  return date;
 }
 
 function readRangeRows(f){
@@ -521,9 +570,26 @@ function handle(t){
       l={id:newId('exerciseLogs'),exerciseId:parts[0],setId:parts[1],date:v.date,reps:v.reps,weight:v.weight,createdAt:Date.now()};
       logs.push(l); ui.addFor=null; render();
       persist(function(){return setDoc(ref('exerciseLogs',l.id),logData(l));}); return;
+    // Marking a deload start is logging too, so it also works outside edit mode.
+    case 'deload-add':
+      var dd=readDeloadDate(f,null); if(!dd) return;
+      var nd={id:newId('deloads'),date:dd,createdAt:Date.now()};
+      deloads.push(nd); open.add('deload'); saveOpen(); render();
+      persist(function(){return setDoc(ref('deloads',nd.id),{date:nd.date,createdAt:nd.createdAt});}); return;
   }
   if(!editMode) return;
   switch(a){
+    case 'deload-edit':
+      resetForms(); ui.addFor=null; ui.editDeload=id; render();
+      focusIn('[data-form="deload:'+id+'"] [name=date]'); return;
+    case 'deloadedit-save':
+      var de=deloads.find(function(o){return o.id===id;}), ed=readDeloadDate(f,id); if(!de||!ed) return;
+      de.date=ed; ui.editDeload=null; render();
+      persist(function(){return updateDoc(ref('deloads',id),{date:ed});}); return;
+    case 'deload-del':
+      if(!confirmed(t,'Delete?')) return;
+      deloads=deloads.filter(function(o){return o.id!==id;}); render();
+      persist(function(){return deleteDoc(ref('deloads',id));}); return;
     case 'log-edit':
       resetForms(); ui.addFor=null; ui.editLog=id; render();
       focusIn('[data-form="'+id+'"] [name=reps]'); return;
@@ -626,7 +692,6 @@ export function initExercises(opts){
   });
   document.getElementById('btn-add-day').addEventListener('click',addDay);
   document.getElementById('btn-expand-all').addEventListener('click',expandAll);
-  document.getElementById('btn-export').addEventListener('click',exportRoutine);
   document.getElementById('edit-toggle').addEventListener('change',function(){
     editMode=this.checked;
     if(!editMode) resetForms();
