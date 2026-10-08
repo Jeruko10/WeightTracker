@@ -18,9 +18,9 @@ var OPEN_KEY='wt-ex-open';
 var open=loadOpen();
 
 var MAX_SETS=10, MIN_SETS=1, MIN_REPS=1, MAX_REPS=500, HISTORY_PREVIEW=5, CHART_ENTRIES=10;
-// One colour per set, used for the set's dot, its chart line and its legend entry. Set 1 takes
-// the accent; the rest avoid reds so no line reads as the "below range" colour.
-var SET_COLORS=['#ffb5b5','#6fcf97','#f2c94c','#56ccf2','#f2994a','#b39ddb','#4fd1c5','#a3e635','#8fa8ff','#efe0e0'];
+// One colour per set, used for the set's dot, its chart line and its legend entry. The first
+// three are the app's triad; none is red, so no line reads as the "below range" colour.
+var SET_COLORS=['#5fd4c4','#c89bf0','#f2c46d','#7cb8ff','#9be7a5','#f5a97f','#a0a4ff','#cde77f','#7fe3f0','#dde6ea'];
 var CHEV='<svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>';
 // Inline SVG rather than ↑ ✎ ✕ characters, which some platforms swap for coloured emoji.
 function icon(d){ return '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="'+d+'"/></svg>'; }
@@ -339,9 +339,9 @@ function mountChart(exId){
     var a=c.chartArea, y=c.scales.y, ctx=c.ctx;
     var top=Math.max(a.top,y.getPixelForValue(band.max)), bot=Math.min(a.bottom,y.getPixelForValue(band.min));
     if(bot<=top) return;
-    ctx.save(); ctx.fillStyle='rgba(111,207,151,0.08)'; ctx.fillRect(a.left,top,a.right-a.left,bot-top); ctx.restore();
+    ctx.save(); ctx.fillStyle='rgba(95,212,196,0.08)'; ctx.fillRect(a.left,top,a.right-a.left,bot-top); ctx.restore();
   }};
-  var gc='rgba(255,255,255,0.06)', tc='#a39191';
+  var gc='rgba(255,255,255,0.06)', tc='#8c9ea5';
   charts[exId]=new Chart(canvas,{
     type:'line',
     data:{labels:Array.from(dates).sort(),datasets:datasets},

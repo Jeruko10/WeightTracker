@@ -123,7 +123,7 @@ function chartYBounds(minX,maxX){
 //     animating makes them evenly spaced fractions of the window, which slide continuously.
 //   • Which labels fit also changes frame to frame, so text pops in and out. Rather than fight
 //     that, the labels and grid fade out at the start and back in once the zoom has settled.
-var CHART_TICK_RGB='163,145,145', CHART_GRID_ALPHA=0.06;
+var CHART_TICK_RGB='140,158,165', CHART_GRID_ALPHA=0.06;
 // Fixed axis sizes — see the afterFit hooks on the scales. Wide/tall enough for the longest
 // label either axis can produce ("100.0" for a three-digit weight, "17/08" unrotated).
 // CHART_X_PAD is the side room the x axis keeps so an end date label is never clipped: half a
@@ -540,7 +540,7 @@ document.getElementById('btn-add').addEventListener('click',async function(){
 // ── ENTRY ACTIONS ─────────────────────────────────────────────────────────────
 function deleteEntry(entry,row,btn){
   if(row.dataset.confirm!=='1'){
-    row.dataset.confirm='1'; btn.textContent='Confirm'; btn.style.background='#3a1a1a'; btn.style.color='#eb5757';
+    row.dataset.confirm='1'; btn.textContent='Confirm'; btn.style.background='#3d1c20'; btn.style.color='#ff7b7b';
     setTimeout(function(){if(row.dataset.confirm==='1'){row.dataset.confirm='0';btn.textContent='Delete';btn.style.background='';btn.style.color='';}},3000);
     return;
   }
@@ -555,7 +555,7 @@ function editEntry(date){
 function confirmEdit(entry){
   var inp=document.getElementById('ei-'+entry.date);
   var w=parseFloat(inp.value);
-  if(!w||w<30||w>250){inp.style.borderColor='#eb5757';return;}
+  if(!w||w<30||w>250){inp.style.borderColor='#ff7b7b';return;}
   entry.weight=w; render(); fbUpdateEntry(entry);
 }
 function cancelEdit(date){
@@ -571,11 +571,11 @@ function renderHistory(){
   [].concat(entries).reverse().forEach(function(e){
     var isToday=e.date===today();
     var row=document.createElement('div'); row.className='entry'; row.dataset.date=e.date;
-    if(isToday){row.style.background='#2b3a2b';row.style.borderRadius='10px';}
+    if(isToday){row.style.background='#15322f';row.style.borderRadius='10px';}
     var ds=document.createElement('span'); ds.className='edate'; ds.textContent=fmt(e.date);
     if(isToday){
       var b=document.createElement('span'); b.textContent='Today';
-      b.style.cssText='font-size:10px;background:#3f3434;color:#6fcf97;padding:2px 6px;border-radius:6px;margin-left:6px';
+      b.style.cssText='font-size:10px;background:#222c31;color:#5fd4c4;padding:2px 6px;border-radius:6px;margin-left:6px';
       ds.appendChild(b);
     }
     var ws=document.createElement('span'); ws.className='ewt'; ws.textContent=e.weight.toFixed(1)+' kg';
@@ -640,7 +640,7 @@ document.getElementById('btn-save-goal').addEventListener('click',async function
   if(endDate<=today()){err.textContent='Calculated end date is in the past. Adjust pace or start date.';return;}
   if(goal&&btn.dataset.confirm!=='1'){
     btn.dataset.confirm='1'; btn.textContent='Tap again to confirm';
-    btn.style.background='#f2c94c'; btn.style.color='#1f1a1a';
+    btn.style.background='#f2c46d'; btn.style.color='#0f1417';
     setTimeout(function(){btn.dataset.confirm='0';btn.textContent='Save goal';btn.style.background='';btn.style.color='';},3000);
     return;
   }
@@ -660,7 +660,7 @@ document.getElementById('btn-clear-goal').addEventListener('click',async functio
   var btn=document.getElementById('btn-clear-goal');
   if(btn.dataset.confirm!=='1'){
     btn.dataset.confirm='1'; btn.textContent='Tap again to confirm removal';
-    btn.style.background='#3a1a1a'; btn.style.color='#eb5757';
+    btn.style.background='#3d1c20'; btn.style.color='#ff7b7b';
     setTimeout(function(){btn.dataset.confirm='0';btn.textContent='Remove goal';btn.style.background='';btn.style.color='';},3000);
     return;
   }
@@ -715,12 +715,12 @@ function renderGoalTab(){
       var isBulk=g.isBulk!==undefined?g.isBulk:false;
       var div=document.createElement('div'); div.className='past-goal';
       var info=document.createElement('div');
-      info.innerHTML='<span style="font-size:12px;font-weight:500;color:'+(isBulk?'#6fcf97':'#eb5757')+'">'+(isBulk?'Bulk':'Cut')+'</span><span style="font-size:13px;color:#a39191;margin-left:8px">'+fmt(g.start)+' → '+fmt(g.date)+'</span>';
+      info.innerHTML='<span style="font-size:12px;font-weight:500;color:'+(isBulk?'#5fd4c4':'#ff7b7b')+'">'+(isBulk?'Bulk':'Cut')+'</span><span style="font-size:13px;color:#8c9ea5;margin-left:8px">'+fmt(g.start)+' → '+fmt(g.date)+'</span>';
       var right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:10px';
       // Prefer the weight stored on the goal itself; for cycles archived before that field
       // existed, fall back to the entry logged around when the cycle started.
       var ghStartW=(g.startWeight!==undefined&&g.startWeight!==null)?g.startWeight:(function(){var e=entries.find(function(e){return e.date>=g.start;});return e?e.weight:null;})();
-      var ws=document.createElement('span'); ws.style.cssText='font-size:14px;font-weight:500;color:#efe0e0';
+      var ws=document.createElement('span'); ws.style.cssText='font-size:14px;font-weight:500;color:#e4eef0';
       ws.textContent=ghStartW!==null?ghStartW.toFixed(1)+' → '+g.weight.toFixed(1)+' kg':g.weight.toFixed(1)+' kg';
       var db=document.createElement('button'); db.className='ebtn'; db.textContent='Delete';
       (function(gh,row,btn){db.addEventListener('click',function(){deleteGH(gh,row,btn);});})(g,div,db);
@@ -741,12 +741,12 @@ function renderGoalSummary(){
   var totW=Math.round((new Date(goal.date)-new Date(goal.start))/(7*864e5));
   document.getElementById('goal-summary-text').innerHTML=
     '<b>'+goal.weight+' kg</b> by <b>'+fmt(goal.date)+'</b><br>'+
-    '<span style="color:#a39191;font-size:13px">Started '+fmt(goal.start)+' · '+totW+' weeks · target pace: <b>'+(goal.isBulk?'+':'-')+goal.pace+' kg/wk</b>'+(cur?'<br>Currently need: <b>'+sign+kpwN+' kg/wk</b>':'')+'</span>';
+    '<span style="color:#8c9ea5;font-size:13px">Started '+fmt(goal.start)+' · '+totW+' weeks · target pace: <b>'+(goal.isBulk?'+':'-')+goal.pace+' kg/wk</b>'+(cur?'<br>Currently need: <b>'+sign+kpwN+' kg/wk</b>':'')+'</span>';
 }
 
 async function deleteGH(g,row,btn){
   if(row.dataset.confirm!=='1'){
-    row.dataset.confirm='1'; btn.textContent='Confirm'; btn.style.background='#3a1a1a'; btn.style.color='#eb5757';
+    row.dataset.confirm='1'; btn.textContent='Confirm'; btn.style.background='#3d1c20'; btn.style.color='#ff7b7b';
     setTimeout(function(){if(row.dataset.confirm==='1'){row.dataset.confirm='0';btn.textContent='Delete';btn.style.background='';btn.style.color='';}},3000);
     return;
   }
@@ -774,7 +774,7 @@ function render(){
     var cycleIsBulk=goal.isBulk!==undefined?goal.isBulk:true;
     cl.style.display=''; ht.style.display='';
     cl.textContent=cycleIsBulk?'BULKING CYCLE':'CUTTING CYCLE';
-    cl.style.color=cycleIsBulk?'#6fcf97':'#eb5757';
+    cl.style.color=cycleIsBulk?'#5fd4c4':'#ff7b7b';
   } else {cl.style.display='none';ht.style.display='none';}
 
   // Stats
@@ -786,7 +786,7 @@ function render(){
       document.getElementById('s-avg').textContent=prevAvg.toFixed(1)+' kg';
       var diff=curAvg-prevAvg;
       re.textContent=(diff>=0?'+':'')+diff.toFixed(1)+' kg';
-      re.style.color=diff>0?'#6fcf97':diff<0?'#eb5757':'#efe0e0';
+      re.style.color=diff>0?'#5fd4c4':diff<0?'#ff7b7b':'#e4eef0';
     } else {
       document.getElementById('s-avg').textContent='-';
       re.textContent='-';
@@ -978,9 +978,9 @@ function render(){
   var datasets=[{
     label:'Weight',
     data:entries.map(function(e){return {x:dayIdx(e.date),y:e.weight};}),
-    borderColor:'#ffb5b5',backgroundColor:'rgba(255,181,181,0.08)',
+    borderColor:'#5fd4c4',backgroundColor:'rgba(95,212,196,0.10)',
     borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointHitRadius:pointsVisible?HIT_R:0,
-    pointBackgroundColor:'#ffb5b5',tension:0,fill:true
+    pointBackgroundColor:'#5fd4c4',tension:0,fill:true
   }];
   // One dashed segment per goal cycle — the active one and every archived one — so the older
   // stretches of the weight line can be read against the plan they were actually run against,
@@ -1011,7 +1011,7 @@ function render(){
   // A smaller hit radius than the weight line's, so a reading near a logged weight still
   // resolves to the weight rather than to the plan drawn beside it.
   function idealDataset(data){
-    return {label:'Ideal pace',data:data,borderColor:'#6fcf97',borderWidth:1.5,borderDash:[6,3],
+    return {label:'Ideal pace',data:data,borderColor:'#f2c46d',borderWidth:1.5,borderDash:[6,3],
       pointRadius:0,pointHoverRadius:4,pointHitRadius:Math.round(HIT_R*0.6),tension:0,fill:false};
   }
   if(goal){
@@ -1029,7 +1029,7 @@ function render(){
 
   chartState.dates=fullDates; chartState.pxPerDay=PX_PER_DAY; chartState.scrollable=scrollable;
 
-  var gc='rgba(255,255,255,0.06)', tc='#a39191';
+  var gc='rgba(255,255,255,0.06)', tc='#8c9ea5';
   var tickLimit=scrollable?Math.min(visibleDays,60):8;
   var interaction=pointsVisible
     ? {mode:'nearest',axis:'xy',intersect:true}    // bounded by each point's hit radius
