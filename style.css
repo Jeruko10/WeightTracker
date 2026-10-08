@@ -136,7 +136,9 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 #exercises-view{padding:0 16px 16px}
 .ex-wrap{max-width:760px;margin:0 auto}
 #exercises-view:not(.editing) .edit-only{display:none!important}
-.ex-toolbar{position:sticky;top:0;z-index:5;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0 12px;background:#0f1417}
+.ex-toolbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;padding:8px 0 12px;background:#0f1417}
+.tool-group{display:flex;gap:8px}
+.tool-btn.done{background:#123a36;color:#5fd4c4}
 .tool-btn{display:inline-flex;align-items:center;gap:6px;background:#222c31;border:none;border-radius:10px;color:#e4eef0;font-family:inherit;font-size:13px;font-weight:500;padding:8px 12px;cursor:pointer;transition:background .15s}
 .tool-btn:hover:not(:disabled){background:#2b383e}
 .tool-btn:disabled{opacity:.4;cursor:default}

@@ -284,6 +284,67 @@ function updateExpandBtn(){
   var all=allExpanded();
   b.disabled=!loaded||!days.length;
   b.innerHTML='<svg class="chev'+(all?' up':'')+'" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>'+(all?'Collapse all':'Expand all');
+  document.getElementById('btn-export').disabled=!loaded||!days.length;
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+// Plain-text snapshot of the whole routine: every day, exercise and set, with each set's
+// last EXPORT_ENTRIES logs newest first. Columns are padded so it reads cleanly in any
+// monospaced viewer, and the arrows match the app's above/below-range marks.
+var EXPORT_ENTRIES=10, exportTimer=null;
+function fmtLong(s){ var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function pad(s,n){ s=String(s); while(s.length<n) s+=' '; return s; }
+function padL(s,n){ s=String(s); while(s.length<n) s=' '+s; return s; }
+function asciiRange(s){ return s.min===s.max?String(s.min):s.min+'-'+s.max; }
+
+function buildExport(){
+  var out=['TRAINING LOG','Exported '+fmtLong(today()),'Last '+EXPORT_ENTRIES+' entries per set, newest first. ↑ above target range, ↓ below.',''];
+  sortedDays().forEach(function(d){
+    var rule=new Array(Math.max(d.name.length,24)+1).join('=');
+    out.push(rule,d.name.toUpperCase(),rule,'');
+    var exs=dayExercises(d.id);
+    if(!exs.length){ out.push('  (no exercises)',''); return; }
+    exs.forEach(function(x){
+      out.push(x.name+'  ('+x.sets.length+' set'+(x.sets.length===1?'':'s')+')');
+      x.sets.forEach(function(s,k){
+        var hist=setLogs(x.id,s.id).reverse(), shown=hist.slice(0,EXPORT_ENTRIES);
+        out.push('  Set '+(k+1)+' · target '+asciiRange(s)+' reps'+(hist.length>EXPORT_ENTRIES?' · '+hist.length+' entries total':''));
+        if(!shown.length){ out.push('    (no entries yet)'); return; }
+        shown.forEach(function(l){
+          var st=repsState(l.reps,s), mark=st==='up'?' ↑':st==='down'?' ↓':'';
+          out.push('    '+fmtLong(l.date)+'   '+padL(l.reps,3)+' reps'+pad(mark,3)+'  '+padL(fmtW(l.weight),6)+' kg');
+        });
+      });
+      out.push('');
+    });
+  });
+  return out.join('\n').replace(/\n+$/,'')+'\n';
+}
+
+// Clipboard API where allowed; the hidden-textarea fallback covers older browsers and
+// non-secure contexts (plain http) where navigator.clipboard is unavailable.
+function copyText(text){
+  if(navigator.clipboard&&window.isSecureContext) return navigator.clipboard.writeText(text);
+  return new Promise(function(resolve,reject){
+    var ta=document.createElement('textarea');
+    ta.value=text; ta.setAttribute('readonly','');
+    ta.style.cssText='position:fixed;top:0;left:0;opacity:0';
+    document.body.appendChild(ta); ta.select();
+    var ok=false; try{ ok=document.execCommand('copy'); }catch(e){}
+    ta.remove();
+    if(ok) resolve(); else reject(new Error('copy failed'));
+  });
+}
+function exportRoutine(){
+  var b=document.getElementById('btn-export');
+  copyText(buildExport()).then(function(){
+    b.textContent='Copied to clipboard!'; b.classList.add('done');
+  },function(e){
+    console.error(e); b.textContent='Couldn\'t copy';
+  }).then(function(){
+    clearTimeout(exportTimer);
+    exportTimer=setTimeout(function(){ b.textContent='Export'; b.classList.remove('done'); },2000);
+  });
 }
 // Toggles classes on the existing nodes instead of re-rendering, so the CSS transition plays.
 function setOpen(box,isOpen){
@@ -565,6 +626,7 @@ export function initExercises(opts){
   });
   document.getElementById('btn-add-day').addEventListener('click',addDay);
   document.getElementById('btn-expand-all').addEventListener('click',expandAll);
+  document.getElementById('btn-export').addEventListener('click',exportRoutine);
   document.getElementById('edit-toggle').addEventListener('change',function(){
     editMode=this.checked;
     if(!editMode) resetForms();
