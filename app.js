@@ -25,7 +25,7 @@ function ghDoc(id){ return doc(db,'users',currentUser.uid,'goalHistory',id); }
 // arithmetic below therefore stays in UTC — mixing in local getters/setters silently loses or
 // repeats a day when the clock crosses a daylight-saving boundary.
 function today()  { var d=new Date(); return new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10); }
-function fmt(s)   { if(!s) return '—'; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
+function fmt(s)   { if(!s) return '-'; var p=s.split('-'); return p[2]+'/'+p[1]+'/'+p[0]; }
 function addDays(s,d){ var dt=new Date(s); dt.setUTCDate(dt.getUTCDate()+d); return dt.toISOString().slice(0,10); }
 function weekKey(s){
   var dt=new Date(s), jan=new Date(Date.UTC(dt.getUTCFullYear(),0,1));
@@ -123,7 +123,7 @@ function chartYBounds(minX,maxX){
 //     animating makes them evenly spaced fractions of the window, which slide continuously.
 //   • Which labels fit also changes frame to frame, so text pops in and out. Rather than fight
 //     that, the labels and grid fade out at the start and back in once the zoom has settled.
-var CHART_TICK_RGB='147,143,153', CHART_GRID_ALPHA=0.06;
+var CHART_TICK_RGB='163,145,145', CHART_GRID_ALPHA=0.06;
 // Fixed axis sizes — see the afterFit hooks on the scales. Wide/tall enough for the longest
 // label either axis can produce ("100.0" for a three-digit weight, "17/08" unrotated).
 // CHART_X_PAD is the side room the x axis keeps so an end date label is never clipped: half a
@@ -437,7 +437,6 @@ function route(){
   document.querySelectorAll('.mode-link').forEach(function(a){a.classList.toggle('active',a.dataset.mode===mode);});
   document.getElementById('bodyweight-view').style.display=mode==='bodyweight'?'':'none';
   document.getElementById('exercises-view').style.display=mode==='exercises'?'':'none';
-  document.getElementById('app-title').textContent=mode==='bodyweight'?'WEIGHT TRACKER':'EXERCISES';
   document.title=mode==='bodyweight'?'Weight Tracker':'Exercises · Weight Tracker';
   // The chart may have been laid out while hidden (zero width), which also leaves a scrolling
   // range parked at the wrong offset. A plain re-render re-applies the final layout.
@@ -576,7 +575,7 @@ function renderHistory(){
     var ds=document.createElement('span'); ds.className='edate'; ds.textContent=fmt(e.date);
     if(isToday){
       var b=document.createElement('span'); b.textContent='Today';
-      b.style.cssText='font-size:10px;background:#3a3540;color:#6fcf97;padding:2px 6px;border-radius:6px;margin-left:6px';
+      b.style.cssText='font-size:10px;background:#3f3434;color:#6fcf97;padding:2px 6px;border-radius:6px;margin-left:6px';
       ds.appendChild(b);
     }
     var ws=document.createElement('span'); ws.className='ewt'; ws.textContent=e.weight.toFixed(1)+' kg';
@@ -641,7 +640,7 @@ document.getElementById('btn-save-goal').addEventListener('click',async function
   if(endDate<=today()){err.textContent='Calculated end date is in the past. Adjust pace or start date.';return;}
   if(goal&&btn.dataset.confirm!=='1'){
     btn.dataset.confirm='1'; btn.textContent='Tap again to confirm';
-    btn.style.background='#f2c94c'; btn.style.color='#1c1b1f';
+    btn.style.background='#f2c94c'; btn.style.color='#1f1a1a';
     setTimeout(function(){btn.dataset.confirm='0';btn.textContent='Save goal';btn.style.background='';btn.style.color='';},3000);
     return;
   }
@@ -716,12 +715,12 @@ function renderGoalTab(){
       var isBulk=g.isBulk!==undefined?g.isBulk:false;
       var div=document.createElement('div'); div.className='past-goal';
       var info=document.createElement('div');
-      info.innerHTML='<span style="font-size:12px;font-weight:500;color:'+(isBulk?'#6fcf97':'#eb5757')+'">'+(isBulk?'Bulk':'Cut')+'</span><span style="font-size:13px;color:#938f99;margin-left:8px">'+fmt(g.start)+' → '+fmt(g.date)+'</span>';
+      info.innerHTML='<span style="font-size:12px;font-weight:500;color:'+(isBulk?'#6fcf97':'#eb5757')+'">'+(isBulk?'Bulk':'Cut')+'</span><span style="font-size:13px;color:#a39191;margin-left:8px">'+fmt(g.start)+' → '+fmt(g.date)+'</span>';
       var right=document.createElement('div'); right.style.cssText='display:flex;align-items:center;gap:10px';
       // Prefer the weight stored on the goal itself; for cycles archived before that field
       // existed, fall back to the entry logged around when the cycle started.
       var ghStartW=(g.startWeight!==undefined&&g.startWeight!==null)?g.startWeight:(function(){var e=entries.find(function(e){return e.date>=g.start;});return e?e.weight:null;})();
-      var ws=document.createElement('span'); ws.style.cssText='font-size:14px;font-weight:500;color:#e6e1e5';
+      var ws=document.createElement('span'); ws.style.cssText='font-size:14px;font-weight:500;color:#efe0e0';
       ws.textContent=ghStartW!==null?ghStartW.toFixed(1)+' → '+g.weight.toFixed(1)+' kg':g.weight.toFixed(1)+' kg';
       var db=document.createElement('button'); db.className='ebtn'; db.textContent='Delete';
       (function(gh,row,btn){db.addEventListener('click',function(){deleteGH(gh,row,btn);});})(g,div,db);
@@ -737,12 +736,12 @@ function renderGoalSummary(){
   document.getElementById('goal-summary').style.display='';
   var n=entries.length, cur=n?entries[n-1].weight:null;
   var remW=Math.max(0.01,(new Date(goal.date)-new Date())/(7*864e5));
-  var kpwN=cur?((goal.weight-cur)/remW).toFixed(2):'—';
+  var kpwN=cur?((goal.weight-cur)/remW).toFixed(2):'-';
   var sign=parseFloat(kpwN)>0?'+':'';
   var totW=Math.round((new Date(goal.date)-new Date(goal.start))/(7*864e5));
   document.getElementById('goal-summary-text').innerHTML=
     '<b>'+goal.weight+' kg</b> by <b>'+fmt(goal.date)+'</b><br>'+
-    '<span style="color:#938f99;font-size:13px">Started '+fmt(goal.start)+' · '+totW+' weeks · target pace: <b>'+(goal.isBulk?'+':'-')+goal.pace+' kg/wk</b>'+(cur?'<br>Currently need: <b>'+sign+kpwN+' kg/wk</b>':'')+'</span>';
+    '<span style="color:#a39191;font-size:13px">Started '+fmt(goal.start)+' · '+totW+' weeks · target pace: <b>'+(goal.isBulk?'+':'-')+goal.pace+' kg/wk</b>'+(cur?'<br>Currently need: <b>'+sign+kpwN+' kg/wk</b>':'')+'</span>';
 }
 
 async function deleteGH(g,row,btn){
@@ -769,14 +768,14 @@ function render(){
   var MIN_ENTRIES=6, MIN_SPAN_DAYS=13;
   var enoughData=n>=MIN_ENTRIES&&dataSpanDays>=MIN_SPAN_DAYS;
 
-  // Cycle label
-  var cl=document.getElementById('cycle-label'), dv=document.getElementById('hdivider');
+  // Cycle label — its row is hidden entirely without a goal, so it leaves no empty gap.
+  var cl=document.getElementById('cycle-label'), ht=document.getElementById('header-titles');
   if(goal&&goal.start&&goal.date){
     var cycleIsBulk=goal.isBulk!==undefined?goal.isBulk:true;
-    cl.style.display=''; dv.style.display='';
+    cl.style.display=''; ht.style.display='';
     cl.textContent=cycleIsBulk?'BULKING CYCLE':'CUTTING CYCLE';
     cl.style.color=cycleIsBulk?'#6fcf97':'#eb5757';
-  } else {cl.style.display='none';dv.style.display='none';}
+  } else {cl.style.display='none';ht.style.display='none';}
 
   // Stats
   var prevAvg=enoughData?windowAvg(series,addDays(lastDate,-7),7,firstDate):null;
@@ -787,15 +786,15 @@ function render(){
       document.getElementById('s-avg').textContent=prevAvg.toFixed(1)+' kg';
       var diff=curAvg-prevAvg;
       re.textContent=(diff>=0?'+':'')+diff.toFixed(1)+' kg';
-      re.style.color=diff>0?'#6fcf97':diff<0?'#eb5757':'#e6e1e5';
+      re.style.color=diff>0?'#6fcf97':diff<0?'#eb5757':'#efe0e0';
     } else {
-      document.getElementById('s-avg').textContent='—';
-      re.textContent='—';
+      document.getElementById('s-avg').textContent='-';
+      re.textContent='-';
     }
   } else {
-    document.getElementById('s-cur').textContent='—';
-    document.getElementById('s-avg').textContent='—';
-    document.getElementById('s-rate').textContent='—';
+    document.getElementById('s-cur').textContent='-';
+    document.getElementById('s-avg').textContent='-';
+    document.getElementById('s-rate').textContent='-';
   }
 
   // Goal banner
@@ -845,7 +844,7 @@ function render(){
         ?Math.abs(diffDays)+' day'+(Math.abs(diffDays)===1?'':'s')+' early'
         :diffDays+' day'+(diffDays===1?'':'s')+' late';
       document.getElementById('goal-reached-text').innerHTML=
-        '🎉 You reached your goal of <b>'+goal.weight.toFixed(1)+' kg</b> in <b>'+(elapsedDays/7).toFixed(1)+' weeks</b> — <b>'+diffTxt+'</b> compared to your original plan!';
+        '🎉 You reached your goal of <b>'+goal.weight.toFixed(1)+' kg</b> in <b>'+(elapsedDays/7).toFixed(1)+' weeks</b>, <b>'+diffTxt+'</b> compared to your original plan!';
     } else if(pastDue){
       proj.style.display='none'; bars.style.display='none';
       chip.className='chip slow'; chip.textContent='Goal date passed'; pdesc.textContent='';
@@ -889,7 +888,7 @@ function render(){
         proj.textContent='Log more entries to see projection';
       } else {
         var movRight=(goalIsGain&&actualPaceP>0)||(!goalIsGain&&actualPaceP<0);
-        if(Math.abs(actualPaceP)<0.001) proj.textContent='Trend is flat — log more data';
+        if(Math.abs(actualPaceP)<0.001) proj.textContent='Trend is flat. Log more data';
         else if(!movRight) proj.textContent='Current trend is moving away from goal';
         else{
           var wn=(goal.weight-curAvg)/actualPaceP;
@@ -897,7 +896,7 @@ function render(){
           var ps=(pd.getDate()<10?'0':'')+pd.getDate()+'/'+(pd.getMonth()<9?'0':'')+(pd.getMonth()+1)+'/'+pd.getFullYear();
           var dd=Math.round((pd-gE)/864e5);
           var dt=dd===0?'right on time':dd<0?Math.abs(dd)+'d early':dd+'d late';
-          proj.innerHTML='At current rate, projected arrival: <b>'+ps+'</b> — <b>'+dt+'</b>';
+          proj.innerHTML='At current rate, projected arrival: <b>'+ps+'</b> (<b>'+dt+'</b>)';
         }
       }
 
@@ -979,9 +978,9 @@ function render(){
   var datasets=[{
     label:'Weight',
     data:entries.map(function(e){return {x:dayIdx(e.date),y:e.weight};}),
-    borderColor:'#d0bcff',backgroundColor:'rgba(208,188,255,0.08)',
+    borderColor:'#ffb5b5',backgroundColor:'rgba(255,181,181,0.08)',
     borderWidth:2,pointRadius:pointRadius,pointHoverRadius:5,pointHitRadius:pointsVisible?HIT_R:0,
-    pointBackgroundColor:'#d0bcff',tension:0,fill:true
+    pointBackgroundColor:'#ffb5b5',tension:0,fill:true
   }];
   // One dashed segment per goal cycle — the active one and every archived one — so the older
   // stretches of the weight line can be read against the plan they were actually run against,
@@ -1030,7 +1029,7 @@ function render(){
 
   chartState.dates=fullDates; chartState.pxPerDay=PX_PER_DAY; chartState.scrollable=scrollable;
 
-  var gc='rgba(255,255,255,0.06)', tc='#938f99';
+  var gc='rgba(255,255,255,0.06)', tc='#a39191';
   var tickLimit=scrollable?Math.min(visibleDays,60):8;
   var interaction=pointsVisible
     ? {mode:'nearest',axis:'xy',intersect:true}    // bounded by each point's hit radius

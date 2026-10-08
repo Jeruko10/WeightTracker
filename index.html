@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#1c1b1f">
+<meta name="theme-color" content="#1f1a1a">
 <title>Weight Tracker</title>
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
@@ -27,9 +27,7 @@
       <a class="mode-link" href="#/exercises" data-mode="exercises">Exercises</a>
     </nav>
     <div class="header">
-      <div class="header-titles">
-        <h1 id="app-title">WEIGHT TRACKER</h1>
-        <div class="hdivider" id="hdivider"></div>
+      <div class="header-titles" id="header-titles" style="display:none">
         <span id="cycle-label"></span>
       </div>
       <div class="tabs">
@@ -52,9 +50,9 @@
       <div class="overview-grid">
         <div class="ov-group">
           <div class="stats">
-            <div class="stat"><div class="stat-label">Current avg</div><div class="stat-val ac" id="s-cur">—</div></div>
-            <div class="stat"><div class="stat-label">Prev avg</div><div class="stat-val" id="s-avg">—</div></div>
-            <div class="stat"><div class="stat-label">Avg change</div><div class="stat-val" id="s-rate">—</div></div>
+            <div class="stat"><div class="stat-label">Current avg</div><div class="stat-val ac" id="s-cur">-</div></div>
+            <div class="stat"><div class="stat-label">Prev avg</div><div class="stat-val" id="s-avg">-</div></div>
+            <div class="stat"><div class="stat-label">Avg change</div><div class="stat-val" id="s-rate">-</div></div>
           </div>
           <div class="goal-banner">
             <div class="banner-title" id="banner-title">Goal</div>
@@ -144,7 +142,7 @@
         </div>
         <div class="card" id="goal-summary" style="display:none">
           <div class="card-title">Current goal</div>
-          <div id="goal-summary-text" style="font-size:14px;color:#e6e1e5;line-height:1.6"></div>
+          <div id="goal-summary-text" style="font-size:14px;color:#efe0e0;line-height:1.6"></div>
         </div>
         <div class="card" id="goal-history-card" style="display:none">
           <div class="card-title">Past goals</div>
@@ -164,7 +162,7 @@
             <span class="sw"></span>
           </label>
         </div>
-        <p class="edit-hint edit-only">Edit mode — create, rename, reorder and delete. Changes save instantly.</p>
+        <p class="edit-hint edit-only">Edit mode: create, rename, reorder and delete. Changes save instantly.</p>
         <div class="card edit-only" id="new-day-card">
           <div class="card-title">New training day</div>
           <div class="inline-form">

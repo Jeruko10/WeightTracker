@@ -18,9 +18,9 @@ var OPEN_KEY='wt-ex-open';
 var open=loadOpen();
 
 var MAX_SETS=10, MIN_SETS=1, MIN_REPS=1, MAX_REPS=500, HISTORY_PREVIEW=5, CHART_ENTRIES=10;
-// One colour per set, used for the set's dot, its chart line and its legend entry. Red sits
-// late in the list so the first sets never read as the "below range" colour.
-var SET_COLORS=['#d0bcff','#6fcf97','#f2c94c','#56ccf2','#f2994a','#ff8fab','#4fd1c5','#a3e635','#eb5757','#e6e1e5'];
+// One colour per set, used for the set's dot, its chart line and its legend entry. Set 1 takes
+// the accent; the rest avoid reds so no line reads as the "below range" colour.
+var SET_COLORS=['#ffb5b5','#6fcf97','#f2c94c','#56ccf2','#f2994a','#b39ddb','#4fd1c5','#a3e635','#8fa8ff','#efe0e0'];
 var CHEV='<svg class="chev" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4"/></svg>';
 // Inline SVG rather than ↑ ✎ ✕ characters, which some platforms swap for coloured emoji.
 function icon(d){ return '<svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="'+d+'"/></svg>'; }
@@ -71,7 +71,7 @@ function lastWeight(x,k){
 function persist(task){
   sync('Saving…','saving');
   return task().then(function(){ sync('Saved','saved'); setTimeout(function(){sync('');},2000); })
-    .catch(function(e){ console.error(e); sync('Error saving — check your connection','error'); });
+    .catch(function(e){ console.error(e); sync('Error saving. Check your connection','error'); });
 }
 // Cascading deletes and reorders are written as batches so they land all-or-nothing. A batch
 // holds at most 500 writes, so a day with a long history is split across several.
@@ -145,7 +145,7 @@ function dayHtml(d,i,arr){
         editActions('day',d.id,i,arr.length)+'</div>';
   var body=exs.length
     ? exs.map(function(x,j){return exHtml(x,j,exs.length);}).join('')
-    : '<p class="hist-empty">No exercises yet'+(editMode?'':' — turn on Edit mode to add some')+'</p>';
+    : '<p class="hist-empty">No exercises yet'+(editMode?'':'. Turn on Edit mode to add some')+'</p>';
   body+=ui.newExFor===d.id
     ? '<div class="edit-only">'+exerciseForm(null,d.id)+'</div>'
     : textBtn('+ Add exercise','ex-new',d.id,'add-ex-btn edit-only');
@@ -266,7 +266,7 @@ function render(){
   var ds=sortedDays();
   tree.innerHTML=ds.length
     ? ds.map(dayHtml).join('')
-    : '<p class="empty">'+(editMode?'Create your first training day above.':'No training days yet — turn on <b>Edit mode</b> to create one.')+'</p>';
+    : '<p class="empty">'+(editMode?'Create your first training day above.':'No training days yet. Turn on <b>Edit mode</b> to create one.')+'</p>';
   Array.from(open).forEach(function(k){ if(k.indexOf('c:')===0) mountChart(k.slice(2)); });
   updateExpandBtn();
 }
@@ -341,7 +341,7 @@ function mountChart(exId){
     if(bot<=top) return;
     ctx.save(); ctx.fillStyle='rgba(111,207,151,0.08)'; ctx.fillRect(a.left,top,a.right-a.left,bot-top); ctx.restore();
   }};
-  var gc='rgba(255,255,255,0.06)', tc='#938f99';
+  var gc='rgba(255,255,255,0.06)', tc='#a39191';
   charts[exId]=new Chart(canvas,{
     type:'line',
     data:{labels:Array.from(dates).sort(),datasets:datasets},
@@ -432,7 +432,7 @@ function addDay(){
   var inp=document.getElementById('new-day-name'), err=document.getElementById('new-day-err');
   var name=inp.value.trim();
   if(!name){ err.textContent='Give the day a name.'; return; }
-  if(!loaded){ err.textContent='Still loading — try again in a moment.'; return; }
+  if(!loaded){ err.textContent='Still loading, try again in a moment.'; return; }
   err.textContent='';
   var d={id:newId('trainingDays'),name:name,order:days.length?Math.max.apply(null,days.map(function(x){return x.order||0;}))+1:0,createdAt:Date.now()};
   days.push(d); open.add('d:'+d.id); saveOpen();
@@ -520,7 +520,7 @@ function handle(t){
       var keep=new Set(ev2.sets.map(function(s){return s.id;}));
       var dropped=logs.filter(function(o){return o.exerciseId===id&&!keep.has(o.setId);});
       // Removing a set takes its history with it — make that an explicit second tap.
-      if(dropped.length&&!confirmed(t,'Deletes '+dropped.length+' logged entr'+(dropped.length===1?'y':'ies')+' — tap again')) return;
+      if(dropped.length&&!confirmed(t,'Deletes '+dropped.length+' logged entr'+(dropped.length===1?'y':'ies')+'. Tap again')) return;
       x.name=ev2.name; x.sets=ev2.sets;
       var dropIds=new Set(dropped.map(function(o){return o.id;}));
       logs=logs.filter(function(o){return !dropIds.has(o.id);});
