@@ -1,6 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { initExercises, loadExercises, clearExercises } from './exercises.js';
 
 var FB = initializeApp({
   apiKey:"AIzaSyCyLBXgZeYsTW8s7IiGr5foJzLmzo3D9z4",
@@ -415,14 +416,35 @@ onAuthStateChanged(auth,function(u){
     else av.textContent=(u.displayName||'U')[0].toUpperCase();
     setDoc(uDoc('data/profile'),{name:u.displayName||'',email:u.email||'',photoURL:u.photoURL||''});
     loadAll();
+    loadExercises(u.uid);
   } else {
     currentUser=null;
     document.getElementById('login-screen').style.display='flex';
     document.getElementById('app-screen').style.display='none';
     entries=[]; goal=null; goalHistory=[];
     if(chart){chart.destroy();chart=null;}
+    clearExercises();
   }
 });
+
+// ── APP MODE (ROUTER) ─────────────────────────────────────────────────────────
+// Hash routes rather than paths: the site is served as static files from GitHub Pages, which
+// has no rewrites, so '#/exercises' is the only kind of deep link that survives a reload.
+initExercises({db:db,sync:sync});
+function route(){
+  var mode=location.hash==='#/exercises'?'exercises':'bodyweight';
+  document.querySelector('.app').dataset.mode=mode;
+  document.querySelectorAll('.mode-link').forEach(function(a){a.classList.toggle('active',a.dataset.mode===mode);});
+  document.getElementById('bodyweight-view').style.display=mode==='bodyweight'?'':'none';
+  document.getElementById('exercises-view').style.display=mode==='exercises'?'':'none';
+  document.getElementById('app-title').textContent=mode==='bodyweight'?'WEIGHT TRACKER':'EXERCISES';
+  document.title=mode==='bodyweight'?'Weight Tracker':'Exercises · Weight Tracker';
+  // The chart may have been laid out while hidden (zero width), which also leaves a scrolling
+  // range parked at the wrong offset. A plain re-render re-applies the final layout.
+  if(mode==='bodyweight'&&chart) render();
+}
+window.addEventListener('hashchange',route);
+route();
 
 // ── FIREBASE LOAD ─────────────────────────────────────────────────────────────
 async function loadAll(){

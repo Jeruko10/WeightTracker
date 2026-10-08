@@ -21,10 +21,14 @@
 </div>
 
 <div id="app-screen" style="display:none">
-  <div class="app">
+  <div class="app" data-mode="bodyweight">
+    <nav class="mode-switch" aria-label="App section">
+      <a class="mode-link active" href="#/bodyweight" data-mode="bodyweight">Bodyweight</a>
+      <a class="mode-link" href="#/exercises" data-mode="exercises">Exercises</a>
+    </nav>
     <div class="header">
       <div class="header-titles">
-        <h1>WEIGHT TRACKER</h1>
+        <h1 id="app-title">WEIGHT TRACKER</h1>
         <div class="hdivider" id="hdivider"></div>
         <span id="cycle-label"></span>
       </div>
@@ -43,6 +47,7 @@
     </div>
     <div class="sync-indicator" id="sync-indicator"></div>
 
+    <div id="bodyweight-view">
     <div id="overview" class="section active">
       <div class="overview-grid">
         <div class="ov-group">
@@ -145,6 +150,30 @@
           <div class="card-title">Past goals</div>
           <div id="goal-history-list"></div>
         </div>
+      </div>
+    </div>
+    </div>
+
+    <div id="exercises-view" style="display:none">
+      <div class="ex-wrap">
+        <div class="ex-toolbar">
+          <button class="tool-btn" id="btn-expand-all" disabled>Expand all</button>
+          <label class="edit-switch">
+            <span>Edit mode</span>
+            <input type="checkbox" id="edit-toggle">
+            <span class="sw"></span>
+          </label>
+        </div>
+        <p class="edit-hint edit-only">Edit mode — create, rename, reorder and delete. Changes save instantly.</p>
+        <div class="card edit-only" id="new-day-card">
+          <div class="card-title">New training day</div>
+          <div class="inline-form">
+            <input type="text" id="new-day-name" placeholder="e.g. Push, Pull, Legs" maxlength="40">
+            <button class="btn primary" id="btn-add-day">Add</button>
+          </div>
+          <p class="err" id="new-day-err"></p>
+        </div>
+        <div id="ex-tree"></div>
       </div>
     </div>
   </div>
