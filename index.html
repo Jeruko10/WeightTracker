@@ -22,18 +22,23 @@
 
 <div id="app-screen" style="display:none">
   <div class="app" data-mode="bodyweight">
-    <nav class="mode-switch" aria-label="App section">
-      <a class="mode-link active" href="#/bodyweight" data-mode="bodyweight">Bodyweight</a>
-      <a class="mode-link" href="#/exercises" data-mode="exercises">Exercises</a>
-    </nav>
-    <div class="user-bar">
-      <div class="user-info">
-        <div class="user-avatar" id="user-avatar"></div>
-        <span class="user-name" id="user-name"></span>
-      </div>
-      <div class="user-actions">
-        <button class="tool-btn" id="btn-export">Export</button>
-        <button class="signout-btn" id="btn-signout">Sign out</button>
+    <div class="top-bar">
+      <nav class="mode-switch" aria-label="App section">
+        <a class="mode-link active" href="#/bodyweight" data-mode="bodyweight">Bodyweight</a>
+        <a class="mode-link" href="#/exercises" data-mode="exercises">Exercises</a>
+      </nav>
+      <div class="profile">
+        <button class="profile-btn" id="btn-profile" aria-haspopup="menu" aria-expanded="false" aria-controls="profile-menu" title="Account">
+          <span class="user-avatar" id="user-avatar"></span>
+        </button>
+        <div class="profile-menu" id="profile-menu" role="menu" aria-label="Account">
+          <div class="pm-user">
+            <span class="pm-name" id="user-name"></span>
+            <span class="pm-email" id="user-email"></span>
+          </div>
+          <button class="pm-item" id="btn-export" role="menuitem">Export</button>
+          <button class="pm-item pm-danger" id="btn-signout" role="menuitem">Sign out</button>
+        </div>
       </div>
     </div>
     <div class="header">

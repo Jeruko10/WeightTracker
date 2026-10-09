@@ -222,10 +222,10 @@ function logRow(l,s){
 
 function logForm(v,action,id){
   return '<div class="log-form" data-form="'+id+'">'+
-    '<div class="log-grid">'+
+    '<div class="lf-grid">'+
       '<label class="lf-date"><span class="field-label">Date</span><input type="date" name="date" value="'+v.date+'"></label>'+
       '<label><span class="field-label">Reps</span><input type="number" name="reps" inputmode="numeric" min="0" max="'+MAX_REPS+'" step="1" value="'+v.reps+'"></label>'+
-      '<label><span class="field-label">Weight (kg)</span><input type="number" name="weight" inputmode="decimal" min="0" max="1000" step="0.25" value="'+v.weight+'"></label>'+
+      '<label><span class="field-label">Weight (kg)</span><input type="number" name="weight" min="-1000" max="1000" step="0.25" value="'+v.weight+'"></label>'+
     '</div>'+
     '<div class="form-actions">'+textBtn('Save',action,id,'btn primary sm')+textBtn('Cancel','cancel','','btn secondary sm')+'</div>'+
     '<p class="err"></p></div>';
@@ -395,7 +395,7 @@ function focusSetHtml(x,s,k){
       '<input type="hidden" name="date" value="'+today()+'">'+
       '<div class="focus-form-grid">'+
         '<label><span class="field-label">Reps</span><input type="number" name="reps" inputmode="numeric" min="0" max="'+MAX_REPS+'" step="1" value=""></label>'+
-        '<label><span class="field-label">Weight (kg)</span><input type="number" name="weight" inputmode="decimal" min="0" max="1000" step="0.25" value="'+lastWeight(x,k)+'"></label>'+
+        '<label><span class="field-label">Weight (kg)</span><input type="number" name="weight" min="-1000" max="1000" step="0.25" value="'+lastWeight(x,k)+'"></label>'+
       '</div>'+
       '<div class="form-actions">'+textBtn('Save','log-save',sk,'btn primary sm')+textBtn('Cancel','cancel','','btn secondary sm')+'</div>'+
       '<p class="err"></p></div>';
@@ -624,7 +624,8 @@ function readLogForm(f){
   var reps=Number(rv), weight=wv===''?0:Number(wv);
   if(!date) return fail(f,'Pick a date.');
   if(rv===''||!Number.isInteger(reps)||reps<0||reps>MAX_REPS) return fail(f,'Reps must be a whole number from 0 to '+MAX_REPS+'.');
-  if(!isFinite(weight)||weight<0||weight>1000) return fail(f,'Weight must be between 0 and 1000 kg.');
+  // Negative weight is allowed for assisted lifts (e.g. -20 kg on an assisted pull-up).
+  if(!isFinite(weight)||weight<-1000||weight>1000) return fail(f,'Weight must be between -1000 and 1000 kg.');
   return {date:date,reps:reps,weight:Math.round(weight*100)/100};
 }
 

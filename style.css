@@ -115,16 +115,27 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:24px}
 #login-screen h2{font-size:24px;font-weight:500;color:#e4eef0}
 #login-screen p{font-size:14px;color:#8c9ea5;text-align:center;max-width:280px}
-.user-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px 4px}
-.user-info{display:flex;align-items:center;gap:8px}
-.user-avatar{width:28px;height:28px;border-radius:50%;background:#222c31;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;color:#5fd4c4;overflow:hidden;flex-shrink:0}
+/* Top bar: section switch plus the profile avatar, whose menu holds the account actions. */
+.top-bar{display:flex;align-items:center;gap:10px;margin:16px 16px 0}
+.top-bar .mode-switch{flex:1;margin:0;min-width:0}
+.profile{position:relative;flex-shrink:0}
+.profile-btn{width:46px;height:46px;border-radius:50%;border:none;background:#182024;padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s}
+.profile-btn:hover{background:#222c31}
+.profile-btn:focus-visible,.profile-btn[aria-expanded=true]{box-shadow:0 0 0 2px #5fd4c4}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:#222c31;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#5fd4c4;overflow:hidden;flex-shrink:0}
+.profile-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:240px;max-width:calc(100vw - 32px);padding:6px;background:#182024;border:1px solid #223036;border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:2px;
+  opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s}
+.profile-menu.open{opacity:1;visibility:visible;transform:none;transition:opacity .18s ease,transform .18s ease,visibility 0s}
+.pm-user{display:flex;flex-direction:column;gap:2px;padding:10px 12px 12px;margin-bottom:4px;border-bottom:1px solid #223036;min-width:0}
+.pm-name{font-size:14px;font-weight:600;color:#e4eef0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-email{font-size:12px;color:#8c9ea5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-email:empty{display:none}
+.pm-item{width:100%;text-align:left;background:none;border:none;border-radius:10px;padding:11px 12px;font-family:inherit;font-size:14px;font-weight:500;color:#e4eef0;cursor:pointer;transition:background .15s,color .15s}
+.pm-item:hover,.pm-item:focus-visible{background:#222c31;outline:none}
+.pm-item.done{background:#123a36;color:#5fd4c4}
+.pm-danger{color:#ff7b7b}
+.pm-item.confirming{background:#3d1c20;color:#ff7b7b}
 .user-avatar img{width:100%;height:100%;object-fit:cover}
-.user-name{font-size:13px;color:#8c9ea5}
-.signout-btn{background:#222c31;border:none;color:#b8c6cb;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;padding:6px 12px;border-radius:10px;transition:background .15s,color .15s}
-.signout-btn:hover{background:#2b383e;color:#e4eef0}
-.signout-btn.confirming{background:#3d1c20;color:#ff7b7b}
-.user-actions{display:flex;align-items:center;gap:6px}
-.user-actions .tool-btn{padding:6px 12px;font-size:12px}
 .sync-indicator{font-size:11px;padding:0 20px 8px;text-align:right;min-height:20px;color:#8c9ea5}
 .sync-indicator.saving{color:#f2c46d}
 .sync-indicator.saved{color:#5fd4c4}
@@ -162,8 +173,7 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 
 /* Focus: only the chosen day. The section switch, user bar and Expand all disappear, and the
    sticky toolbar becomes a slim bar with the day name and the mode button. */
-.app[data-mode=exercises][data-focus] .mode-switch,
-.app[data-mode=exercises][data-focus] .user-bar,
+.app[data-mode=exercises][data-focus] .top-bar,
 .app[data-mode=exercises][data-focus] #btn-expand-all{display:none}
 .app[data-mode=exercises][data-focus] #exercises-view{padding-top:12px}
 .app[data-focus] .ex-wrap{max-width:560px}
@@ -292,9 +302,9 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 .log-form,.ex-form{background:#182024;border-radius:12px;padding:12px;margin:2px 0 6px;display:flex;flex-direction:column;gap:10px}
 .ex .ex-form{background:#182024}
 .day-body>.edit-only>.ex-form{background:#12191c}
-.log-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.log-grid .lf-date{grid-column:1/-1}
-.log-grid .field-label,.ex-form label>.field-label{display:block;font-size:11px;margin-bottom:4px}
+.lf-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.lf-grid .lf-date{grid-column:1/-1}
+.lf-grid .field-label,.ex-form label>.field-label{display:block;font-size:11px;margin-bottom:4px}
 .log-form input,.ex-form input,.rename-row input{font-size:14px;padding:8px 10px;min-width:0}
 .form-actions{display:flex;gap:8px}
 .btn.sm{width:auto;padding:8px 16px;font-size:13px}
@@ -321,8 +331,8 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 .ex-chart-wrap{position:relative;height:200px}
 
 @media (min-width:600px){
-  .log-grid{grid-template-columns:1.4fr 1fr 1fr}
-  .log-grid .lf-date{grid-column:auto}
+  .lf-grid{grid-template-columns:1.4fr 1fr 1fr}
+  .lf-grid .lf-date{grid-column:auto}
 }
 
 /* Desktop: same markup, laid out as horizontal columns instead of stacked. Below this width

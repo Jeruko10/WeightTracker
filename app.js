@@ -415,7 +415,27 @@ document.getElementById('btn-signout').addEventListener('click',function(){
     return;
   }
   btn.dataset.confirm='0'; btn.textContent='Sign out'; btn.classList.remove('confirming');
+  setProfileMenu(false);
   signOut(auth);
+});
+
+// ── PROFILE MENU ──────────────────────────────────────────────────────────────
+// Account details and actions live behind the avatar, so the top of the app stays clean.
+// The menu closes on an outside click, Escape, or a section change.
+var profileBtn=document.getElementById('btn-profile'), profileMenu=document.getElementById('profile-menu');
+function setProfileMenu(open){
+  profileMenu.classList.toggle('open',open);
+  profileBtn.setAttribute('aria-expanded',String(open));
+}
+profileBtn.addEventListener('click',function(e){
+  e.stopPropagation();
+  setProfileMenu(!profileMenu.classList.contains('open'));
+});
+document.addEventListener('click',function(e){
+  if(profileMenu.classList.contains('open')&&!profileMenu.contains(e.target)) setProfileMenu(false);
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&profileMenu.classList.contains('open')){ setProfileMenu(false); profileBtn.focus(); }
 });
 
 onAuthStateChanged(auth,function(u){
@@ -423,9 +443,11 @@ onAuthStateChanged(auth,function(u){
     currentUser=u;
     document.getElementById('login-screen').style.display='none';
     document.getElementById('app-screen').style.display='';
-    document.getElementById('user-name').textContent=u.displayName||u.email;
+    document.getElementById('user-name').textContent=u.displayName||u.email||'';
+    document.getElementById('user-email').textContent=u.displayName?(u.email||''):'';
     var av=document.getElementById('user-avatar');
-    if(u.photoURL) av.innerHTML='<img src="'+u.photoURL+'">';
+    // no-referrer: Google profile photos can refuse requests that carry another site's referrer.
+    if(u.photoURL) av.innerHTML='<img src="'+u.photoURL+'" alt="" referrerpolicy="no-referrer">';
     else av.textContent=(u.displayName||'U')[0].toUpperCase();
     setDoc(uDoc('data/profile'),{name:u.displayName||'',email:u.email||'',photoURL:u.photoURL||''});
     loadAll();
@@ -455,6 +477,7 @@ function route(){
   if(mode==='bodyweight') resetExercisesMode();
   if(currentRoute&&currentRoute!==mode) playEnter(document.getElementById(mode+'-view'));
   currentRoute=mode;
+  setProfileMenu(false);
   document.querySelector('.app').dataset.mode=mode;
   document.querySelectorAll('.mode-link').forEach(function(a){a.classList.toggle('active',a.dataset.mode===mode);});
   document.getElementById('bodyweight-view').style.display=mode==='bodyweight'?'':'none';
