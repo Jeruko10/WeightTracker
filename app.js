@@ -1,7 +1,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, deleteDoc, collection, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-import { initExercises, loadExercises, clearExercises, exportSections } from './exercises.js';
+import { initExercises, loadExercises, clearExercises, exportSections, resetExercisesMode } from './exercises.js';
 
 var FB = initializeApp({
   apiKey:"AIzaSyCyLBXgZeYsTW8s7IiGr5foJzLmzo3D9z4",
@@ -434,8 +434,17 @@ onAuthStateChanged(auth,function(u){
 // Hash routes rather than paths: the site is served as static files from GitHub Pages, which
 // has no rewrites, so '#/exercises' is the only kind of deep link that survives a reload.
 initExercises({db:db,sync:sync});
+// Re-plays a short fade-in on a block that was just swapped in, so section and tab changes
+// don't jump abruptly.
+function playEnter(el){ el.classList.remove('view-enter'); void el.offsetWidth; el.classList.add('view-enter'); }
+var currentRoute=null;
 function route(){
   var mode=location.hash==='#/exercises'?'exercises':'bodyweight';
+  // Opening Bodyweight resets Exercises to read-only View, so arriving from this tab never
+  // lands in Edit or mid-Train.
+  if(mode==='bodyweight') resetExercisesMode();
+  if(currentRoute&&currentRoute!==mode) playEnter(document.getElementById(mode+'-view'));
+  currentRoute=mode;
   document.querySelector('.app').dataset.mode=mode;
   document.querySelectorAll('.mode-link').forEach(function(a){a.classList.toggle('active',a.dataset.mode===mode);});
   document.getElementById('bodyweight-view').style.display=mode==='bodyweight'?'':'none';
@@ -581,6 +590,7 @@ document.querySelectorAll('.tab').forEach(function(tab){
     tab.classList.add('active');
     document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active');});
     document.getElementById(tab.dataset.tab).classList.add('active');
+    playEnter(document.getElementById(tab.dataset.tab));
     if(tab.dataset.tab==='goal') renderGoalTab();
   });
 });

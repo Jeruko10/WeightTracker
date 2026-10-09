@@ -10,9 +10,11 @@ import { collection, doc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch } fr
 // added, removed or reordered — an index would silently shift history onto another set.
 var db=null, uid=null, sync=function(){};
 var days=[], exercises=[], logs=[], deloads=[], loaded=false, loadError=false;
-// View (default), Edit (structural changes) or Focus (one day, nothing else). Mode and the
-// focused day are remembered per viewer, so a reload mid-workout lands back in Focus.
-var MODES=['view','edit','focus'], MODE_LABEL={view:'View',edit:'Edit',focus:'Focus'};
+// View (read-only, the default), Edit (structure and history) or Train (one day, nothing else).
+// The mode and trained day survive a reload, so a refresh mid-workout lands back in Train; any
+// way of leaving Train (another mode, or the Bodyweight section) drops the day, so the next
+// visit starts from the day picker.
+var MODES=['view','edit','train'], MODE_LABEL={view:'View',edit:'Edit',train:'Train'};
 var MODE_KEY='wt-ex-mode', FOCUS_KEY='wt-ex-focus-day';
 var mode=loadPref(MODE_KEY,'view'), focusDay=loadPref(FOCUS_KEY,null);
 if(MODES.indexOf(mode)<0) mode='view';
@@ -62,6 +64,8 @@ function repsState(reps,s){ return reps>s.max?'up':reps<s.min?'down':'in'; }
 function uniformRange(x){ return x.sets.every(function(s){return s.min===x.sets[0].min&&s.max===x.sets[0].max;}); }
 
 function isEdit(){ return mode==='edit'; }
+// View is read-only: logging (sets and deload starts) happens in Edit and Train.
+function canLog(){ return mode!=='view'; }
 function loadPref(k,def){ try{ var v=localStorage.getItem(k); return v===null?def:v; }catch(e){ return def; } }
 function savePref(k,v){ try{ if(v===null) localStorage.removeItem(k); else localStorage.setItem(k,v); }catch(e){} }
 
@@ -194,7 +198,7 @@ function setHtml(x,s,k){
     '<span class="set-dot" style="background:'+SET_COLORS[k]+'"></span>'+
     '<span class="set-name">Set '+(k+1)+'</span>'+
     '<span class="set-range">'+rangeText(s)+' reps</span>'+
-    (ui.addFor===sk?'':textBtn('+ Log','log-open',sk,'log-btn'))+'</div>';
+    (ui.addFor===sk||!canLog()?'':textBtn('+ Log','log-open',sk,'log-btn'))+'</div>';
   if(ui.addFor===sk) h+=logForm({date:today(),reps:'',weight:lastWeight(x,k)},'log-save',sk);
   if(!hist.length&&ui.addFor!==sk) h+='<p class="hist-empty">No entries yet</p>';
   else if(hist.length) h+='<div class="hist">'+shown.map(function(l){return logRow(l,s);}).join('')+'</div>';
@@ -274,7 +278,7 @@ function render(){
   document.getElementById('exercises-view').classList.toggle('editing',isEdit());
   // data-focus lets the stylesheet strip the shared chrome (section switch, user bar) too.
   var app=document.querySelector('.app');
-  if(mode==='focus') app.setAttribute('data-focus',''); else app.removeAttribute('data-focus');
+  if(mode==='train') app.setAttribute('data-focus',''); else app.removeAttribute('data-focus');
   document.getElementById('focus-title').innerHTML='';
   updateModeBtn();
   if(!uid){ tree.innerHTML=''; updateExpandBtn(); return; }
@@ -284,7 +288,7 @@ function render(){
       : '<p class="empty">Loading…</p>';
     updateExpandBtn(); return;
   }
-  if(mode==='focus'){ renderFocus(tree); return; }
+  if(mode==='train'){ renderFocus(tree); return; }
   var ds=sortedDays();
   tree.innerHTML=deloadHtml()+(ds.length
     ? ds.map(dayHtml).join('')
@@ -301,13 +305,32 @@ function updateModeBtn(){
   b.title='Mode: '+MODE_LABEL[mode]+'. Click for '+MODE_LABEL[next]+'.';
   b.setAttribute('aria-label',b.title);
 }
-function cycleMode(){
-  mode=MODES[(MODES.indexOf(mode)+1)%MODES.length];
-  savePref(MODE_KEY,mode);
+function setMode(m){
+  if(mode==='train'&&m!=='train'){ focusDay=null; savePref(FOCUS_KEY,null); focusExpanded.clear(); }
+  mode=m; savePref(MODE_KEY,mode);
   resetForms(); ui.addFor=null;
   document.getElementById('new-day-err').textContent='';
+  render(); playEnter();
+  if(mode==='train') window.scrollTo(0,0);
+}
+function cycleMode(){ setMode(MODES[(MODES.indexOf(mode)+1)%MODES.length]); }
+// Called by the router whenever the Bodyweight section opens: coming back to Exercises from
+// there always starts in read-only View, and Train starts again from the day picker.
+export function resetExercisesMode(){
+  if(mode==='view'&&!focusDay) return;
+  if(mode==='train'){ focusDay=null; savePref(FOCUS_KEY,null); focusExpanded.clear(); }
+  mode='view'; savePref(MODE_KEY,mode);
+  resetForms(); ui.addFor=null;
   render();
-  if(mode==='focus') window.scrollTo(0,0);
+}
+
+// Re-plays a short fade-in on content that was just swapped (mode, day pick, change day), so
+// it doesn't jump in abruptly.
+function playEnter(){
+  ['ex-tree','focus-title'].forEach(function(id){
+    var el=document.getElementById(id);
+    el.classList.remove('view-enter'); void el.offsetWidth; el.classList.add('view-enter');
+  });
 }
 
 // ── FOCUS ─────────────────────────────────────────────────────────────────────
@@ -318,7 +341,7 @@ function renderFocus(tree){
   var d=days.find(function(o){return o.id===focusDay;});
   if(!d){
     if(focusDay){ focusDay=null; savePref(FOCUS_KEY,null); }
-    title.innerHTML='<span class="focus-day">Focus</span>';
+    title.innerHTML='<span class="focus-day">Train</span>';
     var ds=sortedDays();
     tree.innerHTML='<div class="focus-wrap"><div><p class="focus-prompt">Choose a day to train</p><div class="focus-days">'+
       (ds.length?ds.map(function(o){
@@ -429,11 +452,11 @@ function deloadHtml(){
       '<div class="ex-titles"><span class="day-name">Deload</span><span class="meta">'+summary+'</span></div>'+
       (phase&&phase.deloadWeek?'<span class="chip deload-chip">Deload week</span>':'')+'</div>'+
     '<div class="fold"><div class="fold-inner"><div class="deload-body">'+
-      '<div class="deload-form" data-form="deload-new">'+
+      (isEdit()?'<div class="deload-form" data-form="deload-new">'+
         '<input type="date" name="date" value="'+today()+'" aria-label="Deload start date">'+
         textBtn('Mark deload start','deload-add','','btn primary sm')+
-        '<p class="err"></p></div>'+
-      (rows?'<div class="deload-list">'+rows+'</div>':'')+
+        '<p class="err"></p></div>':'')+
+      (rows?'<div class="deload-list">'+rows+'</div>':isEdit()?'':'<p class="hist-empty">Switch to Edit mode to mark a deload start.</p>')+
     '</div></div></div></div>';
 }
 
@@ -664,18 +687,20 @@ function handle(t){
       if(showAll.has(id)) showAll.delete(id); else showAll.add(id);
       render(); return;
 
-    // Logging — the one thing allowed outside edit mode.
+    // Logging sets: allowed in Edit and Train, never in read-only View.
     case 'log-open':
+      if(!canLog()) return;
       resetForms(); ui.addFor=id; render();
       focusIn('[data-form="'+id+'"] [name=reps]'); return;
     case 'log-save':
+      if(!canLog()) return;
       var v=readLogForm(f); if(!v) return;
       var parts=id.split(':'), lx=exercises.find(function(o){return o.id===parts[0];});
       var wasDone=!!lx&&exDoneToday(lx);
       l={id:newId('exerciseLogs'),exerciseId:parts[0],setId:parts[1],date:v.date,reps:v.reps,weight:v.weight,createdAt:Date.now()};
       logs.push(l); ui.addFor=null;
-      // In Focus, logging the last pending set finishes the exercise: show its ✓, then fold it.
-      if(mode==='focus'&&lx&&!wasDone&&exDoneToday(lx)){
+      // In Train, logging the last pending set finishes the exercise: show its ✓, then fold it.
+      if(mode==='train'&&lx&&!wasDone&&exDoneToday(lx)){
         focusExpanded.delete(lx.id); justCompleted=lx.id; render(); justCompleted=null;
         setTimeout(function(){
           var box=document.querySelector('#ex-tree [data-key="f:'+lx.id+'"]');
@@ -683,24 +708,23 @@ function handle(t){
         },500);
       } else render();
       persist(function(){return setDoc(ref('exerciseLogs',l.id),logData(l));}); return;
-    // Marking a deload start is logging too, so it also works outside edit mode.
-    case 'deload-add':
-      var dd=readDeloadDate(f,null); if(!dd) return;
-      var nd={id:newId('deloads'),date:dd,createdAt:Date.now()};
-      deloads.push(nd); open.add('deload'); saveOpen(); render();
-      persist(function(){return setDoc(ref('deloads',nd.id),{date:nd.date,createdAt:nd.createdAt});}); return;
     case 'focus-fold':
       var fb=t.closest('.foldable'), fo=!fb.classList.contains('open');
       fb.classList.toggle('open',fo); t.setAttribute('aria-expanded',String(fo));
       if(fo) focusExpanded.add(id); else focusExpanded.delete(id);
       return;
     case 'focus-pick':
-      focusDay=id; savePref(FOCUS_KEY,id); focusExpanded.clear(); resetForms(); ui.addFor=null; render(); window.scrollTo(0,0); return;
+      focusDay=id; savePref(FOCUS_KEY,id); focusExpanded.clear(); resetForms(); ui.addFor=null; render(); playEnter(); window.scrollTo(0,0); return;
     case 'focus-change':
-      focusDay=null; savePref(FOCUS_KEY,null); ui.addFor=null; render(); return;
+      focusDay=null; savePref(FOCUS_KEY,null); ui.addFor=null; render(); playEnter(); return;
   }
   if(!isEdit()) return;
   switch(a){
+    case 'deload-add':
+      var dd=readDeloadDate(f,null); if(!dd) return;
+      var nd={id:newId('deloads'),date:dd,createdAt:Date.now()};
+      deloads.push(nd); open.add('deload'); saveOpen(); render();
+      persist(function(){return setDoc(ref('deloads',nd.id),{date:nd.date,createdAt:nd.createdAt});}); return;
     case 'deload-edit':
       resetForms(); ui.addFor=null; ui.editDeload=id; render();
       focusIn('[data-form="deload:'+id+'"] [name=date]'); return;
@@ -795,7 +819,7 @@ export function initExercises(opts){
   var view=document.getElementById('exercises-view');
   var tree=document.getElementById('ex-tree');
   var focusTitle=document.getElementById('focus-title');
-  // One delegated listener for the tree and the Focus title ("Change day").
+  // One delegated listener for the tree and the Train title ("Change day").
   view.addEventListener('click',function(e){
     var t=e.target.closest('[data-action]');
     if(t&&(tree.contains(t)||focusTitle.contains(t))) handle(t);
