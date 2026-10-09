@@ -122,6 +122,7 @@ input:focus{border-color:#5fd4c4;background:#2b383e}
 .user-name{font-size:13px;color:#8c9ea5}
 .signout-btn{background:#222c31;border:none;color:#b8c6cb;font-size:12px;font-weight:500;cursor:pointer;font-family:inherit;padding:6px 12px;border-radius:10px;transition:background .15s,color .15s}
 .signout-btn:hover{background:#2b383e;color:#e4eef0}
+.signout-btn.confirming{background:#3d1c20;color:#ff7b7b}
 .user-actions{display:flex;align-items:center;gap:6px}
 .user-actions .tool-btn{padding:6px 12px;font-size:12px}
 .sync-indicator{font-size:11px;padding:0 20px 8px;text-align:right;min-height:20px;color:#8c9ea5}

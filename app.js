@@ -406,7 +406,17 @@ function animateChartWindow(toMin,toMax,tickLimit,prevWin){
 document.getElementById('btn-google-sign-in').addEventListener('click',function(){
   signInWithPopup(auth,new GoogleAuthProvider()).catch(console.error);
 });
-document.getElementById('btn-signout').addEventListener('click',function(){ signOut(auth); });
+// Same "tap again to confirm" pattern as the deletes, so a stray tap never logs you out.
+document.getElementById('btn-signout').addEventListener('click',function(){
+  var btn=this;
+  if(btn.dataset.confirm!=='1'){
+    btn.dataset.confirm='1'; btn.textContent='Tap again to sign out'; btn.classList.add('confirming');
+    setTimeout(function(){ if(btn.dataset.confirm==='1'){ btn.dataset.confirm='0'; btn.textContent='Sign out'; btn.classList.remove('confirming'); } },3000);
+    return;
+  }
+  btn.dataset.confirm='0'; btn.textContent='Sign out'; btn.classList.remove('confirming');
+  signOut(auth);
+});
 
 onAuthStateChanged(auth,function(u){
   if(u){
