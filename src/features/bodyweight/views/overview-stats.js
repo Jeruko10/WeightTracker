@@ -1,20 +1,5 @@
-// The header cycle label and the three average tiles at the top of the Overview.
-import { byId, setVisible } from '../../../lib/dom.js';
-import { state } from '../state.js';
-import { hasTimeline } from '../goal-plan.js';
-
-// The cycle label row is hidden entirely without a goal, so it leaves no empty gap.
-export function renderCycleLabel() {
-  const label = byId('cycle-label'), row = byId('header-titles');
-  const goal = state.goal;
-  setVisible(label, hasTimeline(goal));
-  setVisible(row, hasTimeline(goal));
-  if (!hasTimeline(goal)) return;
-  const isBulk = goal.isBulk !== undefined ? goal.isBulk : true;
-  label.textContent = isBulk ? 'BULKING CYCLE' : 'CUTTING CYCLE';
-  label.classList.toggle('bulk', isBulk);
-  label.classList.toggle('cut', !isBulk);
-}
+// The three average tiles at the top of the Overview.
+import { byId } from '../../../lib/dom.js';
 
 export function renderStats(trend) {
   const cur = byId('s-cur'), prev = byId('s-avg'), rate = byId('s-rate');

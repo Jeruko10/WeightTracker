@@ -25,14 +25,18 @@ export function goalStartWeight(goal, entries) {
   return e ? e.weight : null;
 }
 
-/** The record stored in goalHistory when a goal is replaced, completed or reset. */
-export function archiveGoal(goal, { keepStartWeight = false } = {}) {
+/**
+ * The record stored in goalHistory when a goal is replaced, completed or reset. Goals saved by
+ * older versions may lack `isBulk` or `startWeight`; those fields are left out rather than sent
+ * as undefined, which Firestore rejects (the whole write would fail).
+ */
+export function archiveGoal(goal) {
   const archived = {
     weight: goal.weight, start: goal.start, date: goal.date,
-    pace: goal.pace || null, isBulk: goal.isBulk,
+    pace: goal.pace || null, isBulk: goal.isBulk, startWeight: goal.startWeight,
+    savedOn: today(),
   };
-  if (keepStartWeight) archived.startWeight = goal.startWeight;
-  archived.savedOn = today();
+  Object.keys(archived).forEach((k) => { if (archived[k] === undefined) delete archived[k]; });
   return archived;
 }
 

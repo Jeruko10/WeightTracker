@@ -32,7 +32,7 @@
 .mode-link:hover{color:var(--text)}
 .mode-link.active{background:var(--accent-bg-strong);color:var(--accent-light)}
 .mode-link:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
-/* The header (cycle label + Overview/Log/Goal tabs) belongs to Bodyweight only. */
+/* The header (Overview/Log/Goal tabs) belongs to Bodyweight only. */
 .app[data-mode=exercises] .header{display:none}
 
 @media (min-width:900px){

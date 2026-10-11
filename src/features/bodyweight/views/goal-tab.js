@@ -68,7 +68,7 @@ async function onSave() {
   // Replacing a running goal archives it, so that takes a second tap.
   if (state.goal && !confirmTap(btn, 'Tap again to confirm')) return;
   if (state.goal) {
-    const archived = archiveGoal(state.goal, { keepStartWeight: true });
+    const archived = archiveGoal(state.goal);
     state.goalHistory.unshift(archived);
     await createGoalHistory(archived);
   }
