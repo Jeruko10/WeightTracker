@@ -1,0 +1,6 @@
+/* Sign-in screen. */
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;gap:24px}
+#login-screen h2{font-size:24px;font-weight:500;color:var(--text)}
+#login-screen p{font-size:14px;color:var(--muted);text-align:center;max-width:280px}
+.btn.google{max-width:280px;background:#fff;color:var(--bg);display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px}
+.btn.google:hover{background:#f0f0f0}

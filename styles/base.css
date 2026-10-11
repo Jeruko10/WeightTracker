@@ -1,0 +1,8 @@
+/* Reset, page and global animations. */
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Google Sans',Roboto,system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+
+/* Short fade-up replayed from JS whenever a view is swapped (section, tab, mode, day). */
+@keyframes viewEnter{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.view-enter{animation:viewEnter .28s ease both}
+@media (prefers-reduced-motion:reduce){.view-enter{animation:none}}

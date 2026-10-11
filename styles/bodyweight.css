@@ -1,0 +1,125 @@
+/* ── BODYWEIGHT ─────────────────────────────────────────────────────────────── */
+/* Header with the cycle label and the Overview / Log / Goal tabs. */
+.header{background:var(--bg);padding:12px 20px 0}
+.header-titles{display:flex;align-items:center;gap:12px;padding:4px 0 12px;flex-wrap:wrap}
+#cycle-label{font-size:18px;font-weight:500;letter-spacing:.02em;display:none}
+.tabs{display:flex}
+.tab{flex:1;text-align:center;font-size:13px;font-weight:500;padding:10px 0;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s}
+.tab.active{color:var(--accent);border-bottom:2px solid var(--accent)}
+.section{padding:16px;display:none}
+.section.active{display:block}
+
+/* Overview: stats, goal banner, chart. */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.stat{background:var(--surface);border-radius:16px;padding:12px 6px;text-align:center}
+.stat-label{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:500}
+.stat-val{font-size:15px;font-weight:500;color:var(--text)}
+.stat-val.ac{color:var(--accent)}
+.goal-banner{background:var(--surface);border-radius:16px;padding:16px;margin-bottom:12px}
+.banner-title{font-size:12px;color:var(--muted);font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.pace-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.pace-desc{font-size:12px;color:var(--muted)}
+.proj{font-size:12px;color:var(--muted);margin-bottom:10px}
+.proj b{color:var(--text)}
+.bars{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.bar-row{display:flex;flex-direction:column;gap:3px}
+.bar-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.bar-track{height:6px;background:var(--control);border-radius:99px;overflow:hidden}
+.bar-fill{height:100%;border-radius:99px;transition:width .4s}
+.teal{background:var(--accent)}
+.purple{background:var(--purple)}
+.bar-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.goal-msg{margin-top:4px}
+.goal-msg p{font-size:13px;line-height:1.6;margin-bottom:10px}
+.goal-msg b{color:var(--text)}
+.goal-msg.success p{color:var(--accent-text)}
+.goal-msg.warn p{color:var(--warn-text)}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:12px;font-size:12px;color:var(--muted)}
+.leg-solid{width:12px;height:3px;background:var(--accent);border-radius:2px;display:inline-block}
+/* overflow-x:scroll (not auto) so the scrollbar's reserved space never depends on whether the
+   range needs scrolling. A classic, non-overlay scrollbar (the Windows/Chrome default, unlike
+   macOS's overlay one) occupies real height inside the box — with :auto that height only gets
+   taken when a range happens to be scrollable, so the chart's plot area was a few px taller in
+   "1 week" than in "All time". Always reserving it, kept thin via the scrollbar-* rules below,
+   makes every range render into an identical content height. */
+.chart-wrap{position:relative;height:190px;overflow-x:scroll;overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:thin;scrollbar-color:var(--control-hover) transparent}
+.chart-wrap::-webkit-scrollbar{height:6px}
+.chart-wrap::-webkit-scrollbar-track{background:transparent}
+.chart-wrap::-webkit-scrollbar-thumb{background:var(--control-hover);border-radius:3px}
+/* Width is driven per-frame from JS during a range change, so no CSS transition here. */
+#chart-inner{height:100%;position:relative}
+/* The native control paints its own arrow hard against the right edge and ignores most styling,
+   so the appearance is reset and the chevron redrawn as a background image — which can then be
+   inset properly and take the app's accent colour. */
+.range-select{
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-color:var(--control);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%235fd4c4' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center;background-size:10px 6px;
+  border:1.5px solid transparent;border-radius:10px;
+  color:var(--text);font-size:12px;font-weight:500;font-family:inherit;line-height:1.2;
+  padding:7px 30px 7px 12px;
+  outline:none;cursor:pointer;transition:background-color .15s,border-color .15s}
+.range-select:hover{background-color:var(--control-hover)}
+.range-select:focus-visible{border-color:var(--accent)}
+.range-select option{background:var(--surface);color:var(--text)}
+
+/* Log and Goal tabs. */
+.row2{display:grid;grid-template-columns:1fr 100px;gap:8px;margin-bottom:10px}
+.goal-form{display:flex;flex-direction:column;gap:10px}
+.goal-preview{background:var(--control);border-radius:10px;padding:12px;font-size:13px;color:var(--muted);line-height:1.7;display:none}
+.goal-preview b{color:var(--text)}
+.entry-list{display:flex;flex-direction:column}
+.entry{display:flex;align-items:center;justify-content:space-between;padding:11px 8px;border-bottom:1px solid var(--control)}
+.entry:last-of-type{border-bottom:none}
+.edate{font-size:13px;color:var(--muted)}
+.ewt{font-size:15px;font-weight:500}
+.ebtn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:12px;padding:4px 8px;border-radius:6px;font-family:inherit}
+.ebtn:hover{background:var(--danger-bg);color:var(--danger)}
+.ebtn.edit-btn:hover{background:var(--accent-bg-soft);color:var(--accent)}
+.edit-row{display:none;padding:8px 4px 10px;border-bottom:1px solid var(--control);gap:8px;align-items:center;flex-wrap:wrap}
+.edit-row input{max-width:100px}
+.edit-row .btn{padding:8px 14px;font-size:13px;width:auto}
+.edit-row .btn.secondary{margin:0}
+.wtbl{width:100%;border-collapse:collapse;font-size:13px}
+.wtbl th{text-align:left;color:var(--muted);font-weight:500;padding:4px 6px;border-bottom:1px solid var(--control)}
+.wtbl td{padding:7px 6px;border-bottom:1px solid var(--control);color:var(--text)}
+.wtbl tr:last-child td{border-bottom:none}
+.wtbl td:last-child{text-align:right;color:var(--muted);font-size:12px}
+.past-goal{display:flex;justify-content:space-between;align-items:center;padding:9px 4px;border-bottom:1px solid var(--control)}
+.past-goal:last-child{border-bottom:none}
+
+/* Desktop: same markup, laid out as horizontal columns instead of stacked. */
+@media (min-width:900px){
+  .overview-grid,.log-grid,.goal-grid{display:flex;flex-wrap:wrap;align-items:flex-start;gap:16px}
+  .overview-grid>.ov-group,.overview-grid>.card,.log-grid>.card,.goal-grid>.card{flex:1 1 300px;min-width:0;margin-bottom:0}
+  .ov-group{display:flex;flex-direction:column;gap:12px}
+  .ov-group>.stats,.ov-group>.goal-banner{margin-bottom:0}
+}
+
+/* State colours toggled from JS. */
+#cycle-label.bulk{color:var(--accent)}
+#cycle-label.cut{color:var(--danger)}
+.stat-val.up{color:var(--accent)}
+.stat-val.down{color:var(--danger)}
+.leg-dashed{width:12px;height:0;border-top:2px dashed var(--warn);display:inline-block}
+
+/* History rows. */
+.entry.today{background:var(--accent-bg-soft);border-radius:10px}
+.today-badge{font-size:10px;background:var(--control);color:var(--accent);padding:2px 6px;border-radius:6px;margin-left:6px}
+.entry-actions{display:flex;gap:4px}
+.ebtn.confirming{background:var(--danger-bg);color:var(--danger)}
+
+/* Goal tab: current goal summary and past goals. */
+.goal-summary-text{font-size:14px;color:var(--text);line-height:1.6}
+.goal-summary-meta{color:var(--muted);font-size:13px}
+.pg-kind{font-size:12px;font-weight:500}
+.pg-kind.bulk{color:var(--accent)}
+.pg-kind.cut{color:var(--danger)}
+.pg-dates{font-size:13px;color:var(--muted);margin-left:8px}
+.pg-right{display:flex;align-items:center;gap:10px}
+.pg-weights{font-size:14px;font-weight:500;color:var(--text)}
+/* Armed "tap again to confirm" state of the goal buttons. */
+.goal-form .btn.primary.confirming{background:var(--warn);color:var(--bg)}
+.goal-form .btn.secondary.confirming{background:var(--danger-bg);color:var(--danger)}

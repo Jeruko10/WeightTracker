@@ -1,0 +1,40 @@
+/* App shell: page width, top bar with section switch and profile menu, sync line. */
+.app{max-width:430px;margin:0 auto;padding:0 0 2rem}
+/* Top bar: section switch plus the profile avatar, whose menu holds the account actions. */
+.top-bar{display:flex;align-items:center;gap:10px;margin:16px 16px 0}
+.top-bar .mode-switch{flex:1;margin:0;min-width:0}
+.profile{position:relative;flex-shrink:0}
+.profile-btn{width:46px;height:46px;border-radius:50%;border:none;background:var(--surface);padding:0;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .15s,box-shadow .15s}
+.profile-btn:hover{background:var(--control)}
+.profile-btn:focus-visible,.profile-btn[aria-expanded=true]{box-shadow:0 0 0 2px var(--accent)}
+.user-avatar{width:34px;height:34px;border-radius:50%;background:var(--control);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--accent);overflow:hidden;flex-shrink:0}
+.profile-menu{position:absolute;right:0;top:calc(100% + 8px);z-index:30;width:240px;max-width:calc(100vw - 32px);padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;gap:2px;
+  opacity:0;visibility:hidden;transform:translateY(-6px) scale(.98);transform-origin:top right;transition:opacity .18s ease,transform .18s ease,visibility 0s linear .18s}
+.profile-menu.open{opacity:1;visibility:visible;transform:none;transition:opacity .18s ease,transform .18s ease,visibility 0s}
+.pm-user{display:flex;flex-direction:column;gap:2px;padding:10px 12px 12px;margin-bottom:4px;border-bottom:1px solid var(--border);min-width:0}
+.pm-name{font-size:14px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-email{font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pm-email:empty{display:none}
+.pm-item{width:100%;text-align:left;background:none;border:none;border-radius:10px;padding:11px 12px;font-family:inherit;font-size:14px;font-weight:500;color:var(--text);cursor:pointer;transition:background .15s,color .15s}
+.pm-item:hover,.pm-item:focus-visible{background:var(--control);outline:none}
+.pm-item.done{background:var(--accent-bg);color:var(--accent)}
+.pm-danger{color:var(--danger)}
+.pm-item.confirming{background:var(--danger-bg);color:var(--danger)}
+.user-avatar img{width:100%;height:100%;object-fit:cover}
+.sync-indicator{font-size:11px;padding:0 20px 8px;text-align:right;min-height:20px;color:var(--muted)}
+.sync-indicator.saving{color:var(--warn)}
+.sync-indicator.saved{color:var(--accent)}
+.sync-indicator.error{color:var(--danger)}
+
+/* ── MODE SWITCH ─────────────────────────────────────────────────────────────── */
+.mode-switch{display:flex;gap:4px;margin:16px 16px 0;padding:4px;background:var(--surface);border-radius:14px}
+.mode-link{flex:1;text-align:center;padding:9px 0;border-radius:10px;font-size:14px;font-weight:500;color:var(--muted);text-decoration:none;transition:background .2s,color .2s}
+.mode-link:hover{color:var(--text)}
+.mode-link.active{background:var(--accent-bg-strong);color:var(--accent-light)}
+.mode-link:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+/* The header (cycle label + Overview/Log/Goal tabs) belongs to Bodyweight only. */
+.app[data-mode=exercises] .header{display:none}
+
+@media (min-width:900px){
+  .app{max-width:1200px}
+}

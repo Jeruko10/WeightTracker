@@ -1,0 +1,29 @@
+/* Design tokens. The whole palette lives here: re-theming the app means editing only this
+   file (plus src/shared/theme.js for the colours Chart.js draws on canvas). */
+:root{
+  --bg:#0f1417;  /* page background */
+  --surface:#182024;  /* cards */
+  --surface-sunken:#12191c;  /* blocks nested inside a card */
+  --surface-hover:#1b252a;
+  --control:#222c31;  /* inputs, secondary buttons, tracks */
+  --control-hover:#2b383e;
+  --border:#223036;  /* dividers inside cards */
+  --text:#e4eef0;
+  --text-soft:#b8c6cb;
+  --muted:#8c9ea5;  /* labels and secondary text */
+  --disabled:#4d5b61;
+  --accent:#5fd4c4;  /* teal: primary actions, gains, "in range" */
+  --accent-light:#9ae8dd;
+  --accent-ink:#06302b;  /* text on an accent background */
+  --accent-bg:#123a36;
+  --accent-bg-soft:#15322f;
+  --accent-bg-strong:#1d4a45;
+  --accent-text:#c9f2ec;
+  --danger:#ff7b7b;  /* red: deletes, losses, "below range" */
+  --danger-bg:#3d1c20;
+  --warn:#f2c46d;  /* amber: deload, Train mode, goal pace */
+  --warn-light:#f7d796;
+  --warn-bg:#3b2e12;
+  --warn-text:#f7e6c4;
+  --purple:#c89bf0;  /* Edit mode, weight progress bar */
+}
