@@ -1,6 +1,6 @@
 // Reads and validates the inline forms. Each reader returns the clean values, or null after
 // showing the problem in the form's own .err line.
-import { MAX_REPS, MIN_REPS, MAX_SETS, MIN_SETS, MAX_ABS_WEIGHT } from './constants.js';
+import { MAX_REPS, MIN_REPS, MAX_SETS, MIN_SETS, MAX_ABS_WEIGHT, MAX_MACHINE_LEN } from './constants.js';
 import { state } from './state.js';
 import { rangeRow } from './views/forms.js';
 
@@ -9,21 +9,38 @@ function fail(form, msg) {
   return null;
 }
 
+const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 const field = (form, name) => form.querySelector(`[name=${name}]`);
 
-export function readLogForm(f) {
-  const date = field(f, 'date').value;
-  const repsRaw = field(f, 'reps').value, weightRaw = field(f, 'weight').value;
+/** One reps + weight pair, or null after reporting the problem. `suffix`: '' | '-l' | '-r'. */
+function readSide(f, suffix, label) {
+  const repsRaw = field(f, 'reps' + suffix).value, weightRaw = field(f, 'weight' + suffix).value;
   const reps = Number(repsRaw), weight = weightRaw === '' ? 0 : Number(weightRaw);
-  if (!date) return fail(f, 'Pick a date.');
   if (repsRaw === '' || !Number.isInteger(reps) || reps < 0 || reps > MAX_REPS) {
-    return fail(f, 'Reps must be a whole number from 0 to ' + MAX_REPS + '.');
+    return fail(f, cap(label + 'reps must be a whole number from 0 to ' + MAX_REPS + '.'));
   }
   // Negative weight is allowed for assisted lifts (e.g. -20 kg on an assisted pull-up).
   if (!isFinite(weight) || weight < -MAX_ABS_WEIGHT || weight > MAX_ABS_WEIGHT) {
-    return fail(f, `Weight must be between -${MAX_ABS_WEIGHT} and ${MAX_ABS_WEIGHT} kg.`);
+    return fail(f, cap(label + `weight must be between -${MAX_ABS_WEIGHT} and ${MAX_ABS_WEIGHT} kg.`));
   }
-  return { date, reps, weight: Math.round(weight * 100) / 100 };
+  return { reps, weight: Math.round(weight * 100) / 100 };
+}
+
+/** { date, reps, weight } or, for a unilateral form, { date, left, right }. */
+export function readLogForm(f) {
+  const date = field(f, 'date').value;
+  if (!date) return fail(f, 'Pick a date.');
+  if (!f.dataset.uni) {
+    const side = readSide(f, '', '');
+    if (!side) return null;
+    return { date, ...side };
+  }
+  const left = readSide(f, '-l', 'Left: ');
+  if (!left) return null;
+  const same = field(f, 'same').checked;
+  if (same) field(f, 'weight-r').value = field(f, 'weight-l').value;
+  const right = readSide(f, '-r', 'Right: ');
+  return right ? { date, left, right } : null;
 }
 
 /** `selfId`: the deload being edited, so keeping its own date doesn't count as a duplicate. */
@@ -75,5 +92,10 @@ export function readExerciseForm(f) {
     if (mn > mx) return fail(f, lbl + 'min can\'t be greater than max.');
     sets.push({ id: rows[k].id || newSetId(), min: mn, max: mx });
   }
-  return { name, sets };
+  const machine = field(f, 'machine').value.trim().slice(0, MAX_MACHINE_LEN);
+  return {
+    name, sets, machine,
+    unilateral: field(f, 'unilateral').checked,
+    bodyweight: field(f, 'bodyweight').checked,
+  };
 }

@@ -32,7 +32,8 @@ src/
   shell/                   El "marco" de la app, común a todas las secciones.
     auth.js                Login/logout y pantallas según la sesión.
     profile-menu.js        Menú del avatar.
-    router.js              Rutas por hash (#/bodyweight, #/exercises).
+    router.js              Rutas por hash (#/bodyweight, #/exercises, #/exercises/ex/<id>, #/exercises/archive);
+                           pasa a la sección lo que sigue a su hash como sub-ruta.
     export.js              Export a portapapeles (combina ambas features).
   features/
     bodyweight/            Sección Bodyweight (peso corporal y objetivos).
@@ -99,8 +100,12 @@ export.js
 ### features/exercises
 
 ```
-index.js               initExercises, loadExercises, clearExercises, resetExercisesMode, exportSections
-state.js               Datos (days, exercises, logs, deloads) + estado de UI (modo, formularios)
+index.js               initExercises, loadExercises, clearExercises, resetExercisesMode, exportSections,
+                       applyExercisesRoute, setBodyweightProvider, refreshExercises
+state.js               Datos (days, exercises, logs, deloads) + estado de UI (modo, pantalla, pista, formularios)
+nav.js                 Pantalla activa (lista / detalle / archivo) según la sub-ruta del hash
+tonnage.js             Tonelaje por fecha y pista (puro)
+bodyweight-source.js   Hueco por el que el shell inyecta la media de peso corporal (las features no se importan)
 constants.js           Límites, colores por serie, iconos SVG
 repository.js          Carga, persist por lotes y serializadores
 selectors.js           Consultas sobre el estado: ordenar, filtrar, última carga, "hecho hoy"
@@ -114,11 +119,19 @@ export.js
 views/
   render.js            Render principal del árbol
   components.js        Botones e iconos reutilizables
-  tree.js              Día → ejercicio → serie → historial
-  forms.js             Formularios de log y de ejercicio
+  tree.js              Lista: días (acordeón) → filas de ejercicio compactas; enlace al archivo
+  detail.js            Detalle de ejercicio: pistas de máquina, gráfica de tonelaje, series e historial
+  archive.js           Archivo: restaurar en un día o borrar definitivamente
+  forms.js             Formularios de log (bilateral / L-R) y de ejercicio (unilateral, body weight, máquina)
   deload.js            Tarjeta de deload
   train.js             Modo Train
 ```
+
+Modelo de datos de las funciones de ejercicios (detalle en el comentario de `repository.js`):
+- Ejercicio: `unilateral`, `bodyweight`, `machine` (etiqueta activa), `archived` (con `dayId` null, conserva los logs).
+- Log: `machine` (sellada al crear) y `left`/`right` en lugar de `reps`/`weight` si es unilateral. La forma del log decide cómo se pinta.
+- Cada etiqueta de máquina es una **pista** aparte: historial, último peso, "hecho hoy" y gráfica se calculan por pista.
+- El tonelaje no se guarda: `reps × (peso [+ media de 7 días a la fecha del log])`, sumado por fecha.
 
 ## Estilos
 

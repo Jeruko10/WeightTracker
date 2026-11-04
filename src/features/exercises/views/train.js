@@ -5,10 +5,11 @@ import { today, formatDateShort } from '../../../lib/dates.js';
 import { esc, plural } from '../../../lib/html.js';
 import { ICON, chevron } from '../constants.js';
 import { state, setFocusDay } from '../state.js';
-import { sortedDays, dayExercises, setLogs, rangeText, lastWeight, exDoneToday, formatWeight, findById } from '../selectors.js';
-import { textBtn, setDot } from './components.js';
-import { focusLogForm } from './forms.js';
-import { repsCell } from './tree.js';
+import {
+  sortedDays, dayExercises, rangeText, lastWeight, exDoneToday, formatWeight, findById, lastLog, logSides, activeMachine,
+} from '../selectors.js';
+import { textBtn, setDot, repsCell } from './components.js';
+import { logForm } from './forms.js';
 
 export function renderTrain(tree) {
   const title = byId('focus-title');
@@ -44,7 +45,9 @@ function dayPickerHtml() {
 // stay open.
 function exerciseHtml(x) {
   const sets = `<div class="focus-sets">${x.sets.map((s, k) => setHtml(x, s, k)).join('')}</div>`;
-  const name = `<span class="focus-ex-name">${esc(x.name)}</span>`;
+  const machine = activeMachine(x);
+  const name = `<span class="focus-ex-name">${esc(x.name)}` +
+    (machine ? `<span class="tag machine">${esc(machine)}</span>` : '') + '</span>';
   if (!exDoneToday(x)) {
     return `<section class="focus-ex"><div class="focus-ex-head"><span></span>${name}<span></span></div>${sets}</section>`;
   }
@@ -59,14 +62,16 @@ function exerciseHtml(x) {
 function lastLogHtml(last, s) {
   if (!last) return '<span class="focus-none">No entries yet</span>';
   const doneToday = last.date === today();
-  return repsCell(last.reps, s, false) +
-    `<span class="focus-wt">${formatWeight(last.weight)} <small>kg</small></span>` +
+  const sides = logSides(last).map((sd, i, all) =>
+    '<span class="focus-side">' + (all.length > 1 ? `<span class="side-tag">${i ? 'R' : 'L'}</span>` : '') +
+    repsCell(sd.reps, s, false) + `<span class="focus-wt">${formatWeight(sd.weight)} <small>kg</small></span></span>`).join('');
+  return `<span class="focus-sides">${sides}</span>` +
     `<span class="focus-today" title="${doneToday ? 'Logged today' : 'Last: ' + formatDateShort(last.date)}">` +
       (doneToday ? ICON.check : formatDateShort(last.date).slice(0, 5)) + '</span>';
 }
 
 function setHtml(x, s, k) {
-  const sk = x.id + ':' + s.id, h = setLogs(x.id, s.id), last = h.length ? h[h.length - 1] : null;
+  const sk = x.id + ':' + s.id, last = lastLog(x, s);
   const doneToday = !!last && last.date === today(), adding = state.ui.addFor === sk;
   const label = 'Log set ' + (k + 1);
   let html = `<div class="focus-set${doneToday ? ' done' : ''}">` + setDot(k) +
@@ -74,6 +79,6 @@ function setHtml(x, s, k) {
     `<div class="focus-last">${lastLogHtml(last, s)}</div>` +
     (adding ? '' : `<button class="focus-add" data-action="log-open" data-id="${sk}" aria-label="${label}" title="${label}">${ICON.plus}</button>`) +
     '</div>';
-  if (adding) html += focusLogForm(today(), lastWeight(x, k), sk);
+  if (adding) html += logForm({ date: today(), reps: '', weight: lastWeight(x, k) }, 'log-save', sk, { uni: !!x.unilateral, focus: true });
   return html;
 }

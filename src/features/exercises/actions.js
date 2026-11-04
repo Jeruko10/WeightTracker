@@ -4,10 +4,11 @@ import { byId } from '../../lib/dom.js';
 import { confirmTap } from '../../lib/confirm-tap.js';
 import { plural } from '../../lib/html.js';
 import { state, isEdit, canLog, resetForms, closeAllForms, saveOpen, setFocusDay } from './state.js';
-import { sortedDays, dayExercises, exDoneToday, findById } from './selectors.js';
+import { sortedDays, dayExercises, exDoneToday, findById, activeMachine, trackOf } from './selectors.js';
 import { readLogForm, readDeloadDate, readExerciseForm, changeSetCount } from './form-readers.js';
 import { toggleFold, openFold } from './folds.js';
 import { playTreeEnter } from './modes.js';
+import { goTo, exRoute } from './nav.js';
 import { render } from './views/render.js';
 import * as repo from './repository.js';
 
@@ -68,7 +69,10 @@ function saveNewLog(id, form) {
   const [exerciseId, setId] = id.split(':');
   const x = findById(state.exercises, exerciseId);
   const wasDone = !!x && exDoneToday(x);
-  const log = { id: repo.newId(COLLECTIONS.logs), exerciseId, setId, ...v, createdAt: Date.now() };
+  // New entries are stamped with the exercise's active machine label.
+  const log = {
+    id: repo.newId(COLLECTIONS.logs), exerciseId, setId, ...v, machine: x ? activeMachine(x) : '', createdAt: Date.now(),
+  };
   state.logs.push(log);
   state.ui.addFor = null;
   // In Train, logging the last pending set finishes the exercise: show its ✓, then fold it.
@@ -97,6 +101,22 @@ function saveNewLog(id, form) {
 const ANY_MODE = {
   toggle: ({ t }) => toggleFold(t.closest('.foldable')),
   cancel: () => { closeAllForms(); render(); },
+  'ex-open': ({ id }) => goTo(exRoute(id)),
+  'archive-open': () => goTo('archive'),
+  'detail-back': () => {
+    // Backing out of a form returns to the screen under it; otherwise to the list.
+    if (state.ui.newExFor || state.ui.editEx) {
+      closeAllForms();
+      render();
+    } else {
+      goTo('');
+    }
+  },
+  'track-pick': ({ t, id }) => {
+    state.track[id] = t.dataset.track;
+    closeAllForms();
+    render();
+  },
   'hist-more': ({ id }) => {
     if (state.showAll.has(id)) state.showAll.delete(id);
     else state.showAll.add(id);
@@ -230,7 +250,10 @@ const EDIT_ONLY = {
     if (!v) return;
     const siblings = dayExercises(id);
     const order = siblings.length ? siblings[siblings.length - 1].order + 1 : 0;
-    const x = { id: repo.newId(COLLECTIONS.exercises), dayId: id, name: v.name, order, sets: v.sets };
+    const x = {
+      id: repo.newId(COLLECTIONS.exercises), dayId: id, name: v.name, order, sets: v.sets,
+      unilateral: v.unilateral, bodyweight: v.bodyweight, machine: v.machine, archived: false,
+    };
     state.exercises.push(x);
     state.ui.newExFor = null;
     openFold('e:' + x.id);
@@ -241,9 +264,37 @@ const EDIT_ONLY = {
   'ex-down': ({ id }) => moveExercise(id, 1),
   'ex-edit': ({ id }) => {
     closeAllForms();
-    state.open.add('e:' + id);
-    saveOpen();
-    openForm('editEx', id, 'ex:' + id, 'name');
+    goTo(exRoute(id), { slot: 'editEx', id });
+  },
+  'track-activate': ({ id }) => {
+    const x = findById(state.exercises, id);
+    if (!x) return;
+    x.machine = trackOf(x);
+    delete state.track[id];
+    render();
+    repo.saveExercise(x);
+  },
+  'ex-archive': ({ id }) => {
+    const x = findById(state.exercises, id);
+    if (!x) return;
+    x.archived = true;
+    x.dayId = null;
+    delete state.track[id];
+    closeAllForms();
+    if (state.view.kind === 'ex') goTo('');
+    else render();
+    repo.saveExercise(x);
+  },
+  'ex-restore': ({ t, id }) => {
+    const x = findById(state.exercises, id), sel = t.closest('.arch-row').querySelector('select');
+    if (!x || !sel || !sel.value) return;
+    const siblings = dayExercises(sel.value);
+    x.order = siblings.length ? siblings[siblings.length - 1].order + 1 : 0;
+    x.dayId = sel.value;
+    x.archived = false;
+    openFold('d:' + x.dayId);
+    render();
+    repo.saveExercise(x);
   },
   'ex-save': ({ t, id, f }) => {
     const x = findById(state.exercises, id), v = readExerciseForm(f);
@@ -255,6 +306,11 @@ const EDIT_ONLY = {
     if (dropped.length && !confirmTap(t, label)) return;
     x.name = v.name;
     x.sets = v.sets;
+    x.unilateral = v.unilateral;
+    x.bodyweight = v.bodyweight;
+    // A new label starts a new track: follow it instead of staying on the old one.
+    if ((x.machine || '') !== v.machine) delete state.track[id];
+    x.machine = v.machine;
     const dropIds = new Set(dropped.map((o) => o.id));
     state.logs = state.logs.filter((o) => !dropIds.has(o.id));
     state.ui.editEx = null;
@@ -267,7 +323,11 @@ const EDIT_ONLY = {
     if (!confirmTap(t, label)) return;
     state.exercises = state.exercises.filter((o) => o.id !== id);
     state.logs = state.logs.filter((o) => o.exerciseId !== id);
-    render();
+    delete state.track[id];
+    state.open.delete('e:' + id);
+    closeAllForms();
+    if (state.view.kind === 'ex' && state.view.id === id) goTo('');
+    else render();
     repo.deleteExerciseCascade(id, logs);
   },
 };

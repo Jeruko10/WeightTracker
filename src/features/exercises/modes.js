@@ -1,24 +1,22 @@
-// View / Edit / Train. The toolbar button cycles through them in that order.
+// View / Edit / Train, chosen from the segmented control under the header.
 import { byId, playEnter } from '../../lib/dom.js';
-import { ICON } from './constants.js';
-import { state, MODES, MODE_LABEL, closeAllForms, saveMode, setFocusDay } from './state.js';
+import { state, MODES, closeAllForms, saveMode, setFocusDay } from './state.js';
 import { render } from './views/render.js';
 
-function nextMode() {
-  return MODES[(MODES.indexOf(state.mode) + 1) % MODES.length];
-}
-
+/** Marks the segment of the current mode as pressed. */
 export function updateModeBtn() {
-  const btn = byId('mode-btn'), next = nextMode();
-  btn.dataset.mode = state.mode;
-  btn.innerHTML = '<span class="mode-dot"></span>' + MODE_LABEL[state.mode] + ICON.cycle;
-  btn.title = 'Mode: ' + MODE_LABEL[state.mode] + '. Click for ' + MODE_LABEL[next] + '.';
-  btn.setAttribute('aria-label', btn.title);
+  document.querySelectorAll('#mode-seg [data-mode]').forEach((b) => {
+    const on = b.dataset.mode === state.mode;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+  byId('edit-band').hidden = state.mode !== 'edit';
 }
 
 // Re-plays the fade-in on the content that was just swapped (mode, day pick, change day).
 export function playTreeEnter() {
   playEnter(byId('ex-tree'));
+  playEnter(byId('ex-detail'));
   playEnter(byId('focus-title'));
 }
 
@@ -28,19 +26,18 @@ function leaveTrain() {
   state.focusExpanded.clear();
 }
 
-function setMode(mode) {
-  if (state.mode === 'train' && mode !== 'train') leaveTrain();
+export function setMode(mode) {
+  if (!MODES.includes(mode) || mode === state.mode) return;
+  if (state.mode === 'train') leaveTrain();
   state.mode = mode;
   saveMode();
   closeAllForms();
+  // Logging always targets the active machine track, so Train starts from it.
+  if (mode === 'train') state.track = {};
   byId('new-day-err').textContent = '';
   render();
   playTreeEnter();
   if (mode === 'train') window.scrollTo(0, 0);
-}
-
-export function cycleMode() {
-  setMode(nextMode());
 }
 
 // Called by the router whenever the Bodyweight section opens: coming back to Exercises from

@@ -1,7 +1,12 @@
 // Firestore access for Exercises. Layout, all under users/{uid}/:
 //   trainingDays/{id}  { name, order, createdAt }
-//   exercises/{id}     { dayId, name, order, sets: [{ id, min, max }] }
-//   exerciseLogs/{id}  { exerciseId, setId, date, reps, weight, createdAt }
+//   exercises/{id}     { dayId|null, name, order, sets: [{ id, min, max }],
+//                        unilateral, bodyweight, machine, archived }
+//                      archived exercises have dayId null and keep all their logs;
+//                      machine is the active label new logs are stamped with ('' = none)
+//   exerciseLogs/{id}  { exerciseId, setId, date, machine, createdAt } plus either
+//                        reps, weight                    (bilateral)
+//                        left:{reps,weight}, right:{…}   (unilateral exercises)
 //   deloads/{id}       { date, createdAt }   (each doc marks the day a deload starts)
 // Sets carry their own stable id so a log stays attached to the right set when sets are added,
 // removed or reordered — an index would silently shift history onto another set.
@@ -34,12 +39,16 @@ export async function fetchAll() {
 
 // ── Serializers: only these fields are stored ─────────────────────────────────
 const dayData = (d) => ({ name: d.name, order: d.order, createdAt: d.createdAt });
+// Firestore rejects `undefined`, so every optional field is normalised here.
 const exerciseData = (x) => ({
-  dayId: x.dayId, name: x.name, order: x.order,
+  dayId: x.dayId || null, name: x.name, order: x.order,
   sets: x.sets.map((s) => ({ id: s.id, min: s.min, max: s.max })),
+  unilateral: !!x.unilateral, bodyweight: !!x.bodyweight, machine: x.machine || '', archived: !!x.archived,
 });
+const side = (s) => ({ reps: s.reps, weight: s.weight });
 const logData = (l) => ({
-  exerciseId: l.exerciseId, setId: l.setId, date: l.date, reps: l.reps, weight: l.weight, createdAt: l.createdAt,
+  exerciseId: l.exerciseId, setId: l.setId, date: l.date, machine: l.machine || '', createdAt: l.createdAt,
+  ...(l.left ? { left: side(l.left), right: side(l.right) } : { reps: l.reps, weight: l.weight }),
 });
 
 // ── Batches ───────────────────────────────────────────────────────────────────

@@ -32,10 +32,17 @@ export const state = {
 
   /** Fold keys currently open: 'deload', 'd:<dayId>', 'e:<exId>', 'c:<exId>' (chart) */
   open: new Set(loadJSON(STORAGE_KEYS.open, [])),
+  /** Machine track being viewed per exercise: exId → label ('' = none). Absent = the active one. */
+  track: {},
   /** Set keys ('<exId>:<setId>') whose full history is expanded */
   showAll: new Set(),
   /** Which inline form is open, if any. Only one at a time keeps the tree calm. */
   ui: { addFor: null, editLog: null, editDay: null, editEx: null, newExFor: null, editDeload: null },
+
+  /** Screen showing: { kind: 'list' | 'ex' | 'archive', id } — set from the URL (see nav.js) */
+  view: { kind: 'list', id: null },
+  /** A form to open once the pending navigation lands: { slot, id } */
+  pendingForm: null,
 
   // Train mode: finished exercises the user re-opened, and the one that just finished (rendered
   // open once so its fold-away can be seen).

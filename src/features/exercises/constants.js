@@ -6,7 +6,9 @@ export const MAX_REPS = 500;
 export const MAX_ABS_WEIGHT = 1000;
 /** History rows shown per set before "Show all". */
 export const HISTORY_PREVIEW = 5;
-/** Most recent entries per set drawn in an exercise's chart. */
+/** Longest machine label. */
+export const MAX_MACHINE_LEN = 40;
+/** Most recent training dates drawn in an exercise's tonnage chart. */
 export const CHART_ENTRIES = 10;
 /** Most recent entries per set included in the clipboard export. */
 export const EXPORT_ENTRIES = 10;
@@ -35,6 +37,9 @@ export const ICON = {
   del: icon('M4 4l8 8M12 4l-8 8'),
   plus: icon('M8 3v10M3 8h10'),
   check: icon('M3 8.5l3 3 7-7'),
+  archive: icon('M2.5 3.5h11v3h-11zM3.5 6.5v6h9v-6M6.5 9h3'),
+  back: icon('M10 3L5 8l5 5'),
+  next: icon('M6 3l5 5-5 5'),
   cycle: icon('M13 3v3h-3M12.6 6A5 5 0 0 0 3.2 7M3 13v-3h3M3.4 10a5 5 0 0 0 9.4-1'),
 };
 

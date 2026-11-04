@@ -5,6 +5,7 @@ export const COLORS = {
   accent: '#5fd4c4',
   accentFill: 'rgba(95,212,196,0.10)',
   accentBand: 'rgba(95,212,196,0.08)',
+  accentMuted: 'rgba(95,212,196,0.55)',
   amber: '#f2c46d',
 };
 

@@ -49,3 +49,18 @@
 .focus-form-grid .field-label{display:block;font-size:11px;margin-bottom:4px}
 .focus-form .btn.primary{background:var(--warn);color:var(--warn-bg)}
 .focus-form .btn.primary:hover{background:var(--warn-light)}
+
+.focus-ex-name .tag{display:block;width:fit-content;margin:4px auto 0}
+.focus-sides{flex:1;display:flex;flex-direction:column;align-items:flex-end;gap:6px;min-width:0}
+.focus-side{display:flex;align-items:center;gap:10px}
+.focus-form .lf-side{align-items:flex-end}
+.focus-form .check-row.compact{min-height:36px}
+/* Narrow phones: tighten the set row so a left/right last entry fits beside its label. */
+.focus-set{gap:8px}
+.focus-set-label{width:62px}
+.focus-last{gap:6px;min-width:0}
+.focus-last .reps-cell{min-width:0;padding:3px 8px}
+.focus-wt{min-width:0}
+.focus-side{gap:6px}
+.focus-today{width:30px}
+.focus-side .side-tag{width:12px}
