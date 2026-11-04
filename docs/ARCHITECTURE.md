@@ -28,7 +28,7 @@ src/
   shared/                  Servicios de la app compartidos por varias features.
     user-db.js             Referencias Firestore bajo users/{uid}/…
     sync-status.js         Indicador "Saving… / Saved / Error" y persist().
-    theme.js               Colores usados desde JS (gráficas).
+    theme.js               Tema Sistema/Claro/Oscuro (data-theme en <html>, evento themechange) y colores para las gráficas, leídos de las variables CSS.
     export-format.js       Helpers de texto plano para el export (reglas, padding).
   shell/                   El "marco" de la app, común a todas las secciones.
     auth.js                Login/logout y pantallas según la sesión.
@@ -141,7 +141,7 @@ Mismo criterio que en JS: un archivo por responsabilidad, cargados en este orden
 
 ```
 styles/
-  tokens.css           Variables CSS de color. Cambiar el tema = tocar esto (y shared/theme.js).
+  tokens.css           Variables CSS de color: oscuro por defecto, claro con data-theme=light o con el SO en claro (bloque repetido). Las gráficas leen estas mismas variables.
   base.css             Reset, body, animaciones globales.
   components.css       Piezas reutilizables: card, btn, inputs, chip, fold, icon-btn…
   layout.css           Shell: top bar, menú de perfil, cabecera, pestañas, sync.

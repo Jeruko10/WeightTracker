@@ -74,7 +74,7 @@ function saveEdit(entry) {
   const input = byId('ei-' + entry.date);
   const weight = parseFloat(input.value);
   if (!isValidWeight(weight)) {
-    input.style.borderColor = '#ff7b7b';
+    input.style.borderColor = 'var(--danger)';
     return;
   }
   entry.weight = weight;

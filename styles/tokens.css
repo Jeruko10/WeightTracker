@@ -1,6 +1,9 @@
-/* Design tokens. The whole palette lives here: re-theming the app means editing only this
-   file (plus src/shared/theme.js for the colours Chart.js draws on canvas). */
+/* Design tokens. The whole palette lives here: re-theming the app means editing only this file —
+   the JS side (Chart.js draws on a canvas) reads these same variables, see src/shared/theme.js.
+   Dark is the default; light applies when the user picks it, or when they pick "System" and the
+   OS prefers light. The light block is repeated once for each of those two cases. */
 :root{
+  color-scheme:dark;
   --bg:#0f1417;  /* page background */
   --surface:#182024;  /* cards */
   --surface-sunken:#12191c;  /* blocks nested inside a card */
@@ -21,9 +24,101 @@
   --accent-text:#c9f2ec;
   --danger:#ff7b7b;  /* red: deletes, losses, "below range" */
   --danger-bg:#3d1c20;
+  --danger-bg-hover:#4d2328;
+  --on-danger:#2a0d0f;  /* text on a solid danger background */
   --warn:#f2c46d;  /* amber: deload, Train mode, goal pace */
   --warn-light:#f7d796;
   --warn-bg:#3b2e12;
   --warn-text:#f7e6c4;
   --purple:#c89bf0;  /* Edit mode, weight progress bar */
+  --purple-bg:#3a2a52;
+  --snack-action:#0b5c52;  /* action button on the (inverted) snackbar */
+  /* Colours the charts read from JS */
+  --accent-fill:rgba(95,212,196,.10);
+  --accent-band:rgba(95,212,196,.08);
+  --accent-muted:rgba(95,212,196,.55);
+  --chart-tick:#8c9ea5;
+  --chart-tick-rgb:140,158,165;
+  --chart-grid-rgb:255,255,255;
+  --chart-grid-alpha:.06;
+}
+:root[data-theme=light]{
+  color-scheme:light;
+  --bg:#f4f7f8;
+  --surface:#ffffff;
+  --surface-sunken:#eef3f4;
+  --surface-hover:#f0f5f6;
+  --control:#e6edef;
+  --control-hover:#d8e2e5;
+  --border:#dbe4e7;
+  --text:#162126;
+  --text-soft:#3d4f56;
+  --muted:#566a72;
+  --disabled:#9fb0b6;
+  --accent:#0a7c6e;
+  --accent-light:#0b6b5f;
+  --accent-ink:#ffffff;
+  --accent-bg:#d5f2ed;
+  --accent-bg-soft:#e3f6f3;
+  --accent-bg-strong:#bfe9e2;
+  --accent-text:#0b4a42;
+  --danger:#b3261e;
+  --danger-bg:#fde4e2;
+  --danger-bg-hover:#f9cfcb;
+  --on-danger:#ffffff;
+  --warn:#8a5a00;
+  --warn-light:#a46b00;
+  --warn-bg:#fdf0cf;
+  --warn-text:#5c3d00;
+  --purple:#6b3fa0;
+  --purple-bg:#e9dcf8;
+  --snack-action:#7fe0d1;
+  --accent-fill:rgba(10,124,110,.12);
+  --accent-band:rgba(10,124,110,.10);
+  --accent-muted:rgba(10,124,110,.7);
+  --chart-tick:#566a72;
+  --chart-tick-rgb:86,106,114;
+  --chart-grid-rgb:0,0,0;
+  --chart-grid-alpha:.08;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme=dark]):not([data-theme=light]){
+    color-scheme:light;
+    --bg:#f4f7f8;
+    --surface:#ffffff;
+    --surface-sunken:#eef3f4;
+    --surface-hover:#f0f5f6;
+    --control:#e6edef;
+    --control-hover:#d8e2e5;
+    --border:#dbe4e7;
+    --text:#162126;
+    --text-soft:#3d4f56;
+    --muted:#566a72;
+    --disabled:#9fb0b6;
+    --accent:#0a7c6e;
+    --accent-light:#0b6b5f;
+    --accent-ink:#ffffff;
+    --accent-bg:#d5f2ed;
+    --accent-bg-soft:#e3f6f3;
+    --accent-bg-strong:#bfe9e2;
+    --accent-text:#0b4a42;
+    --danger:#b3261e;
+    --danger-bg:#fde4e2;
+    --danger-bg-hover:#f9cfcb;
+    --on-danger:#ffffff;
+    --warn:#8a5a00;
+    --warn-light:#a46b00;
+    --warn-bg:#fdf0cf;
+    --warn-text:#5c3d00;
+    --purple:#6b3fa0;
+    --purple-bg:#e9dcf8;
+    --snack-action:#7fe0d1;
+    --accent-fill:rgba(10,124,110,.12);
+    --accent-band:rgba(10,124,110,.10);
+    --accent-muted:rgba(10,124,110,.7);
+    --chart-tick:#566a72;
+    --chart-tick-rgb:86,106,114;
+    --chart-grid-rgb:0,0,0;
+    --chart-grid-alpha:.08;
+  }
 }

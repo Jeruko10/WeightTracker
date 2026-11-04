@@ -53,6 +53,11 @@ export async function loadBodyweight() {
   }
 }
 
+/** Redraws the section (charts read their colours when drawn, so a theme change needs it). */
+export function refreshBodyweight() {
+  render();
+}
+
 export function clearBodyweight() {
   resetState();
   destroyChart();

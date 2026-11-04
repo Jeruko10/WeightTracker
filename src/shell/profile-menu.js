@@ -1,6 +1,7 @@
 // Account details and actions live behind the avatar, so the top of the app stays clean.
 // The menu closes on an outside click, Escape, or a section change.
 import { byId } from '../lib/dom.js';
+import { getThemePref, setThemePref } from '../shared/theme.js';
 
 let btn = null, menu = null;
 
@@ -30,7 +31,23 @@ export function renderUser(user) {
   }
 }
 
+function markTheme() {
+  const pref = getThemePref();
+  document.querySelectorAll('#theme-seg [data-theme-pref]').forEach((b) => {
+    const on = b.dataset.themePref === pref;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+
 export function initProfileMenu() {
+  markTheme();
+  byId('theme-seg').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-theme-pref]');
+    if (!b) return;
+    setThemePref(b.dataset.themePref);
+    markTheme();
+  });
   btn = byId('btn-profile');
   menu = byId('profile-menu');
   btn.addEventListener('click', (e) => {

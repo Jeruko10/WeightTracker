@@ -20,6 +20,10 @@
 .pm-item:hover,.pm-item:focus-visible{background:var(--control);outline:none}
 .pm-item.done{background:var(--accent-bg);color:var(--accent)}
 .pm-danger{color:var(--danger)}
+.pm-theme{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 12px 10px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.pm-label{font-size:12px;color:var(--muted)}
+.seg.sm .seg-btn{min-height:30px;padding:0 9px;font-size:12px}
+.seg.sm .seg-btn.on{background:var(--accent-bg-strong);color:var(--accent-light)}
 .pm-item.confirming{background:var(--danger-bg);color:var(--danger)}
 .user-avatar img{width:100%;height:100%;object-fit:cover}
 .sync-indicator{font-size:12px;text-align:right;color:var(--muted);flex-shrink:0}

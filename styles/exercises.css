@@ -100,7 +100,7 @@
 .seg-btn:hover{color:var(--text)}
 .seg-btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .seg-btn.on[data-mode=view]{background:var(--accent-bg-strong);color:var(--accent-light)}
-.seg-btn.on[data-mode=edit]{background:#3a2a52;color:var(--purple)}
+.seg-btn.on[data-mode=edit]{background:var(--purple-bg);color:var(--purple)}
 .seg-btn.on[data-mode=train]{background:var(--warn-bg);color:var(--warn)}
 .edit-band{margin:0 0 12px;padding:8px 12px;border-left:3px solid var(--purple);background:var(--surface);border-radius:0 10px 10px 0;font-size:13px;color:var(--text-soft)}
 .edit-band[hidden]{display:none}
@@ -194,8 +194,8 @@
 .check-row small{font-size:12px;color:var(--muted);line-height:1.35}
 .danger-zone{display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
 .btn.danger{background:var(--danger-bg);color:var(--danger);font-weight:500}
-.btn.danger:hover{background:#4d2328}
-.btn.danger.confirming{background:var(--danger);color:#2a0d0f}
+.btn.danger:hover{background:var(--danger-bg-hover)}
+.btn.danger.confirming{background:var(--danger);color:var(--on-danger)}
 .btn .ico{margin-right:4px}
 
 /* ── Archive ─────────────────────────────────────────────────────────────────── */

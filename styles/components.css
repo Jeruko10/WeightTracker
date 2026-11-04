@@ -8,7 +8,7 @@
 .chip.fast{background:var(--danger-bg);color:var(--danger)}
 .chip.slow{background:var(--warn-bg);color:var(--warn)}
 .chip.none{background:var(--control);color:var(--muted)}
-input[type=date],input[type=number],input[type=text]{background:var(--control);border:1.5px solid transparent;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;width:100%;outline:none;font-family:inherit;transition:border-color .15s;color-scheme:dark}
+input[type=date],input[type=number],input[type=text]{background:var(--control);border:1.5px solid transparent;border-radius:10px;color:var(--text);font-size:15px;padding:10px 12px;width:100%;outline:none;font-family:inherit;transition:border-color .15s}
 input:focus{border-color:var(--accent);background:var(--control-hover)}
 .btn{width:100%;border:none;border-radius:10px;font-size:15px;font-weight:600;padding:12px;cursor:pointer;font-family:inherit;transition:background .15s}
 .btn.primary{background:var(--accent);color:var(--accent-ink)}
@@ -42,7 +42,7 @@ input:focus{border-color:var(--accent);background:var(--control-hover)}
 /* Snackbar: transient message with an action, above the section bar. */
 .snackbar{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom));z-index:40;display:flex;align-items:center;gap:14px;max-width:min(92vw,420px);padding:10px 12px 10px 16px;background:var(--text);color:var(--bg);border-radius:12px;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.45);opacity:0;visibility:hidden;transform:translate(-50%,8px);transition:opacity .2s,transform .2s,visibility 0s linear .2s}
 .snackbar.show{opacity:1;visibility:visible;transform:translate(-50%,0);transition:opacity .2s,transform .2s,visibility 0s}
-.snackbar button{min-height:36px;padding:0 12px;border:none;border-radius:8px;background:none;color:#0b5c52;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
-.snackbar button:hover{background:rgba(0,0,0,.08)}
+.snackbar button{min-height:36px;padding:0 12px;border:none;border-radius:8px;background:none;color:var(--snack-action);font-family:inherit;font-size:14px;font-weight:700;cursor:pointer}
+.snackbar button:hover{background:rgba(127,127,127,.25)}
 @media (min-width:768px){.snackbar{bottom:24px;left:calc(50% + 44px)}}
 @media (prefers-reduced-motion:reduce){.snackbar{transition:none}}

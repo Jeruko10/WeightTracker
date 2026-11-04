@@ -115,7 +115,7 @@ export function setAxisChrome(alpha, animating) {
   if (!view.chart) return;
   const { x, y } = view.chart.options.scales;
   const tickColor = 'rgba(' + CHART_THEME.tickRgb + ',' + alpha + ')';
-  const gridColor = 'rgba(255,255,255,' + (CHART_THEME.gridAlpha * alpha).toFixed(4) + ')';
+  const gridColor = 'rgba(' + CHART_THEME.gridRgb + ',' + (CHART_THEME.gridAlpha * alpha).toFixed(4) + ')';
   x.ticks.color = tickColor; y.ticks.color = tickColor;
   x.grid.color = gridColor; y.grid.color = gridColor;
   x.grid.tickColor = gridColor; y.grid.tickColor = gridColor;

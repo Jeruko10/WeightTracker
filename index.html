@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta name="theme-color" content="#0f1417">
+<!-- Apply a saved Light/Dark choice before the first paint, so there is no flash of the wrong theme. -->
+<script>try{var t=localStorage.getItem('wt-theme');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t}catch(e){}</script>
 <title>Weight Tracker</title>
 <link rel="icon" type="image/png" href="assets/icon.png">
 <link rel="apple-touch-icon" href="assets/icon.png">
@@ -41,6 +43,14 @@
           <div class="pm-user">
             <span class="pm-name" id="user-name"></span>
             <span class="pm-email" id="user-email"></span>
+          </div>
+          <div class="pm-theme" role="group" aria-label="Theme">
+            <span class="pm-label">Theme</span>
+            <div class="seg sm" id="theme-seg">
+              <button class="seg-btn" data-theme-pref="system" aria-pressed="true">System</button>
+              <button class="seg-btn" data-theme-pref="light" aria-pressed="false">Light</button>
+              <button class="seg-btn" data-theme-pref="dark" aria-pressed="false">Dark</button>
+            </div>
           </div>
           <button class="pm-item" id="btn-export" role="menuitem">Export</button>
           <button class="pm-item pm-danger" id="btn-signout" role="menuitem">Sign out</button>

@@ -3,8 +3,9 @@ import { initAuth } from './shell/auth.js';
 import { initProfileMenu, renderUser } from './shell/profile-menu.js';
 import { initRouter } from './shell/router.js';
 import { initExport } from './shell/export.js';
+import { initTheme } from './shared/theme.js';
 import {
-  initBodyweight, loadBodyweight, clearBodyweight, onBodyweightShown, makeBodyweightLookup,
+  initBodyweight, loadBodyweight, clearBodyweight, onBodyweightShown, makeBodyweightLookup, refreshBodyweight,
 } from './features/bodyweight/index.js';
 import {
   initExercises, loadExercises, clearExercises, resetExercisesMode, setBodyweightProvider,
@@ -13,6 +14,12 @@ import {
 
 // Features can't import each other: bodyweight exercises get their 7-day average through here.
 setBodyweightProvider(makeBodyweightLookup);
+
+initTheme();
+window.addEventListener('themechange', () => {
+  refreshBodyweight();
+  refreshExercises();
+});
 
 initProfileMenu();
 initExport();
