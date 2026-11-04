@@ -3,6 +3,7 @@
 import { byId } from '../../lib/dom.js';
 import { confirmTap } from '../../lib/confirm-tap.js';
 import { plural } from '../../lib/html.js';
+import { showSnackbar } from '../../lib/snackbar.js';
 import { state, isEdit, canLog, resetForms, closeAllForms, saveOpen, setFocusDay } from './state.js';
 import { sortedDays, dayExercises, exDoneToday, findById, activeMachine, trackOf } from './selectors.js';
 import { readLogForm, readDeloadDate, readExerciseForm, changeSetCount } from './form-readers.js';
@@ -181,11 +182,20 @@ const EDIT_ONLY = {
     render();
     repo.updateDeloadDate(id, date);
   },
-  'deload-del': ({ t, id }) => {
-    if (!confirmTap(t, 'Delete?')) return;
+  'deload-del': ({ id }) => {
+    const d = findById(state.deloads, id);
+    if (!d) return;
     state.deloads = state.deloads.filter((o) => o.id !== id);
     render();
     repo.deleteDeload(id);
+    showSnackbar('Deload date removed', {
+      label: 'Undo',
+      run: () => {
+        state.deloads.push(d);
+        render();
+        repo.saveDeload(d);
+      },
+    });
   },
 
   // Logged sets
@@ -201,11 +211,20 @@ const EDIT_ONLY = {
     render();
     repo.saveLog(log);
   },
-  'log-del': ({ t, id }) => {
-    if (!confirmTap(t, 'Delete?')) return;
+  'log-del': ({ id }) => {
+    const log = findById(state.logs, id);
+    if (!log) return;
     state.logs = state.logs.filter((o) => o.id !== id);
     render();
     repo.deleteLog(id);
+    showSnackbar('Entry deleted', {
+      label: 'Undo',
+      run: () => {
+        state.logs.push(log);
+        render();
+        repo.saveLog(log);
+      },
+    });
   },
 
   // Training days
@@ -277,6 +296,7 @@ const EDIT_ONLY = {
   'ex-archive': ({ id }) => {
     const x = findById(state.exercises, id);
     if (!x) return;
+    const prev = { dayId: x.dayId, order: x.order };
     x.archived = true;
     x.dayId = null;
     delete state.track[id];
@@ -284,6 +304,18 @@ const EDIT_ONLY = {
     if (state.view.kind === 'ex') goTo('');
     else render();
     repo.saveExercise(x);
+    showSnackbar(x.name + ' archived', {
+      label: 'Undo',
+      run: () => {
+        // The day may have been deleted meanwhile: then it stays archived.
+        if (!findById(state.days, prev.dayId)) return;
+        x.archived = false;
+        x.dayId = prev.dayId;
+        x.order = prev.order;
+        render();
+        repo.saveExercise(x);
+      },
+    });
   },
   'ex-restore': ({ t, id }) => {
     const x = findById(state.exercises, id), sel = t.closest('.arch-row').querySelector('select');
