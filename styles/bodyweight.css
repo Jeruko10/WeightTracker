@@ -121,3 +121,13 @@
 /* Armed "tap again to confirm" state of the goal buttons. */
 .goal-form .btn.primary.confirming{background:var(--warn);color:var(--bg)}
 .goal-form .btn.secondary.confirming{background:var(--danger-bg);color:var(--danger)}
+
+/* Wide screens: History sits beside Progress, so it needs no tab of its own. */
+@media (min-width:1280px){
+  #bodyweight-view{display:grid;grid-template-columns:minmax(0,1fr) 380px;align-items:start}
+  #bodyweight-view>.section{grid-column:1}
+  #bodyweight-view>#log{display:block;grid-column:2;grid-row:1}
+  #bodyweight-view:has(#log.active)>#overview{display:block}
+  #bodyweight-view:has(#goal.active)>#log{display:none}
+  .tab[data-tab=log]{display:none}
+}

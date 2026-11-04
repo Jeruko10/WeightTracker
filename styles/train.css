@@ -72,3 +72,5 @@
 .machine-form{display:flex;flex-direction:column;gap:8px;margin:4px 16px 10px;padding:12px;background:var(--surface-sunken);border-radius:12px}
 .machine-form .field-label{display:block;font-size:11px;margin-bottom:4px}
 .machine-form .btn.primary{background:var(--warn);color:var(--warn-bg)}
+.focus-phase{margin:0;font-size:13px;color:var(--text-soft);text-align:center}
+.focus-phase.deload{padding:8px 12px;border-radius:10px;background:var(--warn-bg);color:var(--warn-text);font-weight:600}

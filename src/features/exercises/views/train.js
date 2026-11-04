@@ -11,6 +11,7 @@ import {
   knownMachines,
 } from '../selectors.js';
 import { textBtn, setDot, repsCell } from './components.js';
+import { currentDeload, cyclePhase } from '../deloads.js';
 import { logForm } from './forms.js';
 
 export function renderTrain(tree) {
@@ -25,7 +26,11 @@ export function renderTrain(tree) {
   title.innerHTML = `<span class="focus-day">${esc(day.name)}</span>` +
     textBtn('Change day', 'focus-change', '', 'link-btn focus-change');
   const exs = dayExercises(day.id);
-  tree.innerHTML = '<div class="focus-wrap">' +
+  // The deload cycle matters when picking weights, so its phase sits above the exercises.
+  const cur = currentDeload(), phase = cur ? cyclePhase(cur) : null;
+  const phaseLine = phase
+    ? `<p class="focus-phase${phase.deloadWeek ? ' deload' : ''}">${esc(phase.text)}</p>` : '';
+  tree.innerHTML = '<div class="focus-wrap">' + phaseLine +
     (exs.length ? exs.map(exerciseHtml).join('') : '<p class="empty">No exercises in this day yet.</p>') +
     '</div>';
 }
