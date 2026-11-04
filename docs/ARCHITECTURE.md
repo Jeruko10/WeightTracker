@@ -29,6 +29,7 @@ src/
     user-db.js             Referencias Firestore bajo users/{uid}/…
     sync-status.js         Indicador "Saving… / Saved / Error" y persist().
     theme.js               Tema Sistema/Claro/Oscuro (data-theme en <html>, evento themechange) y colores para las gráficas, leídos de las variables CSS.
+    settings.js            Preferencias por dispositivo (paso de peso 1 / 2.5 / 5 kg) en localStorage.
     export-format.js       Helpers de texto plano para el export (reglas, padding).
   shell/                   El "marco" de la app, común a todas las secciones.
     auth.js                Login/logout y pantallas según la sesión.
