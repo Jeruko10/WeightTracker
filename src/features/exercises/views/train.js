@@ -14,6 +14,41 @@ import { textBtn, setDot, repsCell } from './components.js';
 import { currentDeload, cyclePhase } from '../deloads.js';
 import { logForm } from './forms.js';
 
+// ── Rest clock ────────────────────────────────────────────────────────────────
+// A quiet "Rest 1:42" since the last set logged today. No alarm, no countdown: just the number.
+const REST_HIDE_MS = 2 * 60 * 60 * 1000; // after 2 h it is a new session, not a rest
+let restTimer = null;
+
+function lastSetTime() {
+  const t = today();
+  let last = 0;
+  state.logs.forEach((l) => { if (l.date === t && (l.createdAt || 0) > last) last = l.createdAt; });
+  return last;
+}
+
+function tickRest() {
+  const el = byId('focus-rest');
+  if (!el) return;
+  const last = lastSetTime(), ms = Date.now() - last;
+  if (!last || ms < 0 || ms > REST_HIDE_MS) {
+    el.textContent = '';
+    return;
+  }
+  const s = Math.floor(ms / 1000);
+  el.textContent = 'Rest ' + Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0') + ' since your last set';
+}
+
+export function stopRest() {
+  clearInterval(restTimer);
+  restTimer = null;
+}
+
+function startRest() {
+  stopRest();
+  tickRest();
+  restTimer = setInterval(tickRest, 1000);
+}
+
 export function renderTrain(tree) {
   const title = byId('focus-title');
   const day = findById(state.days, state.focusDay);
@@ -30,9 +65,10 @@ export function renderTrain(tree) {
   const cur = currentDeload(), phase = cur ? cyclePhase(cur) : null;
   const phaseLine = phase
     ? `<p class="focus-phase${phase.deloadWeek ? ' deload' : ''}">${esc(phase.text)}</p>` : '';
-  tree.innerHTML = '<div class="focus-wrap">' + phaseLine +
+  tree.innerHTML = '<div class="focus-wrap">' + phaseLine + '<p class="focus-rest" id="focus-rest"></p>' +
     (exs.length ? exs.map(exerciseHtml).join('') : '<p class="empty">No exercises in this day yet.</p>') +
     '</div>';
+  startRest();
 }
 
 function dayPickerHtml() {

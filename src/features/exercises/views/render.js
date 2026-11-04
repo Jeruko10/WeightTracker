@@ -9,7 +9,7 @@ import { dayHtml, archiveLinkHtml } from './tree.js';
 import { deloadHtml } from './deload.js';
 import { detailHtml } from './detail.js';
 import { archiveHtml } from './archive.js';
-import { renderTrain } from './train.js';
+import { renderTrain, stopRest } from './train.js';
 
 function treeHtml() {
   const days = sortedDays();
@@ -31,6 +31,7 @@ export function render() {
   const tree = byId('ex-tree'), pane = byId('ex-detail');
   if (!tree) return;
   destroyCharts();
+  stopRest();
   byId('exercises-view').classList.toggle('editing', isEdit());
   // data-focus lets the stylesheet strip the shared chrome (section switch, user bar) too.
   document.querySelector('.app').toggleAttribute('data-focus', state.mode === 'train');

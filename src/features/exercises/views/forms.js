@@ -3,6 +3,7 @@ import { esc } from '../../../lib/html.js';
 import {
   MAX_REPS, MIN_REPS, MAX_SETS, MIN_SETS, MAX_ABS_WEIGHT, DEFAULT_SET, DEFAULT_SET_COUNT, MAX_MACHINE_LEN, ICON,
 } from '../constants.js';
+import { getWeightStep } from '../../../shared/settings.js';
 import { knownMachines } from '../selectors.js';
 import { saveCancel, textBtn, setDot } from './components.js';
 
@@ -15,7 +16,7 @@ function repsInput(value, name = 'reps') {
 
 function weightInput(value, name = 'weight', disabled = false) {
   return `<label><span class="field-label">Weight (kg)</span><input type="number" name="${name}" ` +
-    `min="-${MAX_ABS_WEIGHT}" max="${MAX_ABS_WEIGHT}" step="0.25" value="${value}"${disabled ? ' disabled' : ''}></label>`;
+    `min="-${MAX_ABS_WEIGHT}" max="${MAX_ABS_WEIGHT}" step="${getWeightStep()}" value="${value}"${disabled ? ' disabled' : ''}></label>`;
 }
 
 /** The reps + weight inputs of a log: one pair, or a Left and a Right pair for unilateral logs. */

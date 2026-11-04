@@ -74,3 +74,5 @@
 .machine-form .btn.primary{background:var(--warn);color:var(--warn-bg)}
 .focus-phase{margin:0;font-size:13px;color:var(--text-soft);text-align:center}
 .focus-phase.deload{padding:8px 12px;border-radius:10px;background:var(--warn-bg);color:var(--warn-text);font-weight:600}
+.focus-rest{margin:0;font-size:13px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
+.focus-rest:empty{display:none}

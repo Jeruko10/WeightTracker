@@ -2,6 +2,7 @@
 // The menu closes on an outside click, Escape, or a section change.
 import { byId } from '../lib/dom.js';
 import { getThemePref, setThemePref } from '../shared/theme.js';
+import { getWeightStep, setWeightStep } from '../shared/settings.js';
 
 let btn = null, menu = null;
 
@@ -40,8 +41,24 @@ function markTheme() {
   });
 }
 
+function markStep() {
+  const step = getWeightStep();
+  document.querySelectorAll('#step-seg [data-step]').forEach((b) => {
+    const on = Number(b.dataset.step) === step;
+    b.classList.toggle('on', on);
+    b.setAttribute('aria-pressed', String(on));
+  });
+}
+
 export function initProfileMenu() {
   markTheme();
+  markStep();
+  byId('step-seg').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-step]');
+    if (!b) return;
+    setWeightStep(Number(b.dataset.step));
+    markStep();
+  });
   byId('theme-seg').addEventListener('click', (e) => {
     const b = e.target.closest('[data-theme-pref]');
     if (!b) return;
