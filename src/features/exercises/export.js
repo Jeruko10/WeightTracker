@@ -1,13 +1,16 @@
 // Exercises sections of the clipboard export: the training log and the deload cycle. The arrows
 // match the app's above/below-range marks.
-import { today, formatDate, daysBetween } from '../../lib/dates.js';
+import { today, addDays, formatDate, daysBetween } from '../../lib/dates.js';
 import { plural } from '../../lib/html.js';
 import { rule, padLeft, padRight } from '../../shared/export-format.js';
-import { EXPORT_ENTRIES } from './constants.js';
+import { EXPORT_ENTRIES, CHART_ENTRIES } from './constants.js';
 import { state } from './state.js';
 import {
-  sortedDays, dayExercises, setLogs, repsState, formatWeight, logSides, machinesOf, activeMachine,
+  sortedDays, dayExercises, setLogs, repsState, formatWeight, logSides, machinesOf, activeMachine, archivedExercises,
+  rangeText, exDoneToday,
 } from './selectors.js';
+import { dailyTonnage } from './tonnage.js';
+import { bodyweightLookup } from './bodyweight-source.js';
 import { currentDeload, nextDeload, previousDeload, cyclePhase, weeksText } from './deloads.js';
 
 const MARK = { up: ' ↑', down: ' ↓', in: '' };
@@ -86,4 +89,56 @@ function exportDeload() {
 
 export function exportSections() {
   return { training: exportTraining(), deload: exportDeload(), entries: EXPORT_ENTRIES };
+}
+
+// ── Structured data for the HTML report ───────────────────────────────────────
+function trackReport(x, track, lookup) {
+  const logs = state.logs.filter((l) => l.exerciseId === x.id && (l.machine || '') === track);
+  const days = dailyTonnage(x, track, lookup);
+  const lastDate = logs.reduce((m, l) => (l.date > m ? l.date : m), '');
+  return {
+    label: track, active: track === activeMachine(x), entries: logs.length, lastDate,
+    tonnage: days.slice(-CHART_ENTRIES),
+    estimated: !!x.bodyweight && !!lookup.firstDate && days.some((d) => d.date < lookup.firstDate),
+    sets: x.sets.map((s, k) => ({
+      k, range: rangeText(s),
+      rows: setLogs(x.id, s.id, track).slice(-EXPORT_ENTRIES).reverse().map((l) => ({
+        date: l.date,
+        sides: logSides(l).map((sd) => ({ reps: sd.reps, weight: sd.weight, state: repsState(sd.reps, s) })),
+      })),
+    })),
+  };
+}
+
+function exerciseReport(x, lookup) {
+  const active = activeMachine(x);
+  const tracks = machinesOf(x)
+    .filter((t) => t === active || state.logs.some((l) => l.exerciseId === x.id && (l.machine || '') === t))
+    .map((t) => trackReport(x, t, lookup));
+  return {
+    name: x.name, unilateral: !!x.unilateral, bodyweight: !!x.bodyweight, machine: active,
+    doneToday: exDoneToday(x), setCount: x.sets.length, tracks,
+    bodyweightMissing: !!x.bodyweight && !lookup.firstDate,
+  };
+}
+
+/** Training days with their exercises, activity and deload status; null while still loading. */
+export function exercisesReport() {
+  if (!state.loaded) return null;
+  const lookup = bodyweightLookup();
+  const t = today(), dates = Array.from(new Set(state.logs.map((l) => l.date))).sort();
+  const cur = currentDeload(), next = nextDeload(), prev = cur ? previousDeload(cur) : null;
+  return {
+    days: sortedDays().map((d) => ({ name: d.name, exercises: dayExercises(d.id).map((x) => exerciseReport(x, lookup)) })),
+    archivedCount: archivedExercises().length,
+    sessionsLast7: dates.filter((d) => d >= addDays(t, -6)).length,
+    lastWorkout: dates.length ? dates[dates.length - 1] : null,
+    deload: {
+      phase: cur ? cyclePhase(cur) : null,
+      lastDate: cur ? cur.date : null,
+      daysAgo: cur ? daysBetween(cur.date, t) : null,
+      gapBefore: cur && prev ? daysBetween(prev.date, cur.date) : null,
+      nextDate: next ? next.date : null,
+    },
+  };
 }

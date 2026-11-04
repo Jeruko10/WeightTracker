@@ -25,6 +25,7 @@ src/
     snackbar.js            Aviso temporal con acción "Undo" (borrados recuperables, archivar).
     storage.js             localStorage tolerante a fallos.
     clipboard.js           copyText con fallback.
+    svg-charts.js          Gráficas de línea y de barras como cadenas SVG (para el informe HTML, sin Chart.js).
   shared/                  Servicios de la app compartidos por varias features.
     user-db.js             Referencias Firestore bajo users/{uid}/…
     sync-status.js         Indicador "Saving… / Saved / Error" y persist().
@@ -36,7 +37,8 @@ src/
     profile-menu.js        Menú del avatar.
     router.js              Rutas por hash (#/bodyweight, #/exercises, #/exercises/ex/<id>, #/exercises/archive);
                            pasa a la sección lo que sigue a su hash como sub-ruta.
-    export.js              Export a portapapeles (combina ambas features).
+    export.js              Export a portapapeles (texto) y descarga del informe HTML (combina ambas features).
+    export-html.js         Informe HTML autocontenido para enviar a una persona: resumen, peso, entrenos, pestañas y plegables. Solo maqueta; los datos salen de bodyweightReport() y exercisesReport().
   features/
     bodyweight/            Sección Bodyweight (peso corporal y objetivos).
     exercises/             Sección Exercises (días, ejercicios, series, deloads).

@@ -10,7 +10,7 @@ import { handleAction, addDay } from './actions.js';
 import { render } from './views/render.js';
 
 export { resetExercisesMode } from './modes.js';
-export { exportSections } from './export.js';
+export { exportSections, exercisesReport } from './export.js';
 export { applyRoute as applyExercisesRoute } from './nav.js';
 export { setBodyweightProvider } from './bodyweight-source.js';
 

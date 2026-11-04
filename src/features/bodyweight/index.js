@@ -11,7 +11,7 @@ import { initGoalBanner } from './views/goal-banner.js';
 import { initRangeSelect } from './chart/weight-chart.js';
 import { view as chartView, destroyChart } from './chart/chart-view.js';
 
-export { exportBodyweight } from './export.js';
+export { exportBodyweight, bodyweightReport } from './export.js';
 
 /**
  * Builds a `date → 7-day average bodyweight (kg)` lookup from the logged weigh-ins (null when
