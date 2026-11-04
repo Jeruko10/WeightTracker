@@ -21,7 +21,8 @@ src/
     dates.js               Fechas 'YYYY-MM-DD' en UTC: today, addDays, daysBetween, formatos.
     dom.js                 byId, playEnter (animación de entrada).
     html.js                esc() para interpolar texto en HTML.
-    confirm-tap.js         Patrón "toca otra vez para confirmar".
+    confirm-tap.js         Patrón "toca otra vez para confirmar" (borrados en cascada, irreversibles).
+    snackbar.js            Aviso temporal con acción "Undo" (borrados recuperables, archivar).
     storage.js             localStorage tolerante a fallos.
     clipboard.js           copyText con fallback.
   shared/                  Servicios de la app compartidos por varias features.
@@ -85,9 +86,9 @@ views/
   overview-stats.js    Las tres tarjetas de medias
   goal-banner.js       Banner del objetivo (ritmo, proyección, barras, alcanzado/vencido)
   weekly-summary.js    Tabla semanal
-  history.js           Pestaña Log: alta, edición y borrado de entradas
+  history.js           Alta de pesaje (formulario en Progress) y pestaña History: edición y borrado con Undo
   goal-tab.js          Pestaña Goal: formulario, preview, resumen y objetivos pasados
-  tabs.js              Pestañas Overview / Log / Goal
+  tabs.js              Pestañas Progress / History / Goals
 chart/
   weight-chart.js      Crea/actualiza la gráfica y el selector de rango
   chart-data.js        Eje de días, ventana del rango y datasets (peso + ritmo ideal)
