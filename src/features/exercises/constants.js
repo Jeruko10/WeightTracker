@@ -23,6 +23,7 @@ export const STORAGE_KEYS = {
   mode: 'wt-ex-mode',
   focusDay: 'wt-ex-focus-day',
   open: 'wt-ex-open',
+  chartCollapsed: 'wt-ex-chart-collapsed',
 };
 
 // Inline SVG rather than ↑ ✎ ✕ characters, which some platforms swap for coloured emoji.

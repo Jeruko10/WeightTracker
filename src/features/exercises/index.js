@@ -85,8 +85,9 @@ export async function loadExercises(uid) {
 
 export function clearExercises() {
   Object.assign(state, {
-    uid: null, days: [], exercises: [], logs: [], deloads: [], loaded: false, track: {}, view: { kind: 'list', id: null },
+    uid: null, days: [], exercises: [], logs: [], deloads: [], loaded: false, track: {},
   });
+  // state.view mirrors the URL, so it is left alone.
   state.mode = 'view';
   saveMode();
   setFocusDay(null);

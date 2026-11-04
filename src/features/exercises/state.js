@@ -32,12 +32,14 @@ export const state = {
 
   /** Fold keys currently open: 'deload', 'd:<dayId>', 'e:<exId>', 'c:<exId>' (chart) */
   open: new Set(loadJSON(STORAGE_KEYS.open, [])),
+  /** Exercise ids whose tonnage chart is folded away (the summary line stays visible) */
+  chartCollapsed: new Set(loadJSON(STORAGE_KEYS.chartCollapsed, [])),
   /** Machine track being viewed per exercise: exId → label ('' = none). Absent = the active one. */
   track: {},
   /** Set keys ('<exId>:<setId>') whose full history is expanded */
   showAll: new Set(),
   /** Which inline form is open, if any. Only one at a time keeps the tree calm. */
-  ui: { addFor: null, editLog: null, editDay: null, editEx: null, newExFor: null, editDeload: null },
+  ui: { addFor: null, editLog: null, editDay: null, editEx: null, newExFor: null, editDeload: null, machineFor: null },
 
   /** Screen showing: { kind: 'list' | 'ex' | 'archive', id } — set from the URL (see nav.js) */
   view: { kind: 'list', id: null },
@@ -62,7 +64,7 @@ export function canLog() {
 /** Closes every edit form. The "log a set" form (ui.addFor) is handled separately. */
 export function resetForms() {
   const ui = state.ui;
-  ui.editLog = null; ui.editDay = null; ui.editEx = null; ui.newExFor = null; ui.editDeload = null;
+  ui.editLog = null; ui.editDay = null; ui.editEx = null; ui.newExFor = null; ui.editDeload = null; ui.machineFor = null;
 }
 
 export function closeAllForms() {
@@ -77,6 +79,10 @@ export function saveMode() {
 export function setFocusDay(id) {
   state.focusDay = id;
   savePref(STORAGE_KEYS.focusDay, id);
+}
+
+export function saveChartCollapsed() {
+  saveJSON(STORAGE_KEYS.chartCollapsed, Array.from(state.chartCollapsed));
 }
 
 export function saveOpen() {

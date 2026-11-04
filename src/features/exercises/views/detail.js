@@ -3,7 +3,7 @@
 // squeezed inside the list.
 import { today, formatDateShort } from '../../../lib/dates.js';
 import { esc, plural } from '../../../lib/html.js';
-import { ICON, HISTORY_PREVIEW, CHART_ENTRIES } from '../constants.js';
+import { ICON, HISTORY_PREVIEW, CHART_ENTRIES, chevron } from '../constants.js';
 import { state, isEdit, canLog } from '../state.js';
 import {
   findById, setLogs, rangeText, lastWeight, formatWeight, logSides, activeMachine, trackOf, machinesOf,
@@ -41,9 +41,11 @@ function trackSwitcher(x) {
 // ── Tonnage chart card ────────────────────────────────────────────────────────
 function chartCard(x) {
   const ts = tonnageSeries(x, trackOf(x), bodyweightLookup());
-  const shown = Math.min(ts.days.length, CHART_ENTRIES);
-  let head = '<div class="chart-head"><span class="chart-title">Tonnage</span>' +
-    `<span class="meta">last ${CHART_ENTRIES} sessions · kg</span></div>`;
+  const folded = state.chartCollapsed.has(x.id);
+  const shown = folded ? 0 : Math.min(ts.days.length, CHART_ENTRIES);
+  const head = `<button class="chart-head" data-action="chart-toggle" data-id="${x.id}" aria-expanded="${!folded}">` +
+    `${chevron(folded ? '' : ' open')}<span class="chart-title">Tonnage</span>` +
+    `<span class="meta">last ${CHART_ENTRIES} sessions · kg</span></button>`;
   if (!ts.last) {
     return `<section class="card chart-card">${head}<p class="hist-empty">Log some entries on this track to see the chart.</p></section>`;
   }
@@ -59,7 +61,7 @@ function chartCard(x) {
   return `<section class="card chart-card">${head}` +
     `<div class="chart-sum"><strong>${formatTonnage(ts.last.total)} kg</strong>${change}</div>` +
     (shown ? `<div class="ex-chart-wrap"><canvas data-chart="${x.id}" role="img" aria-label="Tonnage per session, last ${shown} sessions"></canvas></div>` : '') +
-    note + '</section>';
+    (folded ? '' : note) + '</section>';
 }
 
 // ── Sets and history ──────────────────────────────────────────────────────────

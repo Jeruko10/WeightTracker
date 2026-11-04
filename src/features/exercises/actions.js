@@ -4,12 +4,15 @@ import { byId } from '../../lib/dom.js';
 import { confirmTap } from '../../lib/confirm-tap.js';
 import { plural } from '../../lib/html.js';
 import { showSnackbar } from '../../lib/snackbar.js';
-import { state, isEdit, canLog, resetForms, closeAllForms, saveOpen, setFocusDay } from './state.js';
+import {
+  state, isEdit, canLog, resetForms, closeAllForms, saveOpen, setFocusDay, saveChartCollapsed,
+} from './state.js';
 import { sortedDays, dayExercises, exDoneToday, findById, activeMachine, trackOf } from './selectors.js';
 import { readLogForm, readDeloadDate, readExerciseForm, changeSetCount } from './form-readers.js';
 import { toggleFold, openFold } from './folds.js';
 import { playTreeEnter } from './modes.js';
 import { goTo, exRoute } from './nav.js';
+import { MAX_MACHINE_LEN } from './constants.js';
 import { render } from './views/render.js';
 import * as repo from './repository.js';
 
@@ -103,6 +106,27 @@ const ANY_MODE = {
   toggle: ({ t }) => toggleFold(t.closest('.foldable')),
   cancel: () => { closeAllForms(); render(); },
   'ex-open': ({ id }) => goTo(exRoute(id)),
+  'chart-toggle': ({ id }) => {
+    if (state.chartCollapsed.has(id)) state.chartCollapsed.delete(id);
+    else state.chartCollapsed.add(id);
+    saveChartCollapsed();
+    render();
+  },
+  // Train: change today's machine label (starts or resumes that machine's track).
+  'train-machine': ({ id }) => {
+    if (!canLog()) return;
+    closeAllForms();
+    openForm('machineFor', id, 'mach:' + id, 'machine');
+  },
+  'train-machine-save': ({ id, f }) => {
+    const x = findById(state.exercises, id);
+    if (!x || !canLog()) return;
+    x.machine = f.querySelector('[name=machine]').value.trim().slice(0, MAX_MACHINE_LEN);
+    delete state.track[id];
+    state.ui.machineFor = null;
+    render();
+    repo.saveExercise(x);
+  },
   'archive-open': () => goTo('archive'),
   'detail-back': () => {
     // Backing out of a form returns to the screen under it; otherwise to the list.

@@ -5,8 +5,10 @@ import { today, formatDateShort } from '../../../lib/dates.js';
 import { esc, plural } from '../../../lib/html.js';
 import { ICON, chevron } from '../constants.js';
 import { state, setFocusDay } from '../state.js';
+import { MAX_MACHINE_LEN } from '../constants.js';
 import {
   sortedDays, dayExercises, rangeText, lastWeight, exDoneToday, formatWeight, findById, lastLog, logSides, activeMachine,
+  knownMachines,
 } from '../selectors.js';
 import { textBtn, setDot, repsCell } from './components.js';
 import { logForm } from './forms.js';
@@ -41,16 +43,33 @@ function dayPickerHtml() {
     `<div class="focus-days">${picks}</div></div></div>`;
 }
 
+function machineForm(x) {
+  return `<div class="machine-form" data-form="mach:${x.id}">` +
+    '<label><span class="field-label">Machine today</span>' +
+      `<input type="text" name="machine" maxlength="${MAX_MACHINE_LEN}" list="machine-options" value="${esc(x.machine || '')}" placeholder="No label"></label>` +
+    `<datalist id="machine-options">${knownMachines().map((m) => `<option value="${esc(m)}">`).join('')}</datalist>` +
+    '<p class="help">New sets today are tracked under this label. Past sets stay in their own track.</p>' +
+    '<div class="form-actions">' + textBtn('Save', 'train-machine-save', x.id, 'btn primary sm') +
+      textBtn('Cancel', 'cancel', '', 'btn secondary sm') + '</div></div>';
+}
+
 // Finished exercises fold away on their own (the user can reopen them); pending ones always
 // stay open.
 function exerciseHtml(x) {
   const sets = `<div class="focus-sets">${x.sets.map((s, k) => setHtml(x, s, k)).join('')}</div>`;
   const machine = activeMachine(x);
-  const name = `<span class="focus-ex-name">${esc(x.name)}` +
+  const plainName = `<span class="focus-ex-name">${esc(x.name)}` +
     (machine ? `<span class="tag machine">${esc(machine)}</span>` : '') + '</span>';
   if (!exDoneToday(x)) {
-    return `<section class="focus-ex"><div class="focus-ex-head"><span></span>${name}<span></span></div>${sets}</section>`;
+    // Pending exercises show the machine as a button: the gym may have swapped it today.
+    const label = machine ? esc(machine) : '+ Machine';
+    const tagBtn = `<button class="tag machine tag-btn${machine ? '' : ' empty'}" data-action="train-machine" data-id="${x.id}" ` +
+      `aria-label="Machine today: ${machine ? esc(machine) : 'none'}. Change">${label}</button>`;
+    const name = `<span class="focus-ex-name">${esc(x.name)}${tagBtn}</span>`;
+    return `<section class="focus-ex"><div class="focus-ex-head"><span></span>${name}<span></span></div>` +
+      (state.ui.machineFor === x.id ? machineForm(x) : '') + sets + '</section>';
   }
+  const name = plainName;
   // The exercise just finished renders open, then folds shut so the collapse is seen happening.
   const isOpen = state.focusExpanded.has(x.id) || state.justCompleted === x.id;
   return `<section class="focus-ex done foldable${isOpen ? ' open' : ''}" data-key="f:${x.id}">` +

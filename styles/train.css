@@ -64,3 +64,11 @@
 .focus-side{gap:6px}
 .focus-today{width:30px}
 .focus-side .side-tag{width:12px}
+
+/* Train: machine label as a button, and its inline form. */
+.tag-btn{border:none;font-family:inherit;cursor:pointer;min-height:28px;padding:3px 10px}
+.tag-btn.empty{background:none;border:1px dashed var(--control-hover);color:var(--muted);font-weight:500}
+.tag-btn:focus-visible{outline:2px solid var(--warn);outline-offset:2px}
+.machine-form{display:flex;flex-direction:column;gap:8px;margin:4px 16px 10px;padding:12px;background:var(--surface-sunken);border-radius:12px}
+.machine-form .field-label{display:block;font-size:11px;margin-bottom:4px}
+.machine-form .btn.primary{background:var(--warn);color:var(--warn-bg)}
