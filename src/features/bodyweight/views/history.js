@@ -1,7 +1,8 @@
-// The Log tab: add a weigh-in, and edit or delete past ones from the history list.
+// Logging a weigh-in (the form sits at the top of Progress) and the History tab's list, where
+// past ones are edited or deleted.
 import { byId } from '../../../lib/dom.js';
 import { today, formatDate } from '../../../lib/dates.js';
-import { confirmTap } from '../../../lib/confirm-tap.js';
+import { showSnackbar } from '../../../lib/snackbar.js';
 import { state, sortEntries } from '../state.js';
 import { createEntry, updateEntry, deleteEntry } from '../repository.js';
 import { render } from '../render.js';
@@ -81,11 +82,19 @@ function saveEdit(entry) {
   updateEntry(entry);
 }
 
-function remove(entry, btn) {
-  if (!confirmTap(btn)) return;
+function remove(entry) {
   state.entries = state.entries.filter((e) => e._id !== entry._id);
   render();
   deleteEntry(entry);
+  showSnackbar('Weigh-in deleted', {
+    label: 'Undo',
+    run: () => {
+      state.entries.push(entry);
+      sortEntries();
+      render();
+      createEntry(entry);
+    },
+  });
 }
 
 function onListClick(e) {
@@ -98,7 +107,7 @@ function onListClick(e) {
     case 'edit': openEdit(date); break;
     case 'save': saveEdit(entry); break;
     case 'cancel': byId('er-' + date).style.display = 'none'; break;
-    case 'delete': remove(entry, btn); break;
+    case 'delete': remove(entry); break;
   }
 }
 

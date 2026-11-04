@@ -57,9 +57,9 @@
     </nav>
     <div class="header">
       <div class="tabs">
-        <div class="tab active" data-tab="overview">Overview</div>
-        <div class="tab" data-tab="log">Log</div>
-        <div class="tab" data-tab="goal">Goal</div>
+        <div class="tab active" data-tab="overview" role="button" tabindex="0">Progress</div>
+        <div class="tab" data-tab="log" role="button" tabindex="0">History</div>
+        <div class="tab" data-tab="goal" role="button" tabindex="0">Goals</div>
       </div>
     </div>
 
@@ -67,11 +67,21 @@
     <div id="overview" class="section active">
       <div class="overview-grid">
         <div class="ov-group">
+          <div class="card">
+            <div class="card-title">Log a weigh-in</div>
+            <div class="row2">
+              <input type="date" id="inp-date">
+              <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
+            </div>
+            <button class="btn primary" id="btn-add">Add</button>
+            <p class="err" id="add-err"></p>
+          </div>
           <div class="stats">
             <div class="stat"><div class="stat-label">Current avg</div><div class="stat-val ac" id="s-cur">-</div></div>
             <div class="stat"><div class="stat-label">Prev avg</div><div class="stat-val" id="s-avg">-</div></div>
             <div class="stat"><div class="stat-label">Avg change</div><div class="stat-val" id="s-rate">-</div></div>
           </div>
+          <p class="stat-note" id="stats-note"></p>
           <div class="goal-banner">
             <div class="banner-title" id="banner-title">Goal</div>
             <div class="pace-row">
@@ -128,15 +138,6 @@
 
     <div id="log" class="section">
       <div class="log-grid">
-        <div class="card">
-          <div class="card-title">Add entry</div>
-          <div class="row2">
-            <input type="date" id="inp-date">
-            <input type="number" id="inp-wt" placeholder="kg" min="30" max="250" step="0.1">
-          </div>
-          <button class="btn primary" id="btn-add">Add</button>
-          <p class="err" id="add-err"></p>
-        </div>
         <div class="card">
           <div class="card-title">History</div>
           <div class="entry-list" id="entry-list"><p class="empty">No entries yet</p></div>

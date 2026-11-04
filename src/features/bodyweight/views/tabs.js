@@ -1,4 +1,4 @@
-// Overview / Log / Goal tabs inside the Bodyweight section.
+// Progress / History / Goals tabs inside the Bodyweight section.
 import { byId, playEnter } from '../../../lib/dom.js';
 import { renderGoalTab } from './goal-tab.js';
 
@@ -15,5 +15,10 @@ function selectTab(tab) {
 export function initTabs() {
   document.querySelectorAll('.tab').forEach((tab) => {
     tab.addEventListener('click', () => selectTab(tab));
+    tab.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      selectTab(tab);
+    });
   });
 }
