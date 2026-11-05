@@ -4,11 +4,11 @@
 import { esc, plural } from '../lib/html.js';
 import { today, formatDate, formatDateShort } from '../lib/dates.js';
 import { sparkBars } from '../lib/svg-charts.js';
+import { weightLabel } from '../shared/export-format.js';
 import { dayReport } from '../features/exercises/index.js';
 
 const SESSIONS = 6;
 const tons = (n) => Math.round(n).toLocaleString('en-US');
-const wt = (n) => String(Math.round(n * 100) / 100);
 
 /** One set on one line: "Set 2   7 reps   × 25 kg" (or "L 7 · R 8 reps" for a left/right set). */
 function setLine(s, bodyweight) {
@@ -16,8 +16,8 @@ function setLine(s, bodyweight) {
   if (!s.row) return `<div class="set">${label}<span class="none">no entry</span></div>`;
   const sides = s.row.sides;
   const reps = sides.map((sd, i) => `<b class="${sd.state}">${sides.length > 1 ? (i ? 'R ' : 'L ') : ''}${sd.reps}</b>`).join(' · ');
-  // 0 kg on a body-weight exercise means "just your body", not an empty bar.
-  const weights = Array.from(new Set(sides.map((sd) => (bodyweight && sd.weight === 0 ? 'bodyweight' : wt(sd.weight) + ' kg'))));
+  // Body-weight exercises say so on every line: the weight entered is added to the body weight.
+  const weights = Array.from(new Set(sides.map((sd) => weightLabel(sd.weight, bodyweight))));
   return `<div class="set">${label}<span class="rp">${reps} <span class="u">${sides[0].reps === 1 && sides.length === 1 ? 'rep' : 'reps'}</span></span>` +
     `<span class="w">× ${weights.join(' / ')}</span></div>`;
 }
@@ -53,10 +53,10 @@ const CSS = `
 :root{color-scheme:light dark;--bg:#f4f7f8;--surface:#fff;--text:#162126;--muted:#566a72;--border:#dbe4e7;--accent:#0a7c6e;--up:#0a7c6e;--down:#b3261e;--tag:#eef3f4}
 @media (prefers-color-scheme:dark){:root{--bg:#0f1417;--surface:#182024;--text:#e4eef0;--muted:#8c9ea5;--border:#223036;--accent:#5fd4c4;--up:#5fd4c4;--down:#ff7b7b;--tag:#222c31}}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
-.sheet{max-width:820px;margin:0 auto;padding:24px}
+.sheet{max-width:880px;margin:0 auto;padding:24px}
 h1{margin:0;font-size:34px;letter-spacing:-.5px}.sub{margin:2px 0 16px;color:var(--muted);font-size:15px}
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden}
-.hd,.row{display:grid;grid-template-columns:minmax(0,1fr) 270px minmax(0,1.15fr);gap:20px;align-items:center;padding:18px 22px}
+.hd,.row{display:grid;grid-template-columns:minmax(0,.9fr) 250px minmax(0,1.3fr);gap:20px;align-items:center;padding:18px 22px}
 .hd{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--border);padding-top:12px;padding-bottom:12px}
 .row+.row{border-top:1px solid var(--border)}.nm{font-weight:650;font-size:19px;line-height:1.25}
 .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}.tags:empty{display:none}.span2{grid-column:2/4}
@@ -66,8 +66,8 @@ h1{margin:0;font-size:34px;letter-spacing:-.5px}.sub{margin:2px 0 16px;color:var
 .sess,.none,.dt,.sn,.u{color:var(--muted)}.sess{font-size:13px}.none{font-size:14px}
 .d{font-size:14px;font-weight:600}.d.up{color:var(--up)}.d.down{color:var(--down)}
 .dt{font-size:13px;margin-bottom:5px}.sets{display:flex;flex-direction:column;gap:4px}
-.set{display:grid;grid-template-columns:48px minmax(0,1fr) auto;gap:10px;align-items:baseline;font-size:16px}
-.sn{font-size:13px}.rp b{font-size:17px}.rp b.up{color:var(--up)}.rp b.down{color:var(--down)}.u{font-size:14px}.w{color:var(--muted);font-size:15px;white-space:nowrap}
+.set{display:grid;grid-template-columns:48px auto minmax(0,1fr);gap:10px;align-items:baseline;font-size:16px}
+.sn{font-size:13px}.rp b{font-size:17px}.rp b.up{color:var(--up)}.rp b.down{color:var(--down)}.u{font-size:14px}.w{color:var(--muted);font-size:15px;text-align:right}
 .foot{margin-top:12px;font-size:13px;color:var(--muted)}
 @media (max-width:640px){.hd{display:none}.row{grid-template-columns:1fr;gap:12px}.span2{grid-column:auto}}
 `;
@@ -83,7 +83,7 @@ export function buildDayHtml(dayId) {
     `<h1>${esc(r.name)}</h1><p class="sub">${esc(formatDate(today()))}</p>` +
     '<div class="panel"><div class="hd"><span>Exercise</span><span>Tonnage · last 6 sessions</span><span>Last entry per set</span></div>' +
     (r.exercises.length ? r.exercises.map(row).join('') : '<div class="row"><span class="none">No exercises in this day.</span></div>') +
-    '</div><p class="foot">Tonnage = reps × weight, added up over every set (kg). Reps: ' +
+    '</div><p class="foot">Tonnage = reps × weight, added up over every set (kg). For body-weight exercises the weight is added to (or, if negative, taken off) your body weight first. Reps: ' +
     '<b style="color:var(--up)">green</b> above and <b style="color:var(--down)">red</b> below the target range.</p>' +
     '</main></body></html>';
 }

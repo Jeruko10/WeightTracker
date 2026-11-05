@@ -2,7 +2,7 @@
 // match the app's above/below-range marks.
 import { today, addDays, formatDate, daysBetween } from '../../lib/dates.js';
 import { plural } from '../../lib/html.js';
-import { rule, padLeft, padRight } from '../../shared/export-format.js';
+import { rule, padLeft, padRight, weightLabel } from '../../shared/export-format.js';
 import { EXPORT_ENTRIES, CHART_ENTRIES } from './constants.js';
 import { state } from './state.js';
 import {
@@ -19,9 +19,10 @@ function asciiRange(s) {
   return s.min === s.max ? String(s.min) : s.min + '-' + s.max;
 }
 
-function sideText(l, s, side, sd, tag) {
-  return (tag ? tag + ' ' : '') + padLeft(sd.reps, 3) + ' reps' + padRight(MARK[repsState(sd.reps, s)], 3) +
-    '  ' + padLeft(formatWeight(sd.weight), 6) + ' kg';
+function sideText(sd, s, tag, bodyweight) {
+  // Body-weight exercises spell out that the weight is added to the body weight.
+  const w = bodyweight ? weightLabel(sd.weight, true) : padLeft(formatWeight(sd.weight), 6) + ' kg';
+  return (tag ? tag + ' ' : '') + padLeft(sd.reps, 3) + ' reps' + padRight(MARK[repsState(sd.reps, s)], 3) + '  ' + w;
 }
 
 function exportSet(out, x, s, k, track) {
@@ -35,7 +36,7 @@ function exportSet(out, x, s, k, track) {
   shown.forEach((l) => {
     const sides = logSides(l);
     out.push('    ' + formatDate(l.date) + '   ' + sides.map((sd, i) =>
-      sideText(l, s, i, sd, sides.length > 1 ? (i ? 'R' : 'L') : '')).join('   '));
+      sideText(sd, s, sides.length > 1 ? (i ? 'R' : 'L') : '', x.bodyweight)).join('   '));
   });
 }
 
