@@ -54,14 +54,21 @@ function setLine(x, s, k) {
     `<span class="set-last">${l ? logSummary(l) + ' kg' : 'No entries yet'}</span></div>`;
 }
 
+/** Unilateral / Body weight / machine, side by side; they wrap onto the next line like text. */
+function tagsHtml(x, machine) {
+  const tags = (x.unilateral ? '<span class="tag">Unilateral</span>' : '') +
+    (x.bodyweight ? '<span class="tag">Body weight</span>' : '') +
+    (machine ? `<span class="tag machine">${esc(machine)}</span>` : '');
+  return tags ? `<span class="tags">${tags}</span>` : '';
+}
+
 function exerciseRow(x, j, count) {
   const key = 'e:' + x.id, machine = activeMachine(x);
   const open = state.open.has(key);
   return `<div class="ex-row foldable${open ? ' open' : ''}" data-key="${key}">` +
     '<div class="ex-row-head">' +
       `<button class="ex-open" data-action="ex-open" data-id="${x.id}">${statusIcon(x)}` +
-        `<span class="ex-titles"><span class="ex-name">${esc(x.name)}${x.unilateral ? ' <span class="tag">L/R</span>' : ''}</span>` +
-        (machine ? `<span class="tag machine">${esc(machine)}</span>` : '') +
+        `<span class="ex-titles"><span class="ex-name">${esc(x.name)}</span>` + tagsHtml(x, machine) +
         `<span class="meta">${exerciseSummary(x)}</span></span></button>` +
       '<span class="row-actions edit-only">' +
         iconBtn(ICON.up, 'ex-up', x.id, 'Move up', j === 0) +

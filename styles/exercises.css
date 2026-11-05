@@ -131,6 +131,7 @@
 .ex-titles{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
 .ex-name{font-size:15px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .ex-titles .meta{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.ex-titles .tags{display:flex;flex-wrap:wrap;gap:4px 6px;max-width:100%;min-width:0}
 .status{flex-shrink:0;width:26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
 .status.todo{border:2px solid var(--disabled)}
 .status.part{border:2px solid var(--warn);color:var(--warn)}
