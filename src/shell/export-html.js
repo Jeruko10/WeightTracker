@@ -169,7 +169,7 @@ function exerciseBlock(x) {
   const lastDay = active && active.tonnage.length ? active.tonnage[active.tonnage.length - 1] : null;
   const tags = (x.unilateral ? '<span class="tag">Left / right</span>' : '') +
     (x.bodyweight ? '<span class="tag">Body weight</span>' : '') +
-    (x.machine ? `<span class="tag mach">${esc(x.machine)}</span>` : '');
+    (x.machine ? `<span class="tag">${esc(x.machine)}</span>` : '');
   const sum = `<span class="nm">${esc(x.name)}</span>${tags}` +
     `<span class="last">${lastDay ? `${esc(formatDateShort(lastDay.date))} · ${tons(lastDay.total)} kg` : 'no entries'}</span>`;
   let body = `<p class="muted">${x.setCount} ${plural(x.setCount, 'set')}</p>`;
@@ -231,7 +231,6 @@ summary::-webkit-details-marker{display:none}summary::before{content:'▸';color
 details.day>summary{background:var(--surface);border:1px solid var(--border);font-weight:600;font-size:17px}.meta{margin-left:auto;font-weight:400;font-size:13px;color:var(--muted)}
 details.ex>summary .nm{font-weight:600}.last{margin-left:auto;font-size:13px;color:var(--muted)}
 .body{padding:8px 4px 4px 12px}.tag{font-size:11px;font-weight:600;padding:1px 8px;border-radius:6px;background:var(--surface);border:1px solid var(--border);color:var(--soft)}
-.tag.mach{background:var(--warn-bg);color:var(--warn);border-color:transparent}
 .cap{font-size:13px;color:var(--soft);margin-top:6px}.setbox{margin-top:12px}.setname{font-weight:600;font-size:14px}
 table.hist td{border:0;border-bottom:1px solid var(--border);vertical-align:top}.d{color:var(--muted);width:72px;white-space:nowrap}
 .side{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}.lr{font-size:11px;font-weight:700;width:14px;color:var(--muted)}.wt{margin-left:auto;font-weight:600;white-space:nowrap}

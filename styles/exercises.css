@@ -137,7 +137,6 @@
 .status.done{background:var(--accent);color:var(--accent-ink)}
 .status .ico{width:15px;height:15px;stroke-width:2.6}
 .tag{display:inline-block;padding:1px 7px;border-radius:6px;background:var(--control);color:var(--text-soft);font-size:11px;font-weight:600;vertical-align:middle;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
-.tag.machine{background:var(--warn-bg);color:var(--warn-text)}
 .ex-exp{width:40px;height:40px}
 .ex-exp .chev{transition:transform .25s}
 .ex-row.open .ex-exp .chev{transform:none;stroke:var(--accent)}
