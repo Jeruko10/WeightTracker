@@ -89,6 +89,16 @@ export function saveOrder(collection, items) {
 // ── Exercises ─────────────────────────────────────────────────────────────────
 export const saveExercise = (x) => persist(() => setDoc(userDoc(COLLECTIONS.exercises, x.id), exerciseData(x)));
 
+/**
+ * Re-tags logs with another machine label (all-or-nothing batch). `exercise`, when given, has its
+ * active label saved in the same batch — the label follows when the active track is renamed.
+ */
+export function retagLogs(logs, label, exercise) {
+  const ops = logs.map((l) => ({ type: 'update', ref: userDoc(COLLECTIONS.logs, l.id), data: { machine: label } }));
+  if (exercise) ops.push({ type: 'update', ref: userDoc(COLLECTIONS.exercises, exercise.id), data: { machine: exercise.machine || '' } });
+  return runBatch(ops);
+}
+
 /** Saves an edited exercise and deletes the logs of any sets it no longer has. */
 export function saveExerciseDroppingLogs(x, droppedLogs) {
   return runBatch([{ type: 'set', ref: userDoc(COLLECTIONS.exercises, x.id), data: exerciseData(x) }]

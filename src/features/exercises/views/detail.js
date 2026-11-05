@@ -3,11 +3,11 @@
 // squeezed inside the list.
 import { today, formatDateShort } from '../../../lib/dates.js';
 import { esc, plural } from '../../../lib/html.js';
-import { ICON, HISTORY_PREVIEW, CHART_ENTRIES, chevron } from '../constants.js';
+import { ICON, HISTORY_PREVIEW, CHART_ENTRIES, MAX_MACHINE_LEN, chevron } from '../constants.js';
 import { state, isEdit, canLog } from '../state.js';
 import {
   findById, setLogs, rangeText, lastWeight, formatWeight, logSides, activeMachine, trackOf, machinesOf,
-  exDoneToday,
+  exDoneToday, knownMachines,
 } from '../selectors.js';
 import { tonnageSeries } from '../tonnage.js';
 import { bodyweightLookup } from '../bodyweight-source.js';
@@ -36,6 +36,26 @@ function trackSwitcher(x) {
       (isEdit() && !x.archived ? ' ' + textBtn('Make it the active track', 'track-activate', x.id, 'link-btn inline') : '') + '</div>';
   }
   return html;
+}
+
+/** Edit mode: rename the viewed track, or move its entries into another one. */
+function trackTools(x) {
+  if (!isEdit()) return '';
+  const from = trackOf(x), n = state.logs.filter((l) => l.exerciseId === x.id && (l.machine || '') === from).length;
+  if (!n) return '';
+  if (state.ui.moveTrack !== x.id) {
+    return '<div class="track-tools edit-only"><span class="meta">' +
+      `${from ? esc(from) : 'No label'} · ${n} ${plural(n, 'entry', 'entries')}</span>` +
+      textBtn('Rename or move entries…', 'track-move-open', x.id, 'link-btn inline') + '</div>';
+  }
+  const others = Array.from(new Set(machinesOf(x).concat(knownMachines()))).filter((m) => m !== from);
+  return `<div class="track-form" data-form="trk:${x.id}">` +
+    `<p class="track-q">Move the <b>${n}</b> ${plural(n, 'entry', 'entries')} of <b>${from ? esc(from) : 'No label'}</b> to:</p>` +
+    `<input type="text" name="label" maxlength="${MAX_MACHINE_LEN}" list="track-options" placeholder="New name, existing track, or empty for no label" aria-label="New machine label">` +
+    `<datalist id="track-options">${others.map((m) => (m ? `<option value="${esc(m)}">` : '')).join('')}</datalist>` +
+    '<p class="help">A new name renames the track. The name of an existing track merges them into one.</p>' +
+    '<div class="form-actions">' + textBtn('Move entries', 'track-move-save', x.id, 'btn primary sm') +
+      textBtn('Cancel', 'cancel', '', 'btn secondary sm') + '</div><p class="err"></p></div>';
 }
 
 // ── Tonnage chart card ────────────────────────────────────────────────────────
@@ -119,7 +139,7 @@ function exerciseScreen(x) {
   return backBar(esc(x.name), editBtn) +
     `<div class="dt-sub"><span class="meta">${sub}${done && !x.archived ? ' · done today ✓' : ''}</span>${tags}</div>` +
     (x.archived ? '<div class="banner">This exercise is archived. Restore it from the Archive to log again.</div>' : '') +
-    trackSwitcher(x) + chartCard(x) +
+    trackSwitcher(x) + trackTools(x) + chartCard(x) +
     '<div class="sets-list">' + x.sets.map((s, k) => setHtml(x, s, k, canAdd)).join('') + '</div>';
 }
 

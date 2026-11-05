@@ -39,7 +39,7 @@ export const state = {
   /** Set keys ('<exId>:<setId>') whose full history is expanded */
   showAll: new Set(),
   /** Which inline form is open, if any. Only one at a time keeps the tree calm. */
-  ui: { addFor: null, editLog: null, editDay: null, editEx: null, newExFor: null, editDeload: null, machineFor: null },
+  ui: { addFor: null, editLog: null, editDay: null, editEx: null, newExFor: null, editDeload: null, machineFor: null, moveTrack: null },
 
   /** Screen showing: { kind: 'list' | 'ex' | 'archive', id } — set from the URL (see nav.js) */
   view: { kind: 'list', id: null },
@@ -64,7 +64,7 @@ export function canLog() {
 /** Closes every edit form. The "log a set" form (ui.addFor) is handled separately. */
 export function resetForms() {
   const ui = state.ui;
-  ui.editLog = null; ui.editDay = null; ui.editEx = null; ui.newExFor = null; ui.editDeload = null; ui.machineFor = null;
+  ui.editLog = null; ui.editDay = null; ui.editEx = null; ui.newExFor = null; ui.editDeload = null; ui.machineFor = null; ui.moveTrack = null;
 }
 
 export function closeAllForms() {

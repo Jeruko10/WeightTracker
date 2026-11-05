@@ -219,3 +219,10 @@
 .deload-facts div{display:flex;gap:10px}
 .deload-facts dt{width:96px;flex-shrink:0;color:var(--muted)}
 .deload-facts dd{margin:0;font-weight:500}
+
+/* Rename / move a machine track. */
+.track-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:0 0 12px}
+.track-tools .link-btn.inline{margin:0}
+.track-form{display:flex;flex-direction:column;gap:8px;margin:0 0 12px;padding:12px;background:var(--surface-sunken);border-radius:12px}
+.track-q{margin:0;font-size:13px;color:var(--text-soft)}
+.track-form .err:empty{display:none}

@@ -135,7 +135,7 @@ views/
 Modelo de datos de las funciones de ejercicios (detalle en el comentario de `repository.js`):
 - Ejercicio: `unilateral`, `bodyweight`, `machine` (etiqueta activa), `archived` (con `dayId` null, conserva los logs).
 - Log: `machine` (sellada al crear) y `left`/`right` en lugar de `reps`/`weight` si es unilateral. La forma del log decide cómo se pinta.
-- Cada etiqueta de máquina es una **pista** aparte: historial, último peso, "hecho hoy" y gráfica se calculan por pista.
+- Cada etiqueta de máquina es una **pista** aparte: historial, último peso, "hecho hoy" y gráfica se calculan por pista. En Edit, "Rename or move entries…" (detalle del ejercicio) reetiqueta todas las entradas de una pista: un nombre nuevo la renombra, el de una pista existente las fusiona (con Undo); si era la pista activa, la etiqueta activa la sigue (`retagLogs` en un solo batch).
 - El tonelaje no se guarda: `reps × (peso [+ media de 7 días a la fecha del log])`, sumado por fecha.
 
 ## Estilos

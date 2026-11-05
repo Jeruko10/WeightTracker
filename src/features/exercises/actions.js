@@ -309,6 +309,41 @@ const EDIT_ONLY = {
     closeAllForms();
     goTo(exRoute(id), { slot: 'editEx', id });
   },
+  'track-move-open': ({ id }) => {
+    closeAllForms();
+    openForm('moveTrack', id, 'trk:' + id, 'label');
+  },
+  'track-move-save': ({ t, id, f }) => {
+    const x = findById(state.exercises, id);
+    if (!x) return;
+    const from = trackOf(x), to = f.querySelector('[name=label]').value.trim().slice(0, MAX_MACHINE_LEN);
+    if (to === from) {
+      f.querySelector('.err').textContent = 'That is already this track\'s label.';
+      return;
+    }
+    const moved = state.logs.filter((l) => l.exerciseId === id && (l.machine || '') === from);
+    const target = state.logs.filter((l) => l.exerciseId === id && (l.machine || '') === to).length;
+    // Merging can't be split apart again by label, so it asks for a second tap.
+    if (target && !confirmTap(t, `Merge with ${target} existing ${plural(target, 'entry', 'entries')}? Tap again`)) return;
+    const wasActive = activeMachine(x) === from, prevView = state.track[id];
+    moved.forEach((l) => { l.machine = to; });
+    if (wasActive) x.machine = to;
+    state.track[id] = to;
+    state.ui.moveTrack = null;
+    render();
+    repo.retagLogs(moved, to, wasActive ? x : null);
+    showSnackbar(`${moved.length} ${plural(moved.length, 'entry', 'entries')} moved to ${to ? '“' + to + '”' : 'No label'}`, {
+      label: 'Undo',
+      run: () => {
+        moved.forEach((l) => { l.machine = from; });
+        if (wasActive) x.machine = from;
+        if (prevView === undefined) delete state.track[id];
+        else state.track[id] = prevView;
+        render();
+        repo.retagLogs(moved, from, wasActive ? x : null);
+      },
+    });
+  },
   'track-activate': ({ id }) => {
     const x = findById(state.exercises, id);
     if (!x) return;
