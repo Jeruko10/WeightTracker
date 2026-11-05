@@ -20,6 +20,8 @@ window.addEventListener('themechange', () => {
   refreshBodyweight();
   refreshExercises();
 });
+// Deload phases depend on the cycle length setting.
+window.addEventListener('settingschange', refreshExercises);
 
 initProfileMenu();
 initExport();

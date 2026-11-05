@@ -30,7 +30,7 @@ src/
     user-db.js             Referencias Firestore bajo users/{uid}/…
     sync-status.js         Indicador "Saving… / Saved / Error" y persist().
     theme.js               Tema Sistema/Claro/Oscuro (data-theme en <html>, evento themechange) y colores para las gráficas, leídos de las variables CSS.
-    settings.js            Preferencias por dispositivo (paso de peso 1 / 2.5 / 5 kg) en localStorage.
+    settings.js            Preferencias por dispositivo en localStorage: paso de peso (1 / 2.5 / 5 kg) y duración del ciclo (2–14 días; emite settingschange).
     export-format.js       Helpers de texto plano para el export (reglas, padding).
   shell/                   El "marco" de la app, común a todas las secciones.
     auth.js                Login/logout y pantallas según la sesión.
@@ -114,7 +114,7 @@ bodyweight-source.js   Hueco por el que el shell inyecta la media de peso corpor
 constants.js           Límites, colores por serie, iconos SVG
 repository.js          Carga, persist por lotes y serializadores
 selectors.js           Consultas sobre el estado: ordenar, filtrar, última carga, "hecho hoy"
-deloads.js             Ciclo de deload: actual, siguiente, anterior, fase
+deloads.js             Ciclo de deload: actual, siguiente, anterior, fase. Un ciclo dura los días del ajuste "Cycle length" (7 por defecto): el primero tras la marca es el deload cycle, luego Cycle N after deload
 modes.js               View / Edit / Train
 folds.js               Plegado persistente y "Expand all"
 charts.js              Gráficas por ejercicio

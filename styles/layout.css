@@ -55,3 +55,5 @@
 /* Train is a full-screen focus view: no section bar, no rail. */
 .app[data-focus] .main-nav{display:none}
 .app[data-focus]{padding-left:0;padding-bottom:2rem}
+.pm-label{display:flex;flex-direction:column;gap:1px}
+.pm-label small{font-size:11px;color:var(--muted);font-weight:400}

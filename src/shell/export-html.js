@@ -74,7 +74,7 @@ function trainingCard(ex) {
 
 function deloadCard(ex) {
   const d = ex && ex.deload;
-  if (!d || (!d.phase && !d.nextDate)) return card('Deload', 'None recorded', 'No deload weeks marked yet.');
+  if (!d || (!d.phase && !d.nextDate)) return card('Deload', 'None recorded', 'No deload cycles marked yet.');
   const bits = [];
   if (d.lastDate) bits.push(`Last started ${esc(formatDate(d.lastDate))} (${d.daysAgo === 0 ? 'today' : d.daysAgo + ' ' + plural(d.daysAgo, 'day') + ' ago'})`);
   if (d.nextDate) bits.push(`Next planned ${esc(formatDate(d.nextDate))}`);

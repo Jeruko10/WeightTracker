@@ -2,6 +2,7 @@
 // the latest start on or before today; a start in the future is shown as planned, not active.
 import { today, daysBetween } from '../../lib/dates.js';
 import { plural } from '../../lib/html.js';
+import { getCycleLength } from '../../shared/settings.js';
 import { state } from './state.js';
 
 export function deloadsNewestFirst() {
@@ -23,16 +24,17 @@ export function previousDeload(d) {
   return i > 0 ? asc[i - 1] : null;
 }
 
-// Day 0–6 after a start is the deload week itself; from day 7 on, training weeks are counted.
+// The first cycle after a start is the deload cycle itself; after it, training cycles are counted.
+// A cycle is as many days as the user set in the profile menu (7 by default).
 export function cyclePhase(d) {
-  const n = daysBetween(d.date, today());
-  return n < 7
-    ? { deloadWeek: true, text: 'Deload week, day ' + (n + 1) }
-    : { deloadWeek: false, text: 'Week ' + (Math.floor((n - 7) / 7) + 1) + ' after deload' };
+  const n = daysBetween(d.date, today()), len = getCycleLength();
+  return n < len
+    ? { isDeload: true, text: `Deload cycle, day ${n + 1} of ${len}` }
+    : { isDeload: false, text: 'Cycle ' + (Math.floor((n - len) / len) + 1) + ' after deload' };
 }
 
-/** 14 → '2 weeks', 10 → '1.4 weeks'. */
-export function weeksText(days) {
-  const w = days / 7;
-  return (days % 7 === 0 ? String(w) : w.toFixed(1)) + ' ' + plural(w, 'week');
+/** With 5-day cycles: 10 → '2 cycles', 7 → '1.4 cycles'. */
+export function cyclesText(days) {
+  const len = getCycleLength(), c = days / len;
+  return (days % len === 0 ? String(c) : c.toFixed(1)) + ' ' + plural(c, 'cycle');
 }

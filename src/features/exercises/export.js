@@ -11,7 +11,7 @@ import {
 } from './selectors.js';
 import { dailyTonnage } from './tonnage.js';
 import { bodyweightLookup } from './bodyweight-source.js';
-import { currentDeload, nextDeload, previousDeload, cyclePhase, weeksText } from './deloads.js';
+import { currentDeload, nextDeload, previousDeload, cyclePhase, cyclesText } from './deloads.js';
 
 const MARK = { up: ' ↑', down: ' ↓', in: '' };
 
@@ -80,7 +80,7 @@ function exportDeload() {
     out.push('Last deload started   ' + formatDate(cur.date) + '  (' + n + ' ' + plural(n, 'day') + ' ago)');
     out.push('Current status        ' + cyclePhase(cur).text);
     if (prev) {
-      out.push('Previous deload       ' + formatDate(prev.date) + '  (' + weeksText(daysBetween(prev.date, cur.date)) + ' between deloads)');
+      out.push('Previous deload       ' + formatDate(prev.date) + '  (' + cyclesText(daysBetween(prev.date, cur.date)) + ' between deloads)');
     }
   }
   if (next) out.push('Next deload planned   ' + formatDate(next.date));

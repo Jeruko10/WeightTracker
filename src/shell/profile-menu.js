@@ -2,7 +2,9 @@
 // The menu closes on an outside click, Escape, or a section change.
 import { byId } from '../lib/dom.js';
 import { getThemePref, setThemePref } from '../shared/theme.js';
-import { getWeightStep, setWeightStep } from '../shared/settings.js';
+import {
+  getWeightStep, setWeightStep, getCycleLength, setCycleLength, CYCLE_MIN, CYCLE_MAX,
+} from '../shared/settings.js';
 
 let btn = null, menu = null;
 
@@ -50,9 +52,19 @@ function markStep() {
   });
 }
 
+function markCycle() {
+  const n = getCycleLength();
+  byId('cycle-val').textContent = n;
+  byId('cycle-dec').disabled = n <= CYCLE_MIN;
+  byId('cycle-inc').disabled = n >= CYCLE_MAX;
+}
+
 export function initProfileMenu() {
   markTheme();
   markStep();
+  markCycle();
+  byId('cycle-dec').addEventListener('click', () => { setCycleLength(getCycleLength() - 1); markCycle(); });
+  byId('cycle-inc').addEventListener('click', () => { setCycleLength(getCycleLength() + 1); markCycle(); });
   byId('step-seg').addEventListener('click', (e) => {
     const b = e.target.closest('[data-step]');
     if (!b) return;

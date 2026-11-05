@@ -3,7 +3,7 @@ import { today, formatDate, formatDateShort, daysBetween } from '../../../lib/da
 import { plural } from '../../../lib/html.js';
 import { ICON, chevron } from '../constants.js';
 import { state, isEdit } from '../state.js';
-import { deloadsNewestFirst, currentDeload, nextDeload, previousDeload, cyclePhase, weeksText } from '../deloads.js';
+import { deloadsNewestFirst, currentDeload, nextDeload, previousDeload, cyclePhase, cyclesText } from '../deloads.js';
 import { iconBtn, textBtn, saveCancel, foldClass } from './components.js';
 
 function dateForm(formId, date, buttons) {
@@ -16,7 +16,7 @@ function deloadRow(d) {
   if (state.ui.editDeload === d.id) return dateForm('deload:' + d.id, d.date, saveCancel('Save', 'deloadedit-save', d.id));
   const prev = previousDeload(d);
   const note = d.date > today() ? 'Planned'
-    : prev ? weeksText(daysBetween(prev.date, d.date)) + ' after previous'
+    : prev ? cyclesText(daysBetween(prev.date, d.date)) + ' after previous'
     : 'First recorded';
   return '<div class="deload-row">' +
     `<span class="deload-date">${formatDate(d.date)}</span>` +
@@ -33,7 +33,7 @@ function factsHtml(cur, next) {
   if (cur) {
     const n = daysBetween(cur.date, today()), prev = previousDeload(cur);
     rows.push(['Last deload', `${n} ${plural(n, 'day')} ago (${formatDate(cur.date)})`]);
-    if (prev) rows.push(['Previous', weeksText(daysBetween(prev.date, cur.date)) + ' before that']);
+    if (prev) rows.push(['Previous', cyclesText(daysBetween(prev.date, cur.date)) + ' before that']);
   }
   if (next) rows.push(['Next planned', formatDate(next.date)]);
   return rows.length
@@ -55,6 +55,6 @@ export function deloadHtml() {
   return `<div class="card deload-card ${foldClass(key)}" data-key="${key}">` +
     '<div class="fold-head deload-head" data-action="toggle" role="button" tabindex="0">' + chevron() +
       `<div class="ex-titles"><span class="day-name">Deload</span><span class="meta">${summary}</span></div>` +
-      (phase && phase.deloadWeek ? '<span class="chip deload-chip">Deload week</span>' : '') + '</div>' +
+      (phase && phase.isDeload ? '<span class="chip deload-chip">Deload cycle</span>' : '') + '</div>' +
     `<div class="fold"><div class="fold-inner"><div class="deload-body">${factsHtml(cur, next)}${addForm}${list}</div></div></div></div>`;
 }

@@ -64,7 +64,7 @@ export function renderTrain(tree) {
   // The deload cycle matters when picking weights, so its phase sits above the exercises.
   const cur = currentDeload(), phase = cur ? cyclePhase(cur) : null;
   const phaseLine = phase
-    ? `<p class="focus-phase${phase.deloadWeek ? ' deload' : ''}">${esc(phase.text)}</p>` : '';
+    ? `<p class="focus-phase${phase.isDeload ? ' deload' : ''}">${esc(phase.text)}</p>` : '';
   tree.innerHTML = '<div class="focus-wrap">' + phaseLine + '<p class="focus-rest" id="focus-rest"></p>' +
     (exs.length ? exs.map(exerciseHtml).join('') : '<p class="empty">No exercises in this day yet.</p>') +
     '</div>';
