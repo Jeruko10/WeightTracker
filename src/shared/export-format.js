@@ -15,13 +15,13 @@ export function heading(title) {
 /**
  * A logged weight as a person reads it. Plain exercises: "62.5 kg". Body-weight exercises: the
  * number entered is added to (or, if negative, taken off) the user's body weight, so say so:
- * "30 kg + bodyweight", "−10 kg + bodyweight", or just "bodyweight" for 0.
+ * "bodyweight + 30 kg", "bodyweight − 10 kg", or just "bodyweight" for 0.
  */
 export function weightLabel(weight, bodyweight) {
   const w = Math.round(weight * 100) / 100;
   if (!bodyweight) return w + ' kg';
   if (w === 0) return 'bodyweight';
-  return (w < 0 ? '−' : '') + Math.abs(w) + ' kg + bodyweight';
+  return 'bodyweight ' + (w > 0 ? '+' : '−') + ' ' + Math.abs(w) + ' kg';
 }
 
 export function padRight(s, n) {
