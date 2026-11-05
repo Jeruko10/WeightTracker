@@ -76,3 +76,8 @@
 .focus-phase.deload{padding:8px 12px;border-radius:10px;background:var(--warn-bg);color:var(--warn-text);font-weight:600}
 .focus-rest{margin:0;font-size:13px;color:var(--muted);text-align:center;font-variant-numeric:tabular-nums}
 .focus-rest:empty{display:none}
+
+/* Train is a single centred column: the list/detail split of the wide layout does not apply, so the
+   (empty) detail pane must not show as a blank card, and the list is plain content, not a sticky column. */
+.app[data-focus] .ex-detail-pane{display:none!important}
+.app[data-focus] .ex-list-pane{position:static;max-height:none;overflow:visible;padding-right:0}
