@@ -7,7 +7,7 @@ import { EXPORT_ENTRIES, CHART_ENTRIES } from './constants.js';
 import { state } from './state.js';
 import {
   sortedDays, dayExercises, setLogs, repsState, formatWeight, logSides, machinesOf, activeMachine, archivedExercises,
-  rangeText, exDoneToday,
+  rangeText, exDoneToday, findById,
 } from './selectors.js';
 import { dailyTonnage } from './tonnage.js';
 import { bodyweightLookup } from './bodyweight-source.js';
@@ -140,5 +140,31 @@ export function exercisesReport() {
       gapBefore: cur && prev ? daysBetween(prev.date, cur.date) : null,
       nextDate: next ? next.date : null,
     },
+  };
+}
+
+const DAY_REPORT_SESSIONS = 6;
+
+/**
+ * One training day, trimmed for a one-screen summary: per exercise, the tonnage of its last
+ * sessions and only the most recent entry of each set (all on the exercise's current machine).
+ * Null while loading or if the day doesn't exist.
+ */
+export function dayReport(dayId) {
+  const day = findById(state.days, dayId);
+  if (!state.loaded || !day) return null;
+  const lookup = bodyweightLookup();
+  return {
+    name: day.name,
+    exercises: dayExercises(dayId).map((x) => {
+      const r = exerciseReport(x, lookup), t = r.tracks.find((tr) => tr.active) || r.tracks[0];
+      const sets = t ? t.sets.map((s) => ({ k: s.k, row: s.rows[0] || null })) : [];
+      const dates = sets.filter((s) => s.row).map((s) => s.row.date).sort();
+      return {
+        name: x.name, unilateral: r.unilateral, bodyweight: r.bodyweight, machine: r.machine,
+        tonnage: t ? t.tonnage.slice(-DAY_REPORT_SESSIONS).map((d) => ({ date: d.date, total: d.total })) : [],
+        sets, lastDate: dates.length ? dates[dates.length - 1] : null,
+      };
+    }),
   };
 }

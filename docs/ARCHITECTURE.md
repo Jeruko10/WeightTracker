@@ -38,6 +38,7 @@ src/
     router.js              Rutas por hash (#/bodyweight, #/exercises, #/exercises/ex/<id>, #/exercises/archive);
                            pasa a la sección lo que sigue a su hash como sub-ruta.
     export.js              Export a portapapeles (texto) y descarga del informe HTML (combina ambas features).
+    export-day.js          Resumen de un solo día de entrenamiento en HTML (cabe en una captura): tonelaje de las últimas 6 sesiones y último registro de cada serie. Botón en la cabecera del día; datos de dayReport().
     export-html.js         Informe HTML autocontenido para enviar a una persona: resumen, peso, entrenos, pestañas y plegables. Solo maqueta; los datos salen de bodyweightReport() y exercisesReport().
   features/
     bodyweight/            Sección Bodyweight (peso corporal y objetivos).

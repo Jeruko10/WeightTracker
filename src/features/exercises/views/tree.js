@@ -24,6 +24,7 @@ export function dayHtml(d, i, all) {
     : '<div class="fold-head day-head" data-action="toggle" role="button" tabindex="0">' + chevron() +
         `<span class="day-name">${esc(d.name)}</span>` +
         `<span class="meta">${p.total ? p.done + '/' + p.total + ' done' : '0 exercises'}</span>` +
+        iconBtn(ICON.download, 'day-export', d.id, 'Export this day as HTML', !p.total) +
         editActions('day', d.id, i, all.length) + '</div>';
   let body = exs.length
     ? exs.map((x, j) => exerciseRow(x, j, exs.length)).join('')

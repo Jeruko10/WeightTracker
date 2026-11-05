@@ -100,3 +100,20 @@ export function barChart({
   });
   return frame(width, height, label, g);
 }
+
+/**
+ * A tiny bar sparkline (no axes), bottom-aligned and scaled to its tallest bar. `bars`:
+ * [{ value, title, highlight }]. Meant to sit inline next to a number. Bars keep the width of
+ * `slots` slots and sit right-aligned, so one lone bar isn't stretched across the whole chart.
+ */
+export function sparkBars({ bars, width = 96, height = 40, slots = bars.length, label = 'Trend' }) {
+  if (!bars.length) return '';
+  const max = Math.max(...bars.map((b) => b.value), 1), gap = 4, n = Math.max(slots, bars.length);
+  const bw = (width - gap * (n - 1)) / n, x0 = (n - bars.length) * (bw + gap);
+  const g = bars.map((b, i) => {
+    const h = Math.max(2, (b.value / max) * (height - 2));
+    return `<rect class="col${b.highlight ? ' hi' : ''}" x="${num(x0 + i * (bw + gap))}" y="${num(height - h)}" width="${num(bw)}" ` +
+      `height="${num(h)}" rx="2"><title>${esc(b.title || String(b.value))}</title></rect>`;
+  }).join('');
+  return `<svg class="spark" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="${esc(label)}">${g}</svg>`;
+}

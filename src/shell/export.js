@@ -1,9 +1,11 @@
 // One plain-text snapshot of everything, copied to the clipboard from the profile menu: the
 // training log first, then the deload cycle, then bodyweight (only when there is any).
 import { byId } from '../lib/dom.js';
+import { showSync } from '../shared/sync-status.js';
 import { today, formatDate } from '../lib/dates.js';
 import { copyText } from '../lib/clipboard.js';
 import { buildHtmlReport, reportFileName } from './export-html.js';
+import { buildDayHtml, dayFileName } from './export-day.js';
 import { heading } from '../shared/export-format.js';
 import { exportSections } from '../features/exercises/index.js';
 import { exportBodyweight } from '../features/bodyweight/index.js';
@@ -27,17 +29,31 @@ export function buildExport() {
   return out.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '') + '\n';
 }
 
+/** Hands a string to the browser as a downloaded .html file. */
+function saveHtml(html, fileName) {
+  const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/** The day-header button in the Exercises list: one training day, one screen. */
+function exportDay(id) {
+  const html = buildDayHtml(id);
+  if (!html) return;
+  saveHtml(html, dayFileName(id));
+  showSync('Day exported', 'saved');
+  setTimeout(() => showSync(''), FEEDBACK_MS);
+}
+
 /** Saves the HTML report as a file: one self-contained page that can be sent to anyone. */
 function downloadHtmlReport(btn) {
   try {
-    const url = URL.createObjectURL(new Blob([buildHtmlReport()], { type: 'text/html;charset=utf-8' }));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = reportFileName();
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    saveHtml(buildHtmlReport(), reportFileName());
     btn.textContent = 'Report downloaded!';
     btn.classList.add('done');
   } catch (e) {
@@ -52,6 +68,11 @@ function downloadHtmlReport(btn) {
 }
 
 export function initExport() {
+  // The list is re-rendered constantly, so listen on its container rather than on the buttons.
+  byId('ex-tree').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-action=day-export]');
+    if (b && !b.disabled) exportDay(b.dataset.id);
+  });
   const htmlBtn = byId('btn-export-html');
   htmlBtn.addEventListener('click', () => downloadHtmlReport(htmlBtn));
   const btn = byId('btn-export');

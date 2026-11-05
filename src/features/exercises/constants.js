@@ -38,6 +38,7 @@ export const ICON = {
   del: icon('M4 4l8 8M12 4l-8 8'),
   plus: icon('M8 3v10M3 8h10'),
   check: icon('M3 8.5l3 3 7-7'),
+  download: icon('M8 2v8M4.5 7L8 10.5 11.5 7M3 13h10'),
   archive: icon('M2.5 3.5h11v3h-11zM3.5 6.5v6h9v-6M6.5 9h3'),
   back: icon('M10 3L5 8l5 5'),
   next: icon('M6 3l5 5-5 5'),
