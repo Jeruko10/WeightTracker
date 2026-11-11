@@ -7,6 +7,7 @@ Weight Tracker: static SPA to log body weight and goals (Bodyweight) and trainin
 - **Build / test / lint:** none, deliberately. Don't add tooling or bundling.
 - **Deploy:** push to `main`; `.github/workflows/static.yml` uploads the repo as-is to GitHub Pages.
 - **Docs:** `docs/` is for humans (ARCHITECTURE in Spanish, conventions, development); read only if the task asks.
+- **Plans / ADRs:** PLAN.md in the root is the plan in progress (absent when idle); `adr/` holds decisions, indexed in `adr/README.md`.
 
 ## Invariants and traps
 
