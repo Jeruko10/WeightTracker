@@ -1,8 +1,8 @@
 # Conventions
 
-How Weight Tracker's code and styles are written. **Read this before touching code or styles.** Each rule carries its reason, because the reason is what stops somebody from "fixing" it. The deliberate departures are listed at the end, in [Exceptions to the conventions](#exceptions-to-the-conventions), each with the convention it departs from and why that is right.
+How Weight Tracker's code and styles are written. Each rule carries its reason, because the reason is what stops somebody from "fixing" it. The deliberate departures are listed at the end, in [Exceptions to the conventions](#exceptions-to-the-conventions), each with the convention it departs from and why that is right.
 
-The full structure — every folder and file, a feature's anatomy, the data model and how to grow — is in [ARCHITECTURE.md](ARCHITECTURE.md) (in Spanish); read it before structural changes. Running, deploying and the no-build rule are in [development.md](development.md).
+The full structure — every folder and file, a feature's anatomy, the data model and how to grow — is in [ARCHITECTURE.md](ARCHITECTURE.md) (in Spanish). Running, deploying and the no-build rule are in [development.md](development.md).
 
 ## Structure
 
