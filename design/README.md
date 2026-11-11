@@ -1,20 +1,16 @@
 # Design
 
-Numbered design documents and ADRs (Architecture Decision Records). Every plan is saved here.
+Plans and ADRs. Every plan is saved here before implementing it.
 
-## Numbering
+## Layout
 
-- One sequence for everything: `NNN-title.md`, three digits, the next free number, a short kebab-case title (`001-nutrition-section.md`).
-- An ADR is `NNN-adr-title.md` (`002-adr-goal-history.md`) and has three sections, **Context**, **Decision** and **Consequences**, under a header that gives its kind, status and date.
-- A number is never reused. A decision that is reversed keeps its file, marked `Superseded by NNN`, and the new one says what it replaces.
-- A rule whose history an ADR tells links to the ADR and does not repeat it; the ADR links back to where the rule lives today ([docs/conventions.md](../docs/conventions.md), [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md), [docs/development.md](../docs/development.md)).
+- Plan: `design/NNN-title.md` — three digits, next free number, short kebab-case title. Goal, approach, numbered steps with a checkbox; each step names its files and when it is done. Up to ~60 lines.
+- ADR: `design/adr/NNNN-title.md` — four digits, its own sequence. Context, Decision, Consequences; up to 20 lines. Immutable: a new ADR supersedes the old one, which is marked `Superseded by NNNN`.
+- A number is never reused.
+- A rule whose history an ADR tells links to the ADR; the ADR links back to where the rule lives ([conventions](../docs/conventions.md), [ARCHITECTURE](../docs/ARCHITECTURE.md), [development](../docs/development.md)).
 
 ## Index
 
-No numbered documents yet. The next one is `001`.
+No plans or ADRs yet. Next plan: `001`; next ADR: `0001`.
 
-## Kept elsewhere
-
-| Document | Kind | Date | Note |
-| --- | --- | --- | --- |
-| [Arquitectura](../docs/ARCHITECTURE.md) | Architecture (in Spanish) | 2026-10-11, last changed 2026-11-11 | Folders, layers, a feature's anatomy, the data model, styles and how to grow. Stays in `docs/`; not numbered. |
+[Arquitectura](../docs/ARCHITECTURE.md) (in Spanish) stays in `docs/`, not numbered.

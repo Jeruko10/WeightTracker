@@ -1,121 +1,87 @@
 # Map
 
-Every file in the repository and what it does, one line each. Keep this up to date when a file is added, moved or changes purpose.
+Weight Tracker: static SPA to log body weight and goals (Bodyweight) and training days, sets and deloads (Exercises).
 
-Where to start: [STATUS.md](STATUS.md) for where the work stands, [docs/](docs/) for how the app is built and the rules it keeps, [design/](design/README.md) for decisions and plans.
+- **Stack:** native ES modules, Firebase Auth/Firestore (gstatic CDN, pinned 10.12.0), Chart.js 4.4.1 as `window.Chart` (cdnjs). No build step.
+- **Run:** `python -m http.server` in the root, open in a browser (modules fail on `file://`). Sign-in is Google, against the real Firebase project.
+- **Build / test / lint:** none, deliberately. Don't add tooling or bundling.
+- **Deploy:** push to `main`; `.github/workflows/static.yml` uploads the repo as-is to GitHub Pages.
+- **Docs:** `docs/` is for humans (ARCHITECTURE in Spanish, conventions, development); read only if the task asks.
 
-## Root
+## Invariants and traps
 
-- `MAP.md` — this index.
-- `STATUS.md` — where the work stands and where to resume; its notice says which doc to read before touching what.
-- `index.html` — the app's markup. Applies the saved theme before first paint (inline script, `wt-theme`), links the stylesheets in cascade order, Chart.js 4.4.1 from cdnjs and `src/main.js`.
-- `assets/icon.png` — the app icon (favicon and Apple touch icon).
-- `.github/workflows/static.yml` — deploys the whole repository, as-is, to GitHub Pages on every push to `main` (or by hand).
+- Dependencies: `main.js → shell/ → features/ → shared/ → lib/`; `lib/` imports nothing of the project.
+- A feature never imports another feature; only `shell/` knows both. Cross-feature data goes via the shell (`setBodyweightProvider`).
+- A feature exposes its API only through its `index.js`; the rest is internal.
+- Firebase is imported only through `src/config/firebase.js` (re-exports what the app uses).
+- Writes go through `persist()` in `shared/sync-status.js` so the Saving/Saved/Error indicator stays true.
+- User data lives under `users/{uid}/…` via `shared/user-db.js`.
+- Dates are `'YYYY-MM-DD'` strings in UTC (`lib/dates.js`); never `Date` local time.
+- `state.js` exports one mutable object (imported `let`s can't be reassigned).
+- Colors only in `styles/tokens.css`; the light block is duplicated (`data-theme=light` and OS light): edit both.
+- `<link>` order in `index.html` matters: tokens → base → components → layout → login → bodyweight → exercises → train.
+- JS toggles classes, not inline styles. Split modules past ~300 lines or mixing DOM with calculation.
+- Opening Bodyweight resets Exercises to View mode (`resetExercisesMode`).
+- The HTML report (`shell/export-html.js`) is self-contained: inline CSS/JS, SVG charts, no network.
 
-## `docs/`
+## Entry points
 
-- `ARCHITECTURE.md` — the architecture, in Spanish: folders, layers and dependency rules, a feature's anatomy, the Exercises data model, styles and how to grow.
-- `conventions.md` — the rules the code and styles keep, each with its reason, and the exceptions to them.
-- `development.md` — no build step, running locally, signing in, deploying.
-
-## `design/`
-
-- `README.md` — numbering of design documents and ADRs, and their index.
-
-## `devlogs/`
-
-- `README.md` — what goes in the folder: one entry per session, by the `devlog` skill.
+- `index.html` — markup; applies saved theme (`wt-theme`) before first paint.
+- `src/main.js` — starts shell, wires features to auth and router.
 
 ## `src/`
 
-- `main.js` — entry point: starts the shell and wires the features to auth sign-in/sign-out and the hash router; hands Exercises the bodyweight average.
+- `config/firebase.js` — Firebase init, `auth`/`db`, SDK re-exports.
 
-### `src/config/`
+### `lib/` — generic utils, no app knowledge
 
-- `firebase.js` — `initializeApp` and the `auth`/`db` instances; the only place with the config. Pins the Firebase SDK (10.12.0) and re-exports the functions the app uses.
+- `dates.js` — UTC date strings: today, addDays, daysBetween, formats.
+- `confirm-tap.js` — "tap again to confirm" for irreversible deletes.
+- `snackbar.js` — temporary notice with Undo (recoverable deletes).
+- `svg-charts.js` — line and bar charts as SVG strings, for the report.
+- `dom.js`, `html.js`, `storage.js`, `clipboard.js` — small helpers (`esc()` escapes HTML).
 
-### `src/lib/` — generic utils, no knowledge of the app or Firebase
-
-- `dates.js` — `'YYYY-MM-DD'` dates in UTC: today, addDays, daysBetween, formats.
-- `dom.js` — `byId`, `playEnter` (entry animation).
-- `html.js` — `esc()` for interpolating text into HTML.
-- `confirm-tap.js` — "tap again to confirm" (cascading, irreversible deletes).
-- `snackbar.js` — a temporary notice with an "Undo" action (recoverable deletes, archiving).
-- `storage.js` — fault-tolerant `localStorage`.
-- `clipboard.js` — `copyText` with a fallback.
-- `svg-charts.js` — line and bar charts as SVG strings, for the HTML report (no Chart.js).
-
-### `src/shared/` — app services shared by the features
+### `shared/` — services used by several features
 
 - `user-db.js` — Firestore references under `users/{uid}/…`.
-- `sync-status.js` — the "Saving… / Saved / Error" indicator and `persist()`.
-- `theme.js` — System/Light/Dark theme (`data-theme` on `<html>`, the `themechange` event) and chart colors read from the CSS variables.
-- `settings.js` — per-device preferences in `localStorage`: weight step (1 / 2.5 / 5 kg) and cycle length (2–14 days; emits `settingschange`).
-- `export-format.js` — plain-text helpers for the export (rules, padding).
+- `sync-status.js` — Saving/Saved/Error indicator and `persist()`.
+- `theme.js` — System/Light/Dark, `themechange` event, chart colors from CSS.
+- `settings.js` — per-device prefs: weight step, cycle length (`settingschange`).
+- `export-format.js` — plain-text export helpers.
 
-### `src/shell/` — the frame common to every section
+### `shell/` — frame common to every section
 
-- `auth.js` — sign-in/sign-out and which screens show for the session.
+- `auth.js` — sign-in/out and which screens show.
+- `router.js` — hash routes; passes the remainder to the section as sub-route.
+- `export.js` — clipboard text export and HTML report download, both features.
+- `export-html.js` — self-contained HTML report; layout only.
+- `export-day.js` — one training day as screenshot-sized HTML (`dayReport()`).
 - `profile-menu.js` — the avatar menu.
-- `router.js` — hash routes (`#/bodyweight`, `#/exercises`, `#/exercises/ex/<id>`, `#/exercises/archive`); passes what follows a section's hash to it as a sub-route.
-- `export.js` — export to the clipboard (text) and download of the HTML report; combines both features.
-- `export-day.js` — one training day as HTML that fits a screenshot: tonnage of the last 6 sessions and the last log of each set. Data from `dayReport()`.
-- `export-html.js` — the self-contained HTML report to send to a person: summary, weight, training, tabs and folds. Layout only; data from `bodyweightReport()` and `exercisesReport()`.
 
-### `src/features/bodyweight/` — body weight and goals
+### `features/bodyweight/`
 
-- `index.js` — public API: `initBodyweight`, `loadBodyweight`, `refreshBodyweight`, `clearBodyweight`, `onBodyweightShown`, `makeBodyweightLookup`, `exportBodyweight`, `bodyweightReport`.
-- `state.js` — `entries`, `goal`, `goalHistory`, `pendingReset`, `chartRange`.
-- `repository.js` — CRUD of entries, goal and goal history.
-- `stats.js` — interpolated daily series, 7-day averages, data thresholds (pure).
-- `goal-plan.js` — a goal's plan and its archiving (pure).
-- `render.js` — main render: calls each view.
-- `export.js` — the plain-text export section.
-- `views/overview-stats.js` — the three average cards.
-- `views/goal-banner.js` — the goal banner (pace, projection, bars, reached/overdue).
-- `views/weekly-summary.js` — the weekly table.
-- `views/history.js` — adding a weigh-in (form in Progress) and the History tab: editing and deleting with Undo.
-- `views/goal-tab.js` — the Goal tab: form, preview, summary and past goals.
-- `views/tabs.js` — the Progress / History / Goals tabs.
-- `chart/weight-chart.js` — creates/updates the chart and the range selector.
-- `chart/chart-data.js` — day axis, range window and datasets (weight + ideal pace).
-- `chart/chart-view.js` — chart state and window layout (X/Y bounds, scroll).
-- `chart/zoom-animation.js` — the zoom animation on a range change.
-- `chart/zoom-planner.js` — smooth Y-axis planning during the zoom (pure).
+- `index.js` — public API (`init`/`load`/`refresh`/`clear`, `bodyweightReport`…).
+- `state.js`, `repository.js` — state; CRUD of entries, goal, goal history.
+- `stats.js` — interpolated daily series, 7-day averages (pure).
+- `goal-plan.js` — a goal's plan and archiving (pure).
+- `render.js` — main render; calls each view.
+- `views/` — overview stats, goal banner/tab, weekly table, history, tabs.
+- `chart/` — weight chart, data, window layout, zoom animation and planner.
 
-### `src/features/exercises/` — days, exercises, sets, deloads
+### `features/exercises/`
 
-- `index.js` — public API: `initExercises`, `loadExercises`, `clearExercises`, `resetExercisesMode`, `exportSections`, `applyExercisesRoute`, `setBodyweightProvider`, `refreshExercises`.
-- `state.js` — data (days, exercises, logs, deloads) and UI state (mode, screen, track, forms).
-- `nav.js` — the active screen (list / detail / archive) from the hash sub-route.
+- `index.js` — public API (`init`/`load`/`clear`, `exportSections`, `applyExercisesRoute`…).
+- `state.js` — data (days, exercises, logs, deloads) and UI state.
+- `repository.js` — loading, batched persist, serializers; documents the data model.
+- `nav.js` — active screen (list / detail / archive) from the sub-route.
+- `actions.js` — `data-action` event delegation handler.
+- `selectors.js` — sort, filter, last load, "done today".
+- `deloads.js` — deload cycle: current, next, previous, phase.
 - `tonnage.js` — tonnage by date and track (pure).
-- `bodyweight-source.js` — the slot through which the shell injects the bodyweight average.
-- `constants.js` — limits, per-set colors, SVG icons.
-- `repository.js` — loading, batched persist and serializers; its comment documents the data model.
-- `selectors.js` — queries on the state: sort, filter, last load, "done today".
-- `deloads.js` — the deload cycle: current, next, previous, phase.
-- `modes.js` — View / Edit / Train.
-- `folds.js` — persistent folding and "Expand all".
-- `charts.js` — per-exercise charts.
-- `form-readers.js` — reading and validating forms.
-- `actions.js` — the `data-action` handler (event delegation).
-- `export.js` — the plain-text export section.
-- `views/render.js` — main render of the tree.
-- `views/components.js` — reusable buttons and icons.
-- `views/tree.js` — the list: days (accordion) → compact exercise rows; link to the archive.
-- `views/detail.js` — exercise detail: machine tracks, tonnage chart, sets and history.
-- `views/archive.js` — the archive: restore into a day or delete for good.
-- `views/forms.js` — log forms (bilateral / L-R) and the exercise form (unilateral, body weight, machine).
-- `views/deload.js` — the deload card.
-- `views/train.js` — Train mode.
+- `bodyweight-source.js` — slot where the shell injects the bodyweight average.
+- `modes.js`, `folds.js`, `charts.js`, `form-readers.js`, `constants.js` — modes, folding, charts, form parsing, limits/icons.
+- `views/` — tree, detail, archive, forms, deload card, Train mode, components.
 
-## `styles/` — loaded from `index.html` in this order
+## `styles/` — one sheet per responsibility
 
-- `tokens.css` — the color variables: dark by default, light with `data-theme=light` or the OS in light (the block is duplicated). Charts read these same variables.
-- `base.css` — reset, body, global animations.
-- `components.css` — reusable pieces: card, btn, inputs, chip, fold, icon-btn…
-- `layout.css` — the shell: top bar, profile menu, header, tabs, sync.
-- `login.css` — the sign-in screen.
-- `bodyweight.css` — the Bodyweight section, with its desktop layout.
-- `exercises.css` — the Exercises section (tree, forms, deload, charts).
-- `train.css` — Train mode.
+`tokens` (colors), `base`, `components`, `layout`, `login`, `bodyweight`, `exercises`, `train`; each styles what its name says.
