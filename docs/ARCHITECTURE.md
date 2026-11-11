@@ -14,9 +14,11 @@ index.html                 Markup de la app. Solo enlaza estilos y src/main.js.
 assets/                    Imágenes estáticas (icono).
 styles/                    CSS separado por responsabilidad (ver "Estilos").
 src/
-  main.js                  Punto de entrada: arranca el shell y conecta las features.
+  main.js                  Punto de entrada: arranca el shell y conecta las features al login/logout de auth y al
+                           router por hash. Pasa a Exercises la media de peso corporal: setBodyweightProvider(makeBodyweightLookup).
   config/
-    firebase.js            initializeApp + instancias auth/db. Único sitio con la config.
+    firebase.js            initializeApp + instancias auth/db. Único sitio con la config. Fija la versión del SDK
+                           (10.12.0) y reexporta las funciones de Firebase que usa la app.
   lib/                     Utilidades genéricas. NO conocen la app ni Firebase.
     dates.js               Fechas 'YYYY-MM-DD' en UTC: today, addDays, daysBetween, formatos.
     dom.js                 byId, playEnter (animación de entrada).
@@ -36,7 +38,7 @@ src/
     auth.js                Login/logout y pantallas según la sesión.
     profile-menu.js        Menú del avatar.
     router.js              Rutas por hash (#/bodyweight, #/exercises, #/exercises/ex/<id>, #/exercises/archive);
-                           pasa a la sección lo que sigue a su hash como sub-ruta.
+                           pasa a la sección lo que sigue a su hash como sub-ruta (a Exercises, vía applyExercisesRoute).
     export.js              Export a portapapeles (texto) y descarga del informe HTML (combina ambas features).
     export-day.js          Resumen de un solo día de entrenamiento en HTML (cabe en una captura): tonelaje de las últimas 6 sesiones y último registro de cada serie. Botón en la cabecera del día; datos de dayReport().
     export-html.js         Informe HTML autocontenido para enviar a una persona: resumen, peso, entrenos, pestañas y plegables. Solo maqueta; los datos salen de bodyweightReport() y exercisesReport().
