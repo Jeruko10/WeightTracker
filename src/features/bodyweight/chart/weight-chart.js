@@ -1,4 +1,3 @@
-// The Overview's "Progress" chart: creates it once, then updates data and window in place.
 import { byId } from '../../../lib/dom.js';
 import { formatDate, formatDayMonth } from '../../../lib/dates.js';
 import { CHART_THEME } from '../../../shared/theme.js';

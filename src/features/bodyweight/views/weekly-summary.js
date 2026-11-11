@@ -1,4 +1,3 @@
-// "Weekly summary" card: average weight per ISO-ish week, newest first.
 import { byId } from '../../../lib/dom.js';
 import { weekKey } from '../../../lib/dates.js';
 import { plural } from '../../../lib/html.js';

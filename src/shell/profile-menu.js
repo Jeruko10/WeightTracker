@@ -1,5 +1,3 @@
-// Account details and actions live behind the avatar, so the top of the app stays clean.
-// The menu closes on an outside click, Escape, or a section change.
 import { byId } from '../lib/dom.js';
 import { getThemePref, setThemePref } from '../shared/theme.js';
 import {
@@ -17,7 +15,6 @@ function isOpen() {
   return menu.classList.contains('open');
 }
 
-/** Fills the menu header and the avatar for the signed-in user. */
 export function renderUser(user) {
   byId('user-name').textContent = user.displayName || user.email || '';
   byId('user-email').textContent = user.displayName ? (user.email || '') : '';

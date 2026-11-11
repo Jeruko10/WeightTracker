@@ -1,5 +1,4 @@
-// Train mode: one training day and nothing else — each set's range, its latest reps and weight,
-// and a button to log. No folds except finished exercises, no charts. Logs are always for today.
+// Logs here are always for today.
 import { byId } from '../../../lib/dom.js';
 import { today, formatDateShort } from '../../../lib/dates.js';
 import { esc, plural } from '../../../lib/html.js';

@@ -1,6 +1,4 @@
-// Theme: System / Light / Dark. The palette itself lives in styles/tokens.css; this module picks
-// which one applies (a data-theme attribute on <html>) and exposes the same colours to JS, since
-// Chart.js draws on a canvas and can't read CSS variables by itself.
+// Chart.js draws on a canvas and can't read CSS variables, so the palette is also exposed to JS here.
 import { loadPref, savePref } from '../lib/storage.js';
 
 const KEY = 'wt-theme';

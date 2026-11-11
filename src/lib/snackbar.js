@@ -1,5 +1,4 @@
-// A small toast with an optional action ("Undo"). One at a time: a new one replaces the current.
-// Announced politely to screen readers; stays long enough to be read and reached.
+// One at a time: a new snackbar replaces the current one.
 import { byId } from './dom.js';
 
 const SHOW_MS = 7000;

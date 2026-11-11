@@ -1,5 +1,4 @@
-// In-memory state of the Exercises section: the user's data plus UI state. Mutated in place so
-// every module sees the same values.
+// Mutated in place: an imported `let` can't be reassigned from outside its module.
 import { loadPref, savePref, loadJSON, saveJSON } from '../../lib/storage.js';
 import { STORAGE_KEYS } from './constants.js';
 
@@ -13,7 +12,7 @@ function initialMode() {
 }
 
 export const state = {
-  /** Signed-in user, or null — the tree renders nothing without one */
+  // null (signed out): the tree renders nothing.
   uid: null,
   loaded: false,
   loadError: false,
@@ -30,20 +29,17 @@ export const state = {
   mode: initialMode(),
   focusDay: loadPref(STORAGE_KEYS.focusDay, null),
 
-  /** Fold keys currently open: 'deload', 'd:<dayId>', 'e:<exId>', 'c:<exId>' (chart) */
+  // Fold keys: 'deload', 'd:<dayId>', 'e:<exId>', 'c:<exId>' (chart).
   open: new Set(loadJSON(STORAGE_KEYS.open, [])),
-  /** Exercise ids whose tonnage chart is folded away (the summary line stays visible) */
   chartCollapsed: new Set(loadJSON(STORAGE_KEYS.chartCollapsed, [])),
-  /** Machine track being viewed per exercise: exId → label ('' = none). Absent = the active one. */
+  // exId → label ('' = none); absent = the active track.
   track: {},
-  /** Set keys ('<exId>:<setId>') whose full history is expanded */
   showAll: new Set(),
-  /** Which inline form is open, if any. Only one at a time keeps the tree calm. */
+  // Only one inline form open at a time keeps the tree calm.
   ui: { addFor: null, editLog: null, editDay: null, editEx: null, newExFor: null, editDeload: null, machineFor: null, moveTrack: null },
 
-  /** Screen showing: { kind: 'list' | 'ex' | 'archive', id } — set from the URL (see nav.js) */
+  // kind: 'list' | 'ex' | 'archive'; set from the URL (see nav.js).
   view: { kind: 'list', id: null },
-  /** A form to open once the pending navigation lands: { slot, id } */
   pendingForm: null,
 
   // Train mode: finished exercises the user re-opened, and the one that just finished (rendered
@@ -56,12 +52,11 @@ export function isEdit() {
   return state.mode === 'edit';
 }
 
-/** View is read-only: logging (sets and deload starts) happens in Edit and Train. */
+// View is read-only: logging happens in Edit and Train.
 export function canLog() {
   return state.mode !== 'view';
 }
 
-/** Closes every edit form. The "log a set" form (ui.addFor) is handled separately. */
 export function resetForms() {
   const ui = state.ui;
   ui.editLog = null; ui.editDay = null; ui.editEx = null; ui.newExFor = null; ui.editDeload = null; ui.machineFor = null; ui.moveTrack = null;

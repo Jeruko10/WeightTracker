@@ -1,13 +1,9 @@
-// In-memory state of the Bodyweight section. Mutated in place so every module sees the same
-// values (an imported `let` can't be reassigned from outside its module).
+// Mutated in place: an imported `let` can't be reassigned from outside its module.
 export const state = {
-  /** Logged weigh-ins, oldest first: { _id, date, weight } */
+  // entries: oldest first; goalHistory: newest first.
   entries: [],
-  /** The active goal: { weight, start, date, pace, isBulk, startWeight } or null */
   goal: null,
-  /** Archived goals, newest first; same shape plus `savedOn` */
   goalHistory: [],
-  /** The recalculated goal offered when the active one is past due, until accepted */
   pendingReset: null,
 };
 

@@ -2,15 +2,11 @@ export const MAX_SETS = 10;
 export const MIN_SETS = 1;
 export const MIN_REPS = 1;
 export const MAX_REPS = 500;
-/** Weight bounds for a logged set. Negative is allowed for assisted lifts. */
+// Negative allowed for assisted lifts.
 export const MAX_ABS_WEIGHT = 1000;
-/** History rows shown per set before "Show all". */
 export const HISTORY_PREVIEW = 5;
-/** Longest machine label. */
 export const MAX_MACHINE_LEN = 40;
-/** Most recent training dates drawn in an exercise's tonnage chart. */
 export const CHART_ENTRIES = 10;
-/** Most recent entries per set included in the clipboard export. */
 export const EXPORT_ENTRIES = 10;
 export const DEFAULT_SET = { min: 8, max: 12 };
 export const DEFAULT_SET_COUNT = 3;

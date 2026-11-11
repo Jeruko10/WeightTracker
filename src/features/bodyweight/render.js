@@ -1,4 +1,3 @@
-// Redraws the whole Bodyweight section from state. Called after every change.
 import { state } from './state.js';
 import { computeTrend } from './stats.js';
 import { renderStats } from './views/overview-stats.js';

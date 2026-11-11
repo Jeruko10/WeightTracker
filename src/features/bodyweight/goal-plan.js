@@ -1,10 +1,5 @@
-// Goal maths shared by the form preview, Save, the banner and the chart. Pure: no DOM.
 import { addDays, today } from '../../lib/dates.js';
 
-/**
- * Turns the form inputs into a full plan. The goal starts from the latest logged weight (or
- * the target itself when nothing is logged yet) and the end date follows from distance ÷ pace.
- */
 export function planGoal(target, start, pace, entries) {
   const n = entries.length;
   const current = n ? entries[n - 1].weight : null;
@@ -15,21 +10,14 @@ export function planGoal(target, start, pace, entries) {
   return { current, startWeight, delta, isBulk: delta >= 0, weeks, days, endDate: addDays(start, days) };
 }
 
-/**
- * The weight a goal started from. Prefers the value stored on the goal; goals saved before that
- * field existed fall back to the first entry logged on or after the start (null if none).
- */
+// Goals saved before startWeight existed fall back to the first entry on or after the start.
 export function goalStartWeight(goal, entries) {
   if (goal.startWeight !== undefined && goal.startWeight !== null) return goal.startWeight;
   const e = entries.find((x) => x.date >= goal.start);
   return e ? e.weight : null;
 }
 
-/**
- * The record stored in goalHistory when a goal is replaced, completed or reset. Goals saved by
- * older versions may lack `isBulk` or `startWeight`; those fields are left out rather than sent
- * as undefined, which Firestore rejects (the whole write would fail).
- */
+// Legacy goals may lack isBulk/startWeight: left out, since Firestore rejects undefined and the whole write would fail.
 export function archiveGoal(goal) {
   const archived = {
     weight: goal.weight, start: goal.start, date: goal.date,
@@ -40,7 +28,6 @@ export function archiveGoal(goal) {
   return archived;
 }
 
-/** True when the goal has both ends of its timeline (older or partial goals may not). */
 export function hasTimeline(goal) {
   return !!(goal && goal.start && goal.date);
 }

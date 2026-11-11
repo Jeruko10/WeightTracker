@@ -1,5 +1,4 @@
-// Exercises sections of the clipboard export: the training log and the deload cycle. The arrows
-// match the app's above/below-range marks.
+// The arrows match the app's above/below-range marks.
 import { today, addDays, formatDate, daysBetween } from '../../lib/dates.js';
 import { plural } from '../../lib/html.js';
 import { rule, padLeft, padRight, weightLabel } from '../../shared/export-format.js';

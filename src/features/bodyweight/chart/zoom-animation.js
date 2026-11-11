@@ -1,12 +1,4 @@
-// The animated zoom between two chart ranges.
-//
-// It runs in three phases so that every change to the tick set happens while the labels are at
-// zero opacity. Switching tick modes (auto ↔ pinned count) or bounds while they are visible is
-// what makes labels appear from nowhere and reshuffle:
-//   1. fade out  — nothing moves; the old frame and its own tick set just dim away
-//   2. zoom      — labels hidden, tick count pinned so the grid glides with the bounds
-//   3. fade in   — bounds already final and ticks back on automatic, so the labels appear
-//                  directly in their end positions and never re-lay-out afterwards
+// Every tick-set change happens at zero label opacity (fade out, zoom, fade in), or labels pop in and reshuffle.
 import {
   view, yBounds, setAxisChrome, applyWindow, applyFinalLayout,
   visibleWindow, targetVisibleWindow, cancelAnimation,

@@ -1,4 +1,3 @@
-// The three average tiles at the top of the Overview.
 import { byId } from '../../../lib/dom.js';
 import { MIN_ENTRIES, MIN_SPAN_DAYS } from '../stats.js';
 

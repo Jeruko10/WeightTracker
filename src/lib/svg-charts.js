@@ -1,6 +1,4 @@
-// Tiny SVG chart builders that return markup as strings. Used by the HTML report, which must be a
-// single self-contained file (no Chart.js, no network). Colours come from CSS classes and
-// variables defined by the page that embeds the SVG; nothing here knows about the app.
+// No Chart.js, no network (the HTML report is one file); colours come from CSS classes of the embedding page.
 import { esc } from './html.js';
 
 const PAD = { top: 12, right: 14, bottom: 26, left: 44 };

@@ -1,4 +1,4 @@
-// Public API of the Bodyweight section. Nothing outside this folder imports anything else.
+// Nothing outside this folder imports anything else.
 import { showSync, flashSync } from '../../shared/sync-status.js';
 import { state, resetState } from './state.js';
 import { fetchAll } from './repository.js';

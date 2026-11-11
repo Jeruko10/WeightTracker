@@ -1,4 +1,3 @@
-// Progress / History / Goals tabs inside the Bodyweight section.
 import { byId, playEnter } from '../../../lib/dom.js';
 import { renderGoalTab } from './goal-tab.js';
 

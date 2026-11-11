@@ -1,16 +1,4 @@
-// Firestore access for Exercises. Layout, all under users/{uid}/:
-//   trainingDays/{id}  { name, order, createdAt }
-//   exercises/{id}     { dayId|null, name, order, sets: [{ id, min, max }],
-//                        unilateral, bodyweight, machine, archived }
-//                      archived exercises have dayId null and keep all their logs;
-//                      machine is the active label new logs are stamped with ('' = none)
-//   exerciseLogs/{id}  { exerciseId, setId, date, machine, createdAt } plus either
-//                        reps, weight                    (bilateral)
-//                        left:{reps,weight}, right:{…}   (unilateral exercises)
-//   deloads/{id}       { date, createdAt }   (each doc marks the day a deload starts)
-// Sets carry their own stable id so a log stays attached to the right set when sets are added,
-// removed or reordered — an index would silently shift history onto another set.
-//
+// Sets carry a stable id, not an index: an index would silently shift history onto another set.
 // Writes are optimistic: callers update state and re-render first, then persist here.
 import { getDocs, setDoc, updateDoc, deleteDoc, writeBatch, db } from '../../config/firebase.js';
 import { userDoc, userCol, newDocId } from '../../shared/user-db.js';
@@ -74,14 +62,12 @@ function runBatch(ops) {
 export const saveDay = (d) => persist(() => setDoc(userDoc(COLLECTIONS.days, d.id), dayData(d)));
 export const renameDay = (id, name) => persist(() => updateDoc(userDoc(COLLECTIONS.days, id), { name }));
 
-/** Deletes a day together with its exercises and their logs. */
 export function deleteDayCascade(dayId, exercises, logs) {
   return runBatch([del(COLLECTIONS.days, dayId)]
     .concat(exercises.map((x) => del(COLLECTIONS.exercises, x.id)))
     .concat(logs.map((l) => del(COLLECTIONS.logs, l.id))));
 }
 
-/** Writes the `order` of every item whose position changed. */
 export function saveOrder(collection, items) {
   return runBatch(items.map((o) => ({ type: 'update', ref: userDoc(collection, o.id), data: { order: o.order } })));
 }
@@ -89,17 +75,13 @@ export function saveOrder(collection, items) {
 // ── Exercises ─────────────────────────────────────────────────────────────────
 export const saveExercise = (x) => persist(() => setDoc(userDoc(COLLECTIONS.exercises, x.id), exerciseData(x)));
 
-/**
- * Re-tags logs with another machine label (all-or-nothing batch). `exercise`, when given, has its
- * active label saved in the same batch — the label follows when the active track is renamed.
- */
+// All-or-nothing batch; saves the exercise's active label in the same batch so it follows a renamed track.
 export function retagLogs(logs, label, exercise) {
   const ops = logs.map((l) => ({ type: 'update', ref: userDoc(COLLECTIONS.logs, l.id), data: { machine: label } }));
   if (exercise) ops.push({ type: 'update', ref: userDoc(COLLECTIONS.exercises, exercise.id), data: { machine: exercise.machine || '' } });
   return runBatch(ops);
 }
 
-/** Saves an edited exercise and deletes the logs of any sets it no longer has. */
 export function saveExerciseDroppingLogs(x, droppedLogs) {
   return runBatch([{ type: 'set', ref: userDoc(COLLECTIONS.exercises, x.id), data: exerciseData(x) }]
     .concat(droppedLogs.map((l) => del(COLLECTIONS.logs, l.id))));

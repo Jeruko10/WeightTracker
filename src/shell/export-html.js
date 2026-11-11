@@ -1,7 +1,4 @@
-// A self-contained HTML report of the user's current state, meant to be sent to a person (a coach,
-// a doctor, a training partner): one file, no network, readable without explanation. It opens
-// with an at-a-glance summary, then bodyweight and training sections that fold open for detail.
-// The data comes from each feature's report builder; this module only lays it out.
+// Self-contained: one file, no network.
 import { esc, plural } from '../lib/html.js';
 import { today, formatDate, formatDateShort, formatDayMonth, addDays, daysBetween } from '../lib/dates.js';
 import { lineChart, barChart } from '../lib/svg-charts.js';
@@ -20,7 +17,7 @@ const signed = (n, d = 1) => (n >= 0 ? '+' : '−') + Math.abs(n).toFixed(d);
 const REPS_LABEL = { up: ['▲', 'above range'], in: ['●', 'in range'], down: ['▼', 'below range'] };
 
 // ── Small layout helpers ──────────────────────────────────────────────────────
-/** Tab group: buttons plus panels; without JavaScript every panel simply shows. */
+// Without JavaScript every panel simply shows.
 function tabs(labels, panels, selected = 0) {
   return `<div class="tabs" data-tabs data-default="${selected}"><div class="tablist" role="tablist">` +
     labels.map((l) => `<button type="button" role="tab">${esc(l)}</button>`).join('') + '</div>' +
@@ -257,7 +254,6 @@ const SCRIPT = `
 })();
 `;
 
-/** The complete report as one HTML string. */
 export function buildHtmlReport() {
   const bw = bodyweightReport(), ex = exercisesReport(), now = today();
   const title = 'Training & body weight report · ' + formatDate(now);

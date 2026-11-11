@@ -1,5 +1,4 @@
-// Bodyweight section of the clipboard export. Uses the same averages and data threshold as the
-// Overview stats, so the two always agree.
+// Same averages and data threshold as the Overview stats, so the two always agree.
 import { formatDate, today, daysBetween, weekKey } from '../../lib/dates.js';
 import { padLeft } from '../../shared/export-format.js';
 import { state } from './state.js';
@@ -63,7 +62,6 @@ export function bodyweightReport() {
   };
 }
 
-/** Where the user stands against the goal: progress, time elapsed and the gap to the plan. */
 function goalStatus(goal, entries, trend) {
   const startWeight = goalStartWeight(goal, entries) ?? (entries.length ? entries[0].weight : null);
   const isBulk = goal.isBulk !== undefined ? goal.isBulk : startWeight !== null && goal.weight > startWeight;

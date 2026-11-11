@@ -1,4 +1,3 @@
-// Google sign-in/out and the switch between the login screen and the app.
 import { auth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged, setDoc } from '../config/firebase.js';
 import { byId } from '../lib/dom.js';
 import { confirmTap } from '../lib/confirm-tap.js';
@@ -9,7 +8,7 @@ function saveProfile(user) {
   setDoc(userDoc('data', 'profile'), { name: user.displayName || '', email: user.email || '', photoURL: user.photoURL || '' });
 }
 
-/** `onSignIn(user)` / `onSignOut()` run after the user scope and the screens are switched. */
+// onSignIn/onSignOut run after the user scope and the screens are switched.
 export function initAuth({ onSignIn, onSignOut }) {
   byId('btn-google-sign-in').addEventListener('click', () => {
     signInWithPopup(auth, new GoogleAuthProvider()).catch(console.error);

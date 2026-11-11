@@ -1,5 +1,4 @@
-// Clipboard API where allowed; the hidden-textarea fallback covers older browsers and
-// non-secure contexts (plain http) where navigator.clipboard is unavailable.
+// Fallback for older browsers and non-secure contexts (plain http) where navigator.clipboard is unavailable.
 export function copyText(text) {
   if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
   return new Promise((resolve, reject) => {

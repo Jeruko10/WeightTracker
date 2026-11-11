@@ -1,5 +1,4 @@
-// localStorage wrappers that never throw: storage can be unavailable (private mode, blocked
-// site data), and a missing preference must never break the app.
+// Never throws: storage can be unavailable (private mode, blocked site data) and must not break the app.
 
 export function loadPref(key, fallback) {
   try {

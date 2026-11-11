@@ -1,4 +1,3 @@
-// The Deload card at the top of the tree: current phase, and the list of deload starts.
 import { today, formatDate, formatDateShort, daysBetween } from '../../../lib/dates.js';
 import { plural } from '../../../lib/html.js';
 import { ICON, chevron } from '../constants.js';
@@ -27,7 +26,6 @@ function deloadRow(d) {
     '</span></div>';
 }
 
-/** Last / previous / next, as short labelled lines. */
 function factsHtml(cur, next) {
   const rows = [];
   if (cur) {

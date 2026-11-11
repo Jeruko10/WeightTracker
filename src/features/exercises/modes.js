@@ -1,9 +1,7 @@
-// View / Edit / Train, chosen from the segmented control under the header.
 import { byId, playEnter } from '../../lib/dom.js';
 import { state, MODES, closeAllForms, saveMode, setFocusDay } from './state.js';
 import { render } from './views/render.js';
 
-/** Marks the segment of the current mode as pressed. */
 export function updateModeBtn() {
   document.querySelectorAll('#mode-seg [data-mode]').forEach((b) => {
     const on = b.dataset.mode === state.mode;
@@ -20,7 +18,7 @@ export function playTreeEnter() {
   playEnter(byId('focus-title'));
 }
 
-/** Leaving Train drops the trained day, so the next visit starts from the day picker. */
+// Leaving Train drops the trained day, so the next visit starts from the day picker.
 function leaveTrain() {
   setFocusDay(null);
   state.focusExpanded.clear();

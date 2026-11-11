@@ -1,5 +1,3 @@
-// Logging a weigh-in (the form sits at the top of Progress) and the History tab's list, where
-// past ones are edited or deleted.
 import { byId } from '../../../lib/dom.js';
 import { today, formatDate } from '../../../lib/dates.js';
 import { showSnackbar } from '../../../lib/snackbar.js';

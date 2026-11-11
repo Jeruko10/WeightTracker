@@ -1,5 +1,4 @@
-// Every document the app stores lives under users/{uid}/. These helpers build references for
-// the signed-in user, so features never handle the uid themselves.
+// Features never handle the uid themselves.
 import { db, doc, collection } from '../config/firebase.js';
 
 let uid = null;

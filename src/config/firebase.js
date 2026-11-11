@@ -1,5 +1,4 @@
-// Single entry point to Firebase: pins the SDK version and holds the project config. Every other
-// module imports Firebase from here, so upgrading the SDK is a one-file change.
+// Only module importing the Firebase SDK, so upgrading it is a one-file change.
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import { getFirestore } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';

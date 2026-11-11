@@ -1,5 +1,3 @@
-// The list screen: training days (accordions) holding compact exercise rows. A row opens the
-// exercise's detail screen (detail.js); its small chevron expands the sets inline.
 import { esc, plural } from '../../../lib/html.js';
 import { ICON, chevron } from '../constants.js';
 import { state, isEdit } from '../state.js';
@@ -54,7 +52,6 @@ function setLine(x, s, k) {
     `<span class="set-last">${l ? logSummary(l) + ' kg' : 'No entries yet'}</span></div>`;
 }
 
-/** Unilateral / Body weight / machine, side by side; they wrap onto the next line like text. */
 function tagsHtml(x, machine) {
   const tags = (x.unilateral ? '<span class="tag">Unilateral</span>' : '') +
     (x.bodyweight ? '<span class="tag">Body weight</span>' : '') +

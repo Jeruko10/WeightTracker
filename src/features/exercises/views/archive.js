@@ -1,5 +1,3 @@
-// The Archive screen: exercises taken out of the plan but with every logged entry kept. From here
-// they can be restored into any training day, or deleted for good (Edit mode only).
 import { esc, plural } from '../../../lib/html.js';
 import { state } from '../state.js';
 import { archivedExercises, sortedDays } from '../selectors.js';

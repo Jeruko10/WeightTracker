@@ -1,5 +1,3 @@
-// What every data-action button in the Exercises section does. One delegated listener (see
-// index.js) calls handleAction(); handlers update state, re-render, then persist.
 import { byId } from '../../lib/dom.js';
 import { confirmTap } from '../../lib/confirm-tap.js';
 import { plural } from '../../lib/html.js';
@@ -27,14 +25,12 @@ function focusIn(selector) {
   if (el.select && el.type === 'text') el.select();
 }
 
-/** Opens one inline form (state.ui[slot] = id), re-renders and focuses its first field. */
 function openForm(slot, id, formId, fieldName) {
   state.ui[slot] = id;
   render();
   focusIn(`[data-form="${formId}"] [name=${fieldName}]`);
 }
 
-/** Swaps an item with its neighbour and renumbers the list's `order`, saving what changed. */
 function move(list, collection, id, dir) {
   const i = list.findIndex((o) => o.id === id), j = i + dir;
   if (i < 0 || j < 0 || j >= list.length) return;
@@ -101,7 +97,7 @@ function saveNewLog(id, form) {
 // ── Handlers ──────────────────────────────────────────────────────────────────
 // Each receives { t: the clicked element, id: its data-id, f: its enclosing form }.
 
-/** Allowed in every mode (logging itself checks canLog: never in read-only View). */
+// Logging itself checks canLog: never in read-only View.
 const ANY_MODE = {
   toggle: ({ t }) => toggleFold(t.closest('.foldable')),
   cancel: () => { closeAllForms(); render(); },
@@ -182,7 +178,6 @@ const ANY_MODE = {
   },
 };
 
-/** Structure and history changes: Edit mode only. */
 const EDIT_ONLY = {
   // Deloads
   'deload-add': ({ f }) => {

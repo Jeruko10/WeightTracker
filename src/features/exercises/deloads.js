@@ -1,5 +1,4 @@
-// Deload cycle queries. A deload is recorded as the date it starts. The current cycle runs from
-// the latest start on or before today; a start in the future is shown as planned, not active.
+// A deload is the date it starts; the current cycle runs from the latest start on or before today (a future start is planned, not active).
 import { today, daysBetween } from '../../lib/dates.js';
 import { plural } from '../../lib/html.js';
 import { getCycleLength } from '../../shared/settings.js';
@@ -33,7 +32,6 @@ export function cyclePhase(d) {
     : { isDeload: false, text: 'Cycle ' + (Math.floor((n - len) / len) + 1) + ' after deload' };
 }
 
-/** With 5-day cycles: 10 → '2 cycles', 7 → '1.4 cycles'. */
 export function cyclesText(days) {
   const len = getCycleLength(), c = days / len;
   return (days % len === 0 ? String(c) : c.toFixed(1)) + ' ' + plural(c, 'cycle');

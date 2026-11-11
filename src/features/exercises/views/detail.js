@@ -1,6 +1,4 @@
-// The detail screen of one exercise: machine tracks, tonnage chart, and every set with its
-// history and log form. Also hosts the exercise form (create/edit), so editing never happens
-// squeezed inside the list.
+// Also hosts the exercise form (create/edit), so editing never happens squeezed inside the list.
 import { today, formatDateShort } from '../../../lib/dates.js';
 import { esc, plural } from '../../../lib/html.js';
 import { ICON, HISTORY_PREVIEW, CHART_ENTRIES, MAX_MACHINE_LEN, chevron } from '../constants.js';
@@ -38,7 +36,6 @@ function trackSwitcher(x) {
   return html;
 }
 
-/** Edit mode: rename the viewed track, or move its entries into another one. */
 function trackTools(x) {
   if (!isEdit()) return '';
   const from = trackOf(x), n = state.logs.filter((l) => l.exerciseId === x.id && (l.machine || '') === from).length;
@@ -143,7 +140,6 @@ function exerciseScreen(x) {
     '<div class="sets-list">' + x.sets.map((s, k) => setHtml(x, s, k, canAdd)).join('') + '</div>';
 }
 
-/** HTML for the detail pane, or null when the list is showing and no form is open. */
 export function detailHtml() {
   const ui = state.ui, v = state.view;
   if (ui.newExFor) return backBar('New exercise') + '<div class="dt-form">' + exerciseForm(null, ui.newExFor) + '</div>';

@@ -1,4 +1,3 @@
-// Inline forms: log a set, create/edit an exercise. Read back by form-readers.js.
 import { esc } from '../../../lib/html.js';
 import {
   MAX_REPS, MIN_REPS, MAX_SETS, MIN_SETS, MAX_ABS_WEIGHT, DEFAULT_SET, DEFAULT_SET_COUNT, MAX_MACHINE_LEN, ICON,
@@ -19,7 +18,6 @@ function weightInput(value, name = 'weight', disabled = false) {
     `min="-${MAX_ABS_WEIGHT}" max="${MAX_ABS_WEIGHT}" step="${getWeightStep()}" value="${value}"${disabled ? ' disabled' : ''}></label>`;
 }
 
-/** The reps + weight inputs of a log: one pair, or a Left and a Right pair for unilateral logs. */
 function sidesFields(v, uni) {
   if (!uni) return `<div class="lf-pair">${repsInput(v.reps)}${weightInput(v.weight)}</div>`;
   const l = v.left || { reps: '', weight: v.weight === undefined ? '' : v.weight };
@@ -33,11 +31,7 @@ function sidesFields(v, uni) {
       '<span>Same weight on both sides</span></label>';
 }
 
-/**
- * Log form. `v` holds the initial values ({ date, reps, weight } or, for unilateral logs,
- * { date, left, right }); `id` is what data-form points at. `focus`: Train mode's variant, which
- * has no date field (it always logs for today).
- */
+// focus: Train's variant, which has no date field (always logs for today).
 export function logForm(v, action, id, { uni = false, focus = false } = {}) {
   const date = focus
     ? `<input type="hidden" name="date" value="${v.date}">`
@@ -64,7 +58,6 @@ function checkRow(name, checked, title, help) {
     `<span><b>${title}</b><small>${help}</small></span></label>`;
 }
 
-/** Create (x null) or edit an exercise: name, machine, sets and ranges, options. */
 export function exerciseForm(x, dayId) {
   const sets = x ? x.sets : Array.from({ length: DEFAULT_SET_COUNT }, () => ({ id: '', ...DEFAULT_SET }));
   const submit = x

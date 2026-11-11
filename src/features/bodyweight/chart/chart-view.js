@@ -1,26 +1,15 @@
-// State and layout of the weight chart.
-//
-// The chart always holds the FULL day-by-day series; the range dropdown only moves the x-axis
-// bounds over it. Switching range therefore animates as a true zoom — the same line stretches
-// or compresses — instead of swapping in a different dataset that has to pop in.
+// Holds the FULL day series; the range only moves the x bounds, so a range change animates as a true zoom.
 import { byId } from '../../../lib/dom.js';
 import { CHART_THEME } from '../../../shared/theme.js';
 
 export const view = {
-  /** The Chart.js instance, or null before the first render / after sign-out */
   chart: null,
-  /** Selected range: '1w' | '2w' | '1m' | '1y' | 'all' | 'goal' */
   range: '2w',
-  /** Set when the range dropdown changes, so the next render animates instead of jumping */
   transitionQueued: false,
-  /** Calendar day for each x index */
   dates: [],
   pxPerDay: 24,
-  /** Whether the current range is drawn wider than the card and scrolls horizontally */
   scrollable: false,
-  /** The x window ({min,max} day indexes) the chart is showing or zooming towards */
   win: null,
-  /** requestAnimationFrame id of a running zoom */
   animFrame: null,
 };
 
@@ -126,10 +115,7 @@ export function setAxisChrome(alpha, animating) {
   // it also means the y grid does not change at all when the animation ends.
 }
 
-/**
- * Paints one frame: x bounds, matching y bounds, and optionally the canvas width.
- * `yb` undefined → computed from the window; `widthCss` null → leave the current width alone.
- */
+// yb undefined → computed from the window; widthCss null → leave the current width alone.
 export function applyWindow(minX, maxX, yb, widthCss) {
   const chart = view.chart;
   if (!chart) return;

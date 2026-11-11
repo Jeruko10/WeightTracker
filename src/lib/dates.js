@@ -1,6 +1,4 @@
-// Date keys are plain calendar days ('YYYY-MM-DD'), which JS parses as UTC midnight. All day
-// arithmetic here therefore stays in UTC — mixing in local getters/setters silently loses or
-// repeats a day when the clock crosses a daylight-saving boundary.
+// Day keys are 'YYYY-MM-DD' (parsed as UTC midnight): keep arithmetic in UTC, or a day is lost or repeated across DST.
 
 export const DAY_MS = 864e5;
 export const WEEK_MS = 7 * DAY_MS;

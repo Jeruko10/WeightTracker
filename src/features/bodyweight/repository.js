@@ -1,7 +1,3 @@
-// Firestore access for Bodyweight. Layout, all under users/{uid}/:
-//   entries/{id}       { date, weight }
-//   data/goal          the active goal
-//   goalHistory/{id}   archived goals
 import { getDoc, getDocs, setDoc, addDoc, deleteDoc } from '../../config/firebase.js';
 import { userDoc, userCol } from '../../shared/user-db.js';
 import { trackSave } from '../../shared/sync-status.js';

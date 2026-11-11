@@ -1,4 +1,3 @@
-// The small status line under the header: "Loading…", "Saving…", "Saved", errors.
 import { byId } from '../lib/dom.js';
 
 const FLASH_MS = 2000;

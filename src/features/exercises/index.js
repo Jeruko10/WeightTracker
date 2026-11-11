@@ -1,4 +1,4 @@
-// Public API of the Exercises section. Nothing outside this folder imports anything else.
+// Nothing outside this folder imports anything else.
 import { byId } from '../../lib/dom.js';
 import { showSync } from '../../shared/sync-status.js';
 import { state, closeAllForms, saveMode, setFocusDay } from './state.js';

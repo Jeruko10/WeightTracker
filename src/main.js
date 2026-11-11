@@ -1,4 +1,3 @@
-// Entry point: wires the shell (auth, profile menu, router, export) to the feature sections.
 import { initAuth } from './shell/auth.js';
 import { initProfileMenu, renderUser } from './shell/profile-menu.js';
 import { initRouter } from './shell/router.js';

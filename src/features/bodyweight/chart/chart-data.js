@@ -1,5 +1,3 @@
-// Builds what the weight chart draws: the day axis, the x window for the selected range, and the
-// datasets (weight line + one ideal-pace segment per goal cycle). Pure apart from reading state.
 import { WEEK_MS, today, daysBetween } from '../../../lib/dates.js';
 import { COLORS } from '../../../shared/theme.js';
 import { state } from '../state.js';
@@ -21,7 +19,6 @@ const POINT_R = 2.8;
 // point on the x axis", which has no distance limit by design.
 const HIT_R = 9;
 
-/** Every calendar day from the first entry to today (or the last entry, if later). */
 export function buildDayAxis(entries) {
   const dates = [], n = entries.length;
   if (!n) return dates;
@@ -34,7 +31,6 @@ export function buildDayAxis(entries) {
   return dates;
 }
 
-/** The x window for the selected range, clamped to the data we actually have. */
 export function rangeWindow(range, dates, goal) {
   const lastIdx = dates.length - 1;
   if (!dates.length) return { start: 0, end: 0 };
@@ -57,7 +53,6 @@ export function rangeWindow(range, dates, goal) {
   return { start, end };
 }
 
-/** How the selected range is drawn: scrolling or fitted, and whether points are shown. */
 export function rangeLayout(range, visibleDays) {
   const threshold = range === 'all' ? ALL_TIME_THRESHOLD : SCROLL_THRESHOLD;
   const scrollable = range !== '1y' && visibleDays > threshold;
@@ -70,13 +65,7 @@ export function rangeLayout(range, visibleDays) {
   };
 }
 
-/**
- * Hover behaviour. With points drawn, a reading is bounded by each point's hit radius. With
- * nothing drawn to aim at, it is not required to land on a point — but it is still measured in
- * both axes. Picking purely by horizontal distance would tie between the weight line and the
- * pace line, which both carry a point at nearly every date, and the winner would be arbitrary;
- * with both axes it is whichever line the cursor is nearer to.
- */
+// Without points to aim at, hover is still measured in both axes: by x alone the weight and pace lines tie.
 export function interactionFor(pointsVisible) {
   return { mode: 'nearest', axis: 'xy', intersect: pointsVisible };
 }

@@ -1,6 +1,3 @@
-// A one-screen summary of a single training day as a self-contained HTML file, made to be
-// screenshotted or sent as is: per exercise, the tonnage of its last sessions as a small bar chart
-// and only the latest entry of each set. Data comes from the Exercises report builder.
 import { esc, plural } from '../lib/html.js';
 import { today, formatDate, formatDateShort } from '../lib/dates.js';
 import { sparkBars } from '../lib/svg-charts.js';
@@ -10,7 +7,6 @@ import { dayReport } from '../features/exercises/index.js';
 const SESSIONS = 6;
 const tons = (n) => Math.round(n).toLocaleString('en-US');
 
-/** One set on one line: "Set 2   7 reps   × 25 kg" (or "L 7 · R 8 reps" for a left/right set). */
 function setLine(s, bodyweight) {
   const label = `<span class="sn">Set ${s.k + 1}</span>`;
   if (!s.row) return `<div class="set">${label}<span class="none">no entry</span></div>`;
@@ -72,7 +68,6 @@ h1{margin:0;font-size:34px;letter-spacing:-.5px}.sub{margin:2px 0 16px;color:var
 @media (max-width:640px){.hd{display:none}.row{grid-template-columns:1fr;gap:12px}.span2{grid-column:auto}}
 `;
 
-/** The day summary as one HTML string, or null if the day can't be found. */
 export function buildDayHtml(dayId) {
   const r = dayReport(dayId);
   if (!r) return null;

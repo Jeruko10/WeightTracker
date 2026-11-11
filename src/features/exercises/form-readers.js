@@ -1,5 +1,3 @@
-// Reads and validates the inline forms. Each reader returns the clean values, or null after
-// showing the problem in the form's own .err line.
 import { MAX_REPS, MIN_REPS, MAX_SETS, MIN_SETS, MAX_ABS_WEIGHT, MAX_MACHINE_LEN } from './constants.js';
 import { state } from './state.js';
 import { rangeRow } from './views/forms.js';
@@ -12,7 +10,6 @@ function fail(form, msg) {
 const cap = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 const field = (form, name) => form.querySelector(`[name=${name}]`);
 
-/** One reps + weight pair, or null after reporting the problem. `suffix`: '' | '-l' | '-r'. */
 function readSide(f, suffix, label) {
   const repsRaw = field(f, 'reps' + suffix).value, weightRaw = field(f, 'weight' + suffix).value;
   const reps = Number(repsRaw), weight = weightRaw === '' ? 0 : Number(weightRaw);
@@ -26,7 +23,6 @@ function readSide(f, suffix, label) {
   return { reps, weight: Math.round(weight * 100) / 100 };
 }
 
-/** { date, reps, weight } or, for a unilateral form, { date, left, right }. */
 export function readLogForm(f) {
   const date = field(f, 'date').value;
   if (!date) return fail(f, 'Pick a date.');
@@ -43,7 +39,7 @@ export function readLogForm(f) {
   return right ? { date, left, right } : null;
 }
 
-/** `selfId`: the deload being edited, so keeping its own date doesn't count as a duplicate. */
+// selfId: the deload being edited, so keeping its own date isn't a duplicate.
 export function readDeloadDate(f, selfId) {
   const date = field(f, 'date').value;
   if (!date) return fail(f, 'Pick a date.');
@@ -59,7 +55,6 @@ function readRangeRows(f) {
   }));
 }
 
-/** The exercise form's −/+ stepper: adds a set copying the last range, or drops the last. */
 export function changeSetCount(f, delta) {
   const rows = readRangeRows(f);
   if (delta > 0 && rows.length < MAX_SETS) {

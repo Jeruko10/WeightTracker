@@ -1,6 +1,4 @@
-// Which screen of Exercises is showing: the list, one exercise's detail, or the archive. It is
-// driven by the URL hash (#/exercises, #/exercises/ex/<id>, #/exercises/archive) so the browser's
-// Back button and a reload both work; the shell passes the part after '#/exercises/' in here.
+// Driven by the URL hash so the browser's Back button and a reload both work.
 import { state, closeAllForms } from './state.js';
 import { render } from './views/render.js';
 
@@ -23,11 +21,7 @@ export function applyRoute(sub) {
   window.scrollTo(0, state.view.kind === 'list' ? listScroll : 0);
 }
 
-/**
- * Navigates to a route. `form` ({ slot, id }) is opened once the route is applied. Setting the
- * hash fires the router, which calls applyRoute; when the hash already matches nothing would
- * fire, so apply directly.
- */
+// Setting the hash fires the router (→ applyRoute); if it already matches nothing fires, so apply directly.
 export function goTo(sub, form) {
   state.pendingForm = form || null;
   const target = '#/exercises' + (sub ? '/' + sub : '');

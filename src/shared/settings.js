@@ -1,4 +1,4 @@
-// User preferences that aren't the theme. Stored in localStorage (per device), never in Firestore.
+// Per-device (localStorage), never in Firestore.
 import { loadPref, savePref } from '../lib/storage.js';
 
 /** Weight increments the number fields step by (kg). */

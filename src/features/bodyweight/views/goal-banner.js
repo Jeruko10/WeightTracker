@@ -1,5 +1,3 @@
-// The goal banner on the Overview: pace chip, projection and progress bars while a goal is
-// running, or a "reached" / "missed" message with its action once it has ended.
 import { byId, setVisible } from '../../../lib/dom.js';
 import { DAY_MS, WEEK_MS, today, addDays, formatDate, formatLocalDate } from '../../../lib/dates.js';
 import { plural } from '../../../lib/html.js';

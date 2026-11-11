@@ -1,17 +1,14 @@
-// Fold state of the list (which days and exercise rows are open), remembered across reloads,
-// plus the "Expand all / Collapse all" toolbar button.
 import { byId } from '../../lib/dom.js';
 import { chevron } from './constants.js';
 import { state, saveOpen } from './state.js';
 
-/** Every fold "Expand all" opens: the deload card, each day and each (active) exercise row. */
 function foldKeys() {
   return ['deload']
     .concat(state.days.map((d) => 'd:' + d.id))
     .concat(state.exercises.filter((x) => !x.archived).map((x) => 'e:' + x.id));
 }
 
-/** Forgets remembered folds for things deleted on another device. */
+// Forgets folds of things deleted on another device.
 export function pruneOpen() {
   const live = new Set(foldKeys());
   state.open = new Set(Array.from(state.open).filter((k) => live.has(k)));

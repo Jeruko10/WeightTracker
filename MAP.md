@@ -16,6 +16,9 @@ Weight Tracker: static SPA to log body weight and goals (Bodyweight) and trainin
 - Firebase is imported only through `src/config/firebase.js` (re-exports what the app uses).
 - Writes go through `persist()` in `shared/sync-status.js` so the Saving/Saved/Error indicator stays true.
 - User data lives under `users/{uid}/…` via `shared/user-db.js`.
+- Bodyweight docs: `entries/{id}` {date, weight}, `data/goal` (active), `goalHistory/{id}` (archived).
+- Exercises docs: `trainingDays`, `exercises` (sets `[{id,min,max}]`, `dayId` null = archived, `machine` = active tag), `exerciseLogs` (`reps, weight` or `left`/`right`), `deloads` {date}.
+- Set ids are stable, never indexes: an index would shift history onto another set.
 - Dates are `'YYYY-MM-DD'` strings in UTC (`lib/dates.js`); never `Date` local time.
 - `state.js` exports one mutable object (imported `let`s can't be reassigned).
 - Colors only in `styles/tokens.css`; the light block is duplicated (`data-theme=light` and OS light): edit both.
@@ -72,7 +75,7 @@ Weight Tracker: static SPA to log body weight and goals (Bodyweight) and trainin
 
 - `index.js` — public API (`init`/`load`/`clear`, `exportSections`, `applyExercisesRoute`…).
 - `state.js` — data (days, exercises, logs, deloads) and UI state.
-- `repository.js` — loading, batched persist, serializers; documents the data model.
+- `repository.js` — loading, batched persist, serializers; data model in `docs/ARCHITECTURE.md`.
 - `nav.js` — active screen (list / detail / archive) from the sub-route.
 - `actions.js` — `data-action` event delegation handler.
 - `selectors.js` — sort, filter, last load, "done today".

@@ -1,4 +1,3 @@
-// Redraws the Exercises section from state. Called after every change.
 import { byId } from '../../../lib/dom.js';
 import { state, isEdit } from '../state.js';
 import { sortedDays } from '../selectors.js';
@@ -21,7 +20,6 @@ function treeHtml() {
   return deloadHtml() + body + archiveLinkHtml();
 }
 
-/** Content of the detail pane for the current screen, or null when there is none. */
 function paneHtml() {
   if (state.view.kind === 'archive' && !state.ui.newExFor) return state.loaded ? archiveHtml() : null;
   return detailHtml();

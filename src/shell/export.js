@@ -1,5 +1,3 @@
-// One plain-text snapshot of everything, copied to the clipboard from the profile menu: the
-// training log first, then the deload cycle, then bodyweight (only when there is any).
 import { byId } from '../lib/dom.js';
 import { showSync } from '../shared/sync-status.js';
 import { today, formatDate } from '../lib/dates.js';
@@ -29,7 +27,6 @@ export function buildExport() {
   return out.join('\n').replace(/\n{3,}/g, '\n\n').replace(/\s+$/, '') + '\n';
 }
 
-/** Hands a string to the browser as a downloaded .html file. */
 function saveHtml(html, fileName) {
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const a = document.createElement('a');
@@ -41,7 +38,6 @@ function saveHtml(html, fileName) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-/** The day-header button in the Exercises list: one training day, one screen. */
 function exportDay(id) {
   const html = buildDayHtml(id);
   if (!html) return;
@@ -50,7 +46,6 @@ function exportDay(id) {
   setTimeout(() => showSync(''), FEEDBACK_MS);
 }
 
-/** Saves the HTML report as a file: one self-contained page that can be sent to anyone. */
 function downloadHtmlReport(btn) {
   try {
     saveHtml(buildHtmlReport(), reportFileName());

@@ -1,4 +1,3 @@
-// Read-only queries over the Exercises state. No DOM, no Firebase.
 import { today } from '../../lib/dates.js';
 import { state } from './state.js';
 
@@ -22,30 +21,26 @@ export function dayExercises(dayId) {
   return state.exercises.filter((x) => !x.archived && x.dayId === dayId).sort(byOrder);
 }
 
-/** Archived exercises keep their logs but belong to no day. */
+// Archived exercises keep their logs but belong to no day.
 export function archivedExercises() {
   return state.exercises.filter((x) => x.archived).sort((a, b) => a.name.localeCompare(b.name));
 }
 
-/** The machine label new logs are stamped with ('' = none). */
 export function activeMachine(x) {
   return x.machine || '';
 }
 
-/** The machine track being viewed for an exercise (defaults to the active one). */
 export function trackOf(x) {
   const t = state.track[x.id];
   return t === undefined ? activeMachine(x) : t;
 }
 
-/** Distinct machine labels used by the exercise's logs plus its active one, active first. */
 export function machinesOf(x) {
   const set = new Set([activeMachine(x)]);
   state.logs.forEach((l) => { if (l.exerciseId === x.id) set.add(l.machine || ''); });
   return Array.from(set);
 }
 
-/** Every machine label used by any exercise, for the form's suggestions. */
 export function knownMachines() {
   const set = new Set();
   state.exercises.forEach((x) => { if (x.machine) set.add(x.machine); });
@@ -53,12 +48,11 @@ export function knownMachines() {
   return Array.from(set).sort();
 }
 
-/** The sides a log recorded: one for a bilateral log, [left, right] for a unilateral one. */
 export function logSides(l) {
   return l.left ? [l.left, l.right] : [{ reps: l.reps, weight: l.weight }];
 }
 
-/** One set's history on one machine track, oldest first. Defaults to the viewed track. */
+// One set's history on one machine track, oldest first.
 export function setLogs(exId, setId, track) {
   const x = findById(state.exercises, exId);
   const t = track !== undefined ? track : x ? trackOf(x) : '';
@@ -71,7 +65,6 @@ export function rangeText(s) {
   return s.min === s.max ? String(s.min) : s.min + '–' + s.max;
 }
 
-/** Where a rep count sits against the set's target range: 'up' | 'down' | 'in'. */
 export function repsState(reps, s) {
   return reps > s.max ? 'up' : reps < s.min ? 'down' : 'in';
 }
@@ -80,7 +73,6 @@ export function uniformRange(x) {
   return x.sets.every((s) => s.min === x.sets[0].min && s.max === x.sets[0].max);
 }
 
-/** Weight with at most two decimals, no trailing zeros. */
 export function formatWeight(w) {
   return String(Math.round((w || 0) * 100) / 100);
 }
@@ -109,13 +101,11 @@ export function setDoneToday(x, s) {
   return !!l && l.date === today();
 }
 
-/** The latest log of a set on the exercise's active track, or null. */
 export function lastLog(x, s) {
   const h = setLogs(x.id, s.id, activeMachine(x));
   return h.length ? h[h.length - 1] : null;
 }
 
-/** { done, total } exercises finished today in a day. */
 export function dayProgress(d) {
   const exs = dayExercises(d.id);
   return { done: exs.filter(exDoneToday).length, total: exs.length };
@@ -125,7 +115,6 @@ export function sideText(side) {
   return side.reps + ' × ' + formatWeight(side.weight);
 }
 
-/** '10 × 62.5' for a bilateral log, 'L 10 × 24 · R 9 × 24' for a unilateral one. */
 export function logSummary(l) {
   return l.left ? 'L ' + sideText(l.left) + ' · R ' + sideText(l.right) : sideText(l);
 }

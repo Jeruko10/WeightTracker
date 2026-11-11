@@ -1,17 +1,4 @@
-// Plans the vertical scale for a whole zoom, before it starts. Pure maths: the caller passes
-// `boundsAt(minX, maxX)`, which returns the y range the line needs for a given x window.
-//
-// Driving y straight off the data in view does not work: as the window edge sweeps across a
-// steep segment the edge value changes fast, the scale chases it, and the chart lurches —
-// continuous, but with the rate changing sharply enough to read as a jump. So sample the
-// animation up front and derive, for each edge of the scale, the smoothest monotone path that
-// never clips the line. The two edges get their own path because they can be moving opposite
-// ways, and the constraint flips with direction:
-//   • an edge that WIDENS must be at least as far along as the data demands, so the smoothest
-//     safe path is the concave majorant of that demand — it widens early, never late.
-//   • an edge that NARROWS must be at most as far along as the data allows, so the smoothest
-//     safe path is the convex minorant — it holds its width until the data has actually left.
-// With nothing demanded either path degenerates to a straight line.
+// Plans y per edge before the zoom (concave majorant when widening, convex minorant when narrowing): driving y off live data lurches.
 
 const SAMPLES = 48;
 // Keeps the fitted path clear of the requirement between samples. Without it the path can fall
@@ -101,7 +88,6 @@ function planEdge(reqs, from, to, isMin) {
   return hullOf(pts, false);
 }
 
-/** Plans both y edges for a zoom from window `fromV` to `toV` (scale yFrom → yTo). */
 export function planZoomY(fromV, toV, yFrom, yTo, boundsAt) {
   if (!yFrom || !yTo) return null;
   const reqs = [];

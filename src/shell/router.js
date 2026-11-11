@@ -1,6 +1,4 @@
-// Switches between the app's sections. Hash routes rather than paths: the site is served as
-// static files from GitHub Pages, which has no rewrites, so '#/exercises' is the only kind of
-// deep link that survives a reload.
+// Hash routes: GitHub Pages has no rewrites, so '#/exercises' is the only deep link that survives a reload.
 import { byId, setVisible, playEnter } from '../lib/dom.js';
 import { setProfileMenu } from './profile-menu.js';
 
@@ -20,7 +18,7 @@ function routeFromHash() {
   return name ? { name, sub: h.slice(ROUTES[name].hash.length + 1) } : { name: DEFAULT_ROUTE, sub: '' };
 }
 
-/** `onEnter(name, sub)` runs on every route change, after the layout has switched. */
+// onEnter(name, sub) runs on every route change, after the layout has switched.
 export function initRouter(onEnter) {
   function route() {
     const { name, sub } = routeFromHash();

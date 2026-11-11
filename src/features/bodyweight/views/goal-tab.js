@@ -1,5 +1,3 @@
-// The Goal tab: set/replace/remove the active goal with a live preview, the current goal's
-// summary, and the list of past goals.
 import { byId, setVisible } from '../../../lib/dom.js';
 import { WEEK_MS, today, formatDate } from '../../../lib/dates.js';
 import { confirmTap } from '../../../lib/confirm-tap.js';
@@ -18,7 +16,6 @@ function readForm() {
   };
 }
 
-/** Empties the form and hides everything that describes the (now gone) active goal. */
 export function resetGoalForm() {
   FIELDS.forEach((id) => { byId(id).value = ''; });
   setVisible(byId('goal-preview'), false);

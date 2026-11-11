@@ -1,5 +1,3 @@
-// Per-exercise tonnage chart: one bar per training date on the viewed machine track, the latest
-// session highlighted. Mounted into the detail screen after each render.
 import { formatDateShort, formatDayMonth } from '../../lib/dates.js';
 import { COLORS, CHART_THEME } from '../../shared/theme.js';
 import { CHART_ENTRIES } from './constants.js';

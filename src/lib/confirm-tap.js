@@ -1,7 +1,3 @@
-// "Tap again to confirm": the first tap arms the button (new label + `.confirming` class), a
-// second tap within the window confirms. Used for every destructive or hard-to-undo action so a
-// stray tap never deletes anything. Styling of the armed state lives in CSS.
-
 const CONFIRM_WINDOW_MS = 3000;
 const armed = new WeakMap(); // button → { html, timer }
 

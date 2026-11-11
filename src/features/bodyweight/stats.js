@@ -1,4 +1,3 @@
-// Trend maths over the logged weigh-ins. Pure: no DOM, no Firebase.
 import { addDays, daysBetween } from '../../lib/dates.js';
 
 // Two conditions gate the trend stats: enough calendar coverage for two 7-day windows,
@@ -26,7 +25,6 @@ export function buildDailySeries(entries) {
   return series;
 }
 
-/** Mean of the `spanDays` days ending on `endDate`, never reaching before `rangeStart`. */
 export function windowAvg(series, endDate, spanDays, rangeStart) {
   const vals = [];
   for (let k = 0; k < spanDays; k++) {
@@ -47,11 +45,6 @@ export function findReachedDate(series, targetWeight, goalIsGain, rangeStart, ra
   return rangeEnd;
 }
 
-/**
- * Everything the Overview and the export derive from the entries: the current 7-day average
- * (calendar days ending on the last log, gaps interpolated) and, once there is enough data,
- * the 7 days before it.
- */
 export function computeTrend(entries) {
   const n = entries.length;
   const firstDate = n ? entries[0].date : null;
